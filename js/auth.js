@@ -1,5 +1,5 @@
 /**
- * Deprecated
+ * Deprecated. Authentication is not shared whatsoever between Spotify and Twitch.
  */
 class Auth {
 
