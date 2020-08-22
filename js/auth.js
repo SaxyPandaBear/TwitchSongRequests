@@ -1,3 +1,6 @@
+/**
+ * Deprecated
+ */
 class Auth {
 
     /**
