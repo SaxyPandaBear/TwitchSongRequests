@@ -16,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/SaxyPandaBear/TwitchSongRequests/issues"
   },
-  "homepage": "https://github.com/SaxyPandaBear/TwitchSongRequests#readme"
+  "homepage": "https://github.com/SaxyPandaBear/TwitchSongRequests#readme",
+  "dependencies": {
+    "follow-redirects": "^1.13.0",
+    "fs": "0.0.1-security"
+  }
 }

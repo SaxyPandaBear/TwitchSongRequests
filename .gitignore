@@ -1,1 +1,3 @@
 sandbox/playground.js
+node_modules/
+package-lock.json
