@@ -27,10 +27,9 @@ const scopes = "channel_read+channel:read:redemptions";
 // note: leaving this here so I don't have to fetch my channel ID all the time.
 // const channelId = "106060203"
 
-var oauth;
-
 // connects to Twitch's WSS event stream for channel point redemptions
-function subscribeToChannelTopic(channelId) {
+// TODO: figure out how to do the nonce better
+function subscribeToChannelTopic(channelId, oauth_token) {
 
     function heartbeat() {
         message = {
@@ -56,7 +55,7 @@ function subscribeToChannelTopic(channelId) {
             nonce: "abc123",
             data: {
                 topics: [`channel-points-channel-v1.${channelId}`],
-                auth_token: oauth.access_token
+                auth_token: oauth_token
             },
         };
         ws.send(JSON.stringify(listenEvent));
@@ -118,13 +117,10 @@ async function getChannelId(client_id, oauth_token) {
 //       it here.
 // this fetches the OAuth token, then connects to the WSS.
 retrieveToken(credentials.twitch_client_id, credentials.twitch_client_secret, credentials.authorization_code)
-    .then((data) => {
-        oauth = data;
-    })
-    .then(() => {
+    .then((oauth) => {
         // GET the channel ID to then feed as input to subscribe to the topic
-        getChannelId(credentials.client_id, oauth.access_token).then((channel) => {
+        getChannelId(credentials.twitch_client_id, oauth.access_token).then((channel) => {
             let channelId = channel._id;
-            subscribeToChannelTopic(channelId);
+            subscribeToChannelTopic(channelId, oauth.access_token);
         });
     });

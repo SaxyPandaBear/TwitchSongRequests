@@ -1,0 +1,210 @@
+{
+	"info": {
+		"_postman_id": "18ae127b-8e3e-4a46-9207-c437b5b9aea1",
+		"name": "TwitchSongRequestsReference",
+		"description": "Collection of API calls to help document the authorization flow for Twitch/Spotify user authorization grants",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "TWITCH Get OAuth token from authorization code",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://id.twitch.tv/oauth2/token?client_id={{twitch_client_id}}&client_secret={{twitch_client_secret}}&grant_type=authorization_code&code={{twitch_auth_code}}&redirect_uri=https://github.com/SaxyPandaBear/TwitchSongRequests",
+					"protocol": "https",
+					"host": [
+						"id",
+						"twitch",
+						"tv"
+					],
+					"path": [
+						"oauth2",
+						"token"
+					],
+					"query": [
+						{
+							"key": "client_id",
+							"value": "{{twitch_client_id}}"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{twitch_client_secret}}"
+						},
+						{
+							"key": "grant_type",
+							"value": "authorization_code"
+						},
+						{
+							"key": "code",
+							"value": "{{twitch_auth_code}}"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "https://github.com/SaxyPandaBear/TwitchSongRequests"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TWITCH Get user authorization code with required scopes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://id.twitch.tv/oauth2/authorize?client_id={{twitch_client_id}}&redirect_uri=https://github.com/SaxyPandaBear/TwitchSongRequests&response_type=code&scope=channel_read+channel:read:redemptions",
+					"protocol": "https",
+					"host": [
+						"id",
+						"twitch",
+						"tv"
+					],
+					"path": [
+						"oauth2",
+						"authorize"
+					],
+					"query": [
+						{
+							"key": "client_id",
+							"value": "{{twitch_client_id}}"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "https://github.com/SaxyPandaBear/TwitchSongRequests"
+						},
+						{
+							"key": "response_type",
+							"value": "code"
+						},
+						{
+							"key": "scope",
+							"value": "channel_read+channel:read:redemptions"
+						}
+					]
+				},
+				"description": "IMPORTANT NOTE: This does not work in Postman. The URL needs to be resolved with the required variables and then copy pasted into the browser for the user to login and authorize the access request made by this client ID.\r\nThis is so that I can fetch the OAuth code, with required scopes, in order to get an OAuth bearer token to authenticate against the Twitch API to GET the channel details for the given user who authorized the request, as well as to subscribe to that same user's channel point redemption topic."
+			},
+			"response": []
+		},
+		{
+			"name": "TWITCH Get user channel object",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "accessToken",
+							"value": "{{twitch_access_token}}",
+							"type": "string"
+						},
+						{
+							"key": "headerPrefix",
+							"value": "OAuth ",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Client-ID",
+						"value": "{{twitch_client_id}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/vnd.twitchtv.v5+json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://api.twitch.tv/kraken/channel",
+					"protocol": "https",
+					"host": [
+						"api",
+						"twitch",
+						"tv"
+					],
+					"path": [
+						"kraken",
+						"channel"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "1e86a1d4-ac4c-4def-92e6-c388479297e2",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "6702d9a5-04b8-4422-b2b7-88f438113b08",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "a4be2484-1360-4aa0-a462-ca1fa1a0736a",
+			"key": "twitch_client_id",
+			"value": ""
+		},
+		{
+			"id": "8619d82e-8b0e-46d6-b645-0f42226d8383",
+			"key": "twitch_client_secret",
+			"value": null
+		},
+		{
+			"id": "caed2d8c-24a7-4228-9d53-b5a0bcfb230d",
+			"key": "spotify_client_id",
+			"value": null
+		},
+		{
+			"id": "7b7e1339-5c39-4821-b61d-05c3ef3e5a7d",
+			"key": "spotify_client_secret",
+			"value": null
+		},
+		{
+			"id": "ba37268b-5d7d-4821-91ab-9bf080d43cb0",
+			"key": "twitch_auth_code",
+			"value": null
+		},
+		{
+			"id": "daa14ada-be58-44b6-aa17-d267c6b66385",
+			"key": "spotify_auth_code",
+			"value": null
+		},
+		{
+			"id": "1bd5de1d-e220-4807-9aa8-6257f91768a0",
+			"key": "twitch_access_token",
+			"value": ""
+		},
+		{
+			"id": "b8828726-030f-42b0-b1cc-67a5e15fe1bd",
+			"key": "spotify_access_token",
+			"value": ""
+		}
+	],
+	"protocolProfileBehavior": {}
+}
