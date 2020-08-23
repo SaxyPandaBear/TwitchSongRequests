@@ -21,6 +21,11 @@ channel point redemptions with Spotify song requests.
 TBD for the Spotify portion
 
 #### Required Twitch accesses
+For the Twitch integration, this project requires privileged access to the
+`channel_read` and `channel:read:redemptions` scopes. The first one is so that
+the app can fetch the channel ID, which is a required step in identifying which
+individual channel topic to listen to. The second one is to grant the app access
+to read channel point redemption events from their stream.
 
 #### Required Spotify accesses
 

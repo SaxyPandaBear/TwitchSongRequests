@@ -1,4 +1,7 @@
-sandbox/playground.js
 node_modules/
 package-lock.json
 src/credentials.json
+
+# sandbox files to ignore
+sandbox/playground.js
+sandbox/channel.json
