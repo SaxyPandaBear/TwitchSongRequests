@@ -116,7 +116,7 @@ async function getChannelId(client_id, oauth_token) {
 //       a manually fetched authorization code in my credentials file, and referencing
 //       it here.
 // this fetches the OAuth token, then connects to the WSS.
-retrieveToken(credentials.twitch_client_id, credentials.twitch_client_secret, credentials.authorization_code)
+retrieveToken(credentials.twitch_client_id, credentials.twitch_client_secret, credentials.twitch_auth_code)
     .then((oauth) => {
         // GET the channel ID to then feed as input to subscribe to the topic
         getChannelId(credentials.twitch_client_id, oauth.access_token).then((channel) => {
