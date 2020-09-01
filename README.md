@@ -20,8 +20,35 @@ channel point redemptions with Spotify song requests.
 By reading the specific channel topic for when channel points are redeemed, this
 app can intercept those events, and given a specific type of request, we can 
 act on a specific channel point redemption to invoke queueing up a song in Spotify.
+We can make individual asynchronous API calls to the Spotify API in order to queue 
+songs to an active player.
 
-TBD for the Spotify portion
+The overall proposed archicture is shown below, and explained in greater detail:
+
+![Overall Architecture](architecture/big_picture_architecture.png)
+
+How it will work is that there will be a website that people interact with. On this
+site, they will walk through authorizing the app to read/modify data in Twitch and 
+Spotify on the user's behalf. After authorizing, this will send an API request to a 
+server. The server handles the request, which includes the authorization codes from 
+both of the authorization requests in the UI, and uses them to fetch OAuth 2.0 tokens
+from both the Twitch and Spotify APIs. These will be the main authentication model 
+for interacting with all of the integrations. 
+
+The main app will start up a WebSocket connection to the Twitch API in order to receive
+events from a channel, which includes channel point redemption events. Upon receiving
+a channel redemption event, we parse the event and queue up the data by throwing it 
+into SQS. The SQS is used as an event source for a Lambda function which handles 
+processing the inputs to queue up a song in Spotify. The lambda will need to read data 
+from DynamoDB in order to fetch the authentication information needed for the Spotify 
+calls.
+
+A DynamoDB table is used to store state. The diagram shows two tables, but it could
+also be done in a single table that has a superset of the data in both tables. The API 
+will expose an endpoint which is just a direct read from the table that the UI can use 
+to poll for the active connection status. Another proposed functionality is to allow 
+the user to explicitly cancel/close their "connection", to stop the app from consuming
+events and queueing song requests.
 
 ### Required Twitch accesses
 For the Twitch integration, this project requires privileged access to the
