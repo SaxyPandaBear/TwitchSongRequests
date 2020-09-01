@@ -41,12 +41,12 @@ Clone the repo, first.
 git clone https://github.com/SaxyPandaBear/TwitchSongRequests.git
 ```
 
-For now, everything lives in the `./src/app.js` file. This requires a `./src/credentials.json` 
+For now, everything lives in the `./src/demo.js` file. This requires a `./src/credentials.json` 
 file to run. That file is gitignored, so its safe to create it and drop it next 
 to the main app file. 
 
 Create a `credentials.json` file and place it in the same directory as the main
-`./src/app.js` file. Use the credentials file template as a guideline.
+`./src/demo.js` file. Use the credentials file template as a guideline.
 
 Place all of the required sensitive data in that file so that the app can read 
 from it and reference that data. 
@@ -54,10 +54,17 @@ from it and reference that data.
 Note: This includes adding a new key/value pair in the JSON file: `"twitch_auth_code": "foobarbaz"` 
 For now, this is how it runs locally since it can't source an auth code from an external source.
 
-Run the app locally:
+### Running the app
+
+TBD
+
+### Demo applications to proof-of-concept the tech
+
 ```bash
-cd ./src
-node app.js
+cd demo
+# populate the authorization codes in your local credentials.json file
+node twitch.js
+node spotify.js
 ```
 
 An example of what log output looks like:

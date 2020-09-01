@@ -5,3 +5,4 @@ src/credentials.json
 # sandbox files to ignore
 sandbox/playground.js
 sandbox/channel.json
+sandbox/spotify.js
