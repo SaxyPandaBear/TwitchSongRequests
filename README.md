@@ -41,9 +41,9 @@ Clone the repo, first.
 git clone https://github.com/SaxyPandaBear/TwitchSongRequests.git
 ```
 
-For now, everything lives in the `./src/demo.js` file. This requires a `./src/credentials.json` 
-file to run. That file is gitignored, so its safe to create it and drop it next 
-to the main app file. 
+For now, everything lives in the `src` directory. This requires a
+`./src/credentials.json` file to run. That file is gitignored, so it's 
+safe to create it and drop it next to the main app code.
 
 Create a `credentials.json` file and place it in the same directory as the main
 `./src/demo.js` file. Use the credentials file template as a guideline.
