@@ -51,9 +51,6 @@ Create a `credentials.json` file and place it in the same directory as the main
 Place all of the required sensitive data in that file so that the app can read 
 from it and reference that data. 
 
-Note: This includes adding a new key/value pair in the JSON file: `"twitch_auth_code": "foobarbaz"` 
-For now, this is how it runs locally since it can't source an auth code from an external source.
-
 ### Running the app
 
 TBD
