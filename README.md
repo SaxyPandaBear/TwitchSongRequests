@@ -91,7 +91,7 @@ node twitch.js
 node spotify.js
 ```
 
-An example of what log output looks like:
+An example of what log output for the Twitch demo looks like:
 ```
 INFO: Socket Opened
 SENT: {"type":"PING"}
