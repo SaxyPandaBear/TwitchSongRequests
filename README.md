@@ -59,21 +59,28 @@ to read channel point redemption events from their stream.
 
 ### Required Spotify accesses
 
-TBD
+For the Spotify integration, this project requires privileged access to the
+`user-modify-playback-state` scope in order to enqueue songs to a user's player, and 
+access to the `user-read-playback-state` scope in order to read what available 
+players there are, and what song is currently playing. 
 
-## Running it locally
+## Running the server code locally
 
-Clone the repo, first.
+Here's a quick way to get the server up and running, with the steps explained
+in greater detail below:
 ```bash
 git clone https://github.com/SaxyPandaBear/TwitchSongRequests.git
+cd TwitchSongRequests
+# put credentials in ./server/credentials.json
+
 ```
 
-For now, everything lives in the `src` directory. This requires a
-`./src/credentials.json` file to run. That file is gitignored, so it's 
+For now, everything lives in the `server` directory. This requires a
+`./server/credentials.json` file to run. That file is gitignored, so it's 
 safe to create it and drop it next to the main app code.
 
 Create a `credentials.json` file and place it in the same directory as the main
-`./src/demo.js` file. Use the credentials file template as a guideline.
+`./server/demo.js` file. Use the credentials file template as a guideline.
 
 Place all of the required sensitive data in that file so that the app can read 
 from it and reference that data. 
@@ -117,7 +124,7 @@ that documents the required authorization calls.
 TBD
 
 ## Secret management
-For now, secret management is done simply in the `src/credentials.json` file. 
+For now, secret management is done simply in the `server/credentials.json` file. 
 The template file helps to show what to expect in the credentials file:
 
 ```javascript
