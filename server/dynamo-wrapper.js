@@ -1,3 +1,4 @@
+// TODO: finish this
 const AWS = require("aws-sdk");
 const properties = require("./properties.json");
 
@@ -14,3 +15,7 @@ if (properties.env === "local") {
     config.endpoint = ep;
 }
 var docClient = new AWS.DynamoDB.DocumentClient(config);
+
+function upsertAuthentication() {
+    
+}
