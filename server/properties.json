@@ -1,5 +1,0 @@
-{
-    "env": "local",
-    "region": "us-east-1",
-    "tableName": "authentications"
-}
