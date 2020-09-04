@@ -1,31 +1,32 @@
 {
-  "name": "TwitchSongRequests",
-  "version": "1.0.0",
-  "description": "This is yet another project that I will probably never finish. A Twitch integration to enqueue song requests in Spotify",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SaxyPandaBear/TwitchSongRequests.git"
-  },
-  "keywords": [],
-  "author": "Andrew Huynh",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/SaxyPandaBear/TwitchSongRequests/issues"
-  },
-  "homepage": "https://github.com/SaxyPandaBear/TwitchSongRequests#readme",
-  "dependencies": {
-    "aws-sdk": "^2.744.0",
-    "body-parser": "^1.19.0",
-    "bufferutil": "^4.0.1",
-    "express": "^4.17.1",
-    "follow-redirects": "^1.13.0",
-    "fs": "0.0.1-security",
-    "node-fetch": "^2.6.0",
-    "utf-8-validate": "^5.0.2",
-    "ws": "^7.3.1"
-  }
+    "name": "TwitchSongRequests",
+    "version": "1.0.0",
+    "description": "This is yet another project that I will probably never finish. A Twitch integration to enqueue song requests in Spotify",
+    "main": "index.js",
+    "scripts": {
+        "start-local": "node app.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SaxyPandaBear/TwitchSongRequests.git"
+    },
+    "keywords": [],
+    "author": "Andrew Huynh",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/SaxyPandaBear/TwitchSongRequests/issues"
+    },
+    "homepage": "https://github.com/SaxyPandaBear/TwitchSongRequests#readme",
+    "dependencies": {
+        "aws-sdk": "^2.744.0",
+        "body-parser": "^1.19.0",
+        "bufferutil": "^4.0.1",
+        "express": "^4.17.1",
+        "follow-redirects": "^1.13.0",
+        "fs": "0.0.1-security",
+        "node-fetch": "^2.6.0",
+        "utf-8-validate": "^5.0.2",
+        "ws": "^7.3.1"
+    }
 }
