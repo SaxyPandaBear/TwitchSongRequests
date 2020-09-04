@@ -1,7 +1,6 @@
 node_modules/
-package-lock.json
-src/credentials.json
-src/properties.json
+server/credentials.json
+server/properties.json
 
 # sandbox files to ignore
 sandbox/playground.js
