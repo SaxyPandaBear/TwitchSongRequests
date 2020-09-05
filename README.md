@@ -75,15 +75,17 @@ cd TwitchSongRequests
 
 ```
 
-For now, everything lives in the `server` directory. This requires a
-`./server/credentials.json` file to run. That file is gitignored, so it's 
-safe to create it and drop it next to the main app code.
+The main server code in the `server` directory (maybe a little too on-the-nose). 
+This requires a `./server/credentials.json` file to run. That file is gitignored, so 
+it's safe to create it and drop it next to the main app code.
 
 Create a `credentials.json` file and place it in the same directory as the main
-`./server/demo.js` file. Use the credentials file template as a guideline.
+`./server/app.js` file. Use the credentials file template as a guideline.
 
 Place all of the required sensitive data in that file so that the app can read 
 from it and reference that data. 
+
+TODO: Define a process for injecting a properties file
 
 ### Running the app
 
@@ -112,7 +114,7 @@ SENT: {"type":"PING"}
 me to attempt to learn by ear.","cost":10000,"is_user_input_required":true,"is_sub_only":false,"image":null,"default_image":{"url_1x":"https://static-cdn.jtvnw.net/custom-reward-images/default-1.png","url_2x":"https://static-cdn.jtvnw.net/custom-reward-images/default-2.png","url_4x":"https://static-cdn.jtvnw.net/custom-reward-images/default-4.png"},"background_color":"#FA2929","is_enabled":true,"is_paused":false,"is_in_stock":true,"max_per_stream":{"is_enabled":false,"max_per_stream":0},"should_redemptions_skip_request_queue":false,"template_id":null,"updated_for_indicator_at":"2020-01-01T15:11:26.647212555Z","max_per_user_per_stream":{"is_enabled":false,"max_per_user_per_stream":0},"global_cooldown":{"is_enabled":false,"global_cooldown_seconds":0},"redemptions_redeemed_current_stream":0,"cooldown_expires_at":null},"user_input":"hello","status":"UNFULFILLED"}}}' } } }
 ```
 
-Note that subsequent runs of the application require a new authorization code 
+Note that subsequent runs of the application(s) require a new authorization code 
 for each run. 
 
 ### OAuth authentication flow

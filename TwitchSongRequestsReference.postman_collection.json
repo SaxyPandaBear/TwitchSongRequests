@@ -246,7 +246,7 @@
 					"urlencoded": [
 						{
 							"key": "refresh_token",
-							"value": "AQCaaFEeaH_F-ql944G97_3NnUu16XHYU5kSZn7fY8z9-3z38s9SH2o3SweaHy8b0CRWj-_nAkLDEA9SI4tG3HctHB15LyXObXI1mPolo2jwl9qwKLsbWqbdJDBXdP2bmJ8",
+							"value": "{{spotify_refresh_token}}",
 							"type": "text"
 						},
 						{
@@ -281,6 +281,140 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "TWITCH Get Refresh Tokeen",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "refresh_token",
+							"type": "text"
+						},
+						{
+							"key": "refresh_token",
+							"value": "{{twitch_refresh_token}}",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "{{twitch_client_id}}",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{twitch_client_secret}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://id.twitch.tv/oauth2/token",
+					"protocol": "https",
+					"host": [
+						"id",
+						"twitch",
+						"tv"
+					],
+					"path": [
+						"oauth2",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SPOTIFY Get user's available devices",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "accessToken",
+							"value": "{{spotify_access_token}}",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://api.spotify.com/v1/me/player/devices",
+					"protocol": "https",
+					"host": [
+						"api",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"v1",
+						"me",
+						"player",
+						"devices"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SPOTIFY Queue song in player",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "accessToken",
+							"value": "{{spotify_access_token}}",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.spotify.com/v1/me/player/queue?uri={{spotify_song_uri}}&device_id={{spotify_device_id}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"v1",
+						"me",
+						"player",
+						"queue"
+					],
+					"query": [
+						{
+							"key": "uri",
+							"value": "{{spotify_song_uri}}",
+							"description": "A valid Spotify URI for an entity (could be a playlist, a song, an album, etc.)"
+						},
+						{
+							"key": "device_id",
+							"value": "{{spotify_device_id}}",
+							"description": "Active device that this user is connected on"
+						}
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
@@ -307,43 +441,63 @@
 	],
 	"variable": [
 		{
-			"id": "85b64793-8185-4438-8dd6-c355dbf8e7ab",
+			"id": "b50ca017-e152-4ab1-ab97-d30257ad7cea",
 			"key": "twitch_client_id",
 			"value": ""
 		},
 		{
-			"id": "58711b42-441e-4eb0-917b-c099a9ddac88",
+			"id": "b1fa4406-bb48-4652-bd45-57843ee8f626",
 			"key": "twitch_client_secret",
 			"value": null
 		},
 		{
-			"id": "bcbe8760-82a6-4ba8-aab7-48a3ed5cd737",
+			"id": "e3bc4f72-5d42-4ae5-8f05-4e9841203515",
 			"key": "spotify_client_id",
 			"value": null
 		},
 		{
-			"id": "f90b36b9-0e6a-4f34-96e9-2f8329aea159",
+			"id": "5fa8d20b-f5a0-438a-944c-902e512af15d",
 			"key": "spotify_client_secret",
 			"value": null
 		},
 		{
-			"id": "b8c7e021-e88e-4f57-871c-6184c4250efe",
+			"id": "4ea87ede-6098-4686-b6c4-5f0a0bc464d4",
 			"key": "twitch_auth_code",
 			"value": null
 		},
 		{
-			"id": "224b010f-58fa-4714-ae56-34e5b7e01a57",
+			"id": "8ea526a6-becc-475a-89ba-4ede4bbebd64",
 			"key": "spotify_auth_code",
 			"value": null
 		},
 		{
-			"id": "6e2fa992-07a6-46c1-99c9-f6d211e09201",
+			"id": "e8bbf5cf-9386-4c32-94e6-06cbf574ea17",
 			"key": "twitch_access_token",
 			"value": ""
 		},
 		{
-			"id": "3d564bb2-9690-4dca-ba88-7b8f3e8d06bb",
+			"id": "d86de115-38e1-48d4-9ea3-b38e879fb1d8",
 			"key": "spotify_access_token",
+			"value": ""
+		},
+		{
+			"id": "4abf7700-4c12-4774-b628-34453399ccef",
+			"key": "twitch_refresh_token",
+			"value": ""
+		},
+		{
+			"id": "b30faf65-ef89-45f0-9a6e-192fb68e06db",
+			"key": "spotify_refresh_token",
+			"value": ""
+		},
+		{
+			"id": "10489daa-2b3f-4c18-a1f3-bc55bc8b7e1a",
+			"key": "spotify_song_uri",
+			"value": ""
+		},
+		{
+			"id": "00952093-8cec-4947-8e42-e48a9d9cb448",
+			"key": "spotify_device_id",
 			"value": ""
 		}
 	],
