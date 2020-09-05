@@ -1,11 +1,19 @@
 {
     "name": "twitch-song-requests-server",
+    "author": "Andrew Huynh",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SaxyPandaBear/TwitchSongRequests.git"
+    },
+    "description": "Main server code for the product that has a REST API to handle requests from the UI, and orchestrate connections to the Twitch PubSub API.",
     "scripts": {
         "start-local": "node app.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
         "aws-sdk": "^2.744.0",
+        "aws-xray-sdk-core": "^3.1.0",
         "body-parser": "^1.19.0",
         "bufferutil": "^4.0.1",
         "express": "^4.17.1",

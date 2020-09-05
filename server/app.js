@@ -6,13 +6,19 @@
  */
 
 // TODO: figure out how to get dynamic properties set up so that it can run locally
-//       and deployed
+//       and deployed.
+//       Use an environment variable to define the properties that we want to use. 
 const properties = {
-    "env": "LOCAL"
+    "env": "local"
 }
+// const properties = require("./properties.json");
 
 const express = require("express");
 const bodyParser = require("body-parser");
+
+const AWSXRay = require('aws-xray-sdk-core'); // add X-Ray metrics
+const AWS = AWSXRay.captureAWS(require('aws-sdk'));
+
 require("./auth.js")();
 var app = express();
 
@@ -21,6 +27,19 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // parse application/json
 app.use(bodyParser.json());
+
+/**
+ * Create an SDK client for DynamoDB so we can use it to read/write records from the data store.
+ */
+let config = {apiVersion: '2012-08-10'}
+// if we are running locally, add the required property for communicating with 
+// a local instance of DynamoDB
+// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
+if (properties.env === "local") {
+    let ep = new AWS.Endpoint("http://localhost:8000");
+    config.endpoint = ep;
+}
+var docClient = new AWS.DynamoDB.DocumentClient(config);
 
 /**
  * Handles validating the contents of a request that contains authentication details.
@@ -98,5 +117,4 @@ app.post("/spotify", function (req, res) {
     res.status(201).send("Spotify credentials saved");
 });
 
-console.log("Listening to port 8080");
-app.listen(8080);
+app.listen(8080, () => console.log("Listening to port 8080"));

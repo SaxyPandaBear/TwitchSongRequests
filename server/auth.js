@@ -39,7 +39,7 @@ module.exports = function () {
         return response.json();
     }
 
-    // // https://developer.spotify.com/documentation/general/guides/authorization-guide/#authorization-code-flow
+    // https://developer.spotify.com/documentation/general/guides/authorization-guide/#authorization-code-flow
     this.fetchSpotifyToken = async function (clientId, clientSecret, authorizationCode) {
         let request = {
             "grant_type": "authorization_code",
@@ -66,7 +66,7 @@ module.exports = function () {
         return response.json();
     };
 
-    this.refreshSpotifyToken = function (clientId, clientSecret, refreshToken) {
+    this.refreshSpotifyToken = async function (clientId, clientSecret, refreshToken) {
         let request = {
             "grant_type": "refresh_token",
             "refresh_token": refreshToken,

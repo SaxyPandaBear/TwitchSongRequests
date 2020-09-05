@@ -1,7 +1,7 @@
 {
     "name": "TwitchSongRequests",
     "version": "1.0.0",
-    "description": "This is yet another project that I will probably never finish. A Twitch integration to enqueue song requests in Spotify",
+    "description": "A Twitch integration that uses channel point redemption events to trigger enqueuing song requests in a connected Spotify player.",
     "scripts": {
         "start-db": "./start-dynamo.sh",
         "build-server": "cd ./server && npm i",
