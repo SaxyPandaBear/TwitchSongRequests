@@ -1,8 +1,7 @@
-node_modules/
-server/credentials.json
-server/properties.json
+**/node_modules/
+**/credentials.json
+**/properties.json
 
 # sandbox files to ignore
-sandbox/playground.js
-sandbox/channel.json
-sandbox/spotify.js
+sandbox/*.js
+sandbox/*.json

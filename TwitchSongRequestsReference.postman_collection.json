@@ -140,6 +140,147 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "SPOTIFY Get user authorization code with scopes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://accounts.spotify.com/authorize?client_id={{spotify_client_id}}&response_type=code&scope=user-modify-playback-state+user-read-playback-state&redirect_uri=https://github.com/SaxyPandaBear/TwitchSongRequests",
+					"protocol": "https",
+					"host": [
+						"accounts",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"authorize"
+					],
+					"query": [
+						{
+							"key": "client_id",
+							"value": "{{spotify_client_id}}"
+						},
+						{
+							"key": "response_type",
+							"value": "code"
+						},
+						{
+							"key": "scope",
+							"value": "user-modify-playback-state+user-read-playback-state"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "https://github.com/SaxyPandaBear/TwitchSongRequests"
+						}
+					]
+				},
+				"description": "IMPORTANT NOTE: This does not work in Postman. The URL needs to be resolved with the required variables and then copy pasted into the browser for the user to login and authorize the access request made by this client ID. This is so that I can fetch the OAuth code, with required scopes, in order to get an OAuth bearer token to authenticate against the Spotify API."
+			},
+			"response": []
+		},
+		{
+			"name": "SPOTIFY Get OAuth token from authorization code",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "authorization_code",
+							"type": "text"
+						},
+						{
+							"key": "code",
+							"value": "{{spotify_auth_code}}",
+							"type": "text"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "https://github.com/SaxyPandaBear/TwitchSongRequests",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "{{spotify_client_id}}",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{spotify_client_secret}}",
+							"type": "text"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://accounts.spotify.com/api/token",
+					"protocol": "https",
+					"host": [
+						"accounts",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"api",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SPOTIFY Get Refresh Token",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "refresh_token",
+							"value": "AQCaaFEeaH_F-ql944G97_3NnUu16XHYU5kSZn7fY8z9-3z38s9SH2o3SweaHy8b0CRWj-_nAkLDEA9SI4tG3HctHB15LyXObXI1mPolo2jwl9qwKLsbWqbdJDBXdP2bmJ8",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "refresh_token",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "{{spotify_client_id}}",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{spotify_client_secret}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://accounts.spotify.com/api/token",
+					"protocol": "https",
+					"host": [
+						"accounts",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"api",
+						"token"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
@@ -166,42 +307,42 @@
 	],
 	"variable": [
 		{
-			"id": "a4be2484-1360-4aa0-a462-ca1fa1a0736a",
+			"id": "85b64793-8185-4438-8dd6-c355dbf8e7ab",
 			"key": "twitch_client_id",
 			"value": ""
 		},
 		{
-			"id": "8619d82e-8b0e-46d6-b645-0f42226d8383",
+			"id": "58711b42-441e-4eb0-917b-c099a9ddac88",
 			"key": "twitch_client_secret",
 			"value": null
 		},
 		{
-			"id": "caed2d8c-24a7-4228-9d53-b5a0bcfb230d",
+			"id": "bcbe8760-82a6-4ba8-aab7-48a3ed5cd737",
 			"key": "spotify_client_id",
 			"value": null
 		},
 		{
-			"id": "7b7e1339-5c39-4821-b61d-05c3ef3e5a7d",
+			"id": "f90b36b9-0e6a-4f34-96e9-2f8329aea159",
 			"key": "spotify_client_secret",
 			"value": null
 		},
 		{
-			"id": "ba37268b-5d7d-4821-91ab-9bf080d43cb0",
+			"id": "b8c7e021-e88e-4f57-871c-6184c4250efe",
 			"key": "twitch_auth_code",
 			"value": null
 		},
 		{
-			"id": "daa14ada-be58-44b6-aa17-d267c6b66385",
+			"id": "224b010f-58fa-4714-ae56-34e5b7e01a57",
 			"key": "spotify_auth_code",
 			"value": null
 		},
 		{
-			"id": "1bd5de1d-e220-4807-9aa8-6257f91768a0",
+			"id": "6e2fa992-07a6-46c1-99c9-f6d211e09201",
 			"key": "twitch_access_token",
 			"value": ""
 		},
 		{
-			"id": "b8828726-030f-42b0-b1cc-67a5e15fe1bd",
+			"id": "3d564bb2-9690-4dca-ba88-7b8f3e8d06bb",
 			"key": "spotify_access_token",
 			"value": ""
 		}
