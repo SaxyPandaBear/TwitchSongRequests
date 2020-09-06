@@ -11,6 +11,7 @@ integration to enqueue song requests in Spotify
 1. [Testing](#testing)
 1. [Secret management](#secret-management)
 1. [Deployments](#deployments)
+1. [Developing](#developing)
 
 ## What does this project do?
 The purpose of this project is to allow Twitch streamers to integrate their 
@@ -144,3 +145,11 @@ reading in the raw JSON file, and referencing keys in the JSON object directly.
 ## Deployments
 
 TBD
+
+## Developing
+What are the tools you need in order to start contributing on the project? 
+
+1. NodeJS
+1. Docker
+1. Python3
+1. [Pipenv](https://github.com/pypa/pipenv)
