@@ -1,29 +1,23 @@
-import { Component, OnInit } from '@angular/core';
-import {
-  NgWizardConfig,
-  THEME,
-  StepChangedArgs,
-  NgWizardService,
-} from 'ng-wizard';
-import { ActivatedRoute } from '@angular/router';
-import { SpotifyService } from '../../spotify.service';
-import { forkJoin } from 'rxjs';
+import { Component, OnInit } from "@angular/core";
+import { NgWizardConfig, THEME, NgWizardService } from "ng-wizard";
+import { ActivatedRoute } from "@angular/router";
+import { SpotifyService } from "../../spotify.service";
+import { OauthService } from "../../oauth.service";
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  selector: "app-login",
+  templateUrl: "./login.component.html",
+  styleUrls: ["./login.component.scss"],
 })
 export class LoginComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private ngWizardService: NgWizardService,
-    private spotifyService: SpotifyService
+    private spotifyService: SpotifyService,
+    private oauthService: OauthService
   ) {
     this.route.fragment.subscribe((fragment: string) => {
-      console.log('My hash fragment is here => ', fragment);
-
       // TODO: include robust logic to check for access code -- for now, we'll default to simple impl
-      if (fragment && fragment.includes('access_token')) {
+      if (fragment && fragment.includes("access_token")) {
         const access_token = window.location.href.match(
           /\#(?:access_token)\=([\S\s]*?)\&/
         )[1];
@@ -36,12 +30,6 @@ export class LoginComponent implements OnInit {
           } else if (!this.spotifyAccessToken) {
             this.setSpotifyAccessToken(access_token);
           }
-          console.log({
-            accessTokens: {
-              twitch: this.twitchAccessToken,
-              spotify: this.spotifyAccessToken,
-            },
-          });
           this.isLoading = false;
           this.ngWizardService.next();
         }, 1000);
@@ -53,38 +41,59 @@ export class LoginComponent implements OnInit {
   config: NgWizardConfig;
 
   ngOnInit(): void {
-    this.checkSessionStorageAndAssignValues();
-    this.config = {
-      selected: this.getSelectedStep(),
-      theme: THEME.arrows,
-      toolbarSettings: {
-        toolbarExtraButtons: [
-          {
-            text: 'Finish',
-            class: 'btn btn-info',
-            event: () => {
-              alert('Finished!!!');
+    this.oauthService.getOauthStatus().subscribe((currentUsersAccessTokens) => {
+      const {
+        spotifyAccessKey,
+        twitchAccessKey,
+      } = currentUsersAccessTokens as any;
+      console.log({ currentUsersAccessTokens });
+      this.spotifyAccessToken = spotifyAccessKey;
+      this.twitchAccessToken = twitchAccessKey;
+      if (twitchAccessKey) {
+        this.ngWizardService.next();
+      }
+      if (spotifyAccessKey) {
+        this.ngWizardService.next();
+      }
+
+      this.config = {
+        selected: this.getSelectedStep(),
+        theme: THEME.arrows,
+        toolbarSettings: {
+          toolbarExtraButtons: [
+            {
+              text: "Finish",
+              class: "btn btn-info",
+              event: () => {
+                alert("Finished!!!");
+              },
             },
-          },
-        ],
-      },
-    };
+          ],
+        },
+      };
+    });
+    // this.checkSessionStorageAndAssignValues();
   }
   stepChanged(event) {
     console.log({ event });
   }
 
   setSpotifyAccessToken(token) {
-    this.spotifyAccessToken = token;
-    sessionStorage.setItem('spotifyAccessToken', token);
+    console.log("setting spotify access token");
+
+    //this.spotifyAccessToken = token;
+    //sessionStorage.setItem("spotifyAccessToken", "true");
+    this.oauthService.setSpotifyAcessKey(token).subscribe(console.log);
   }
   setTwitchAccessToken(token) {
-    this.twitchAccessToken = token;
-    sessionStorage.setItem('twitchAccessToken', token);
+    console.log("setting twtich access token");
+    //  this.twitchAccessToken = token;
+    //sessionStorage.setItem("twitchAccessToken", "true");
+    this.oauthService.setTwitchAccessKey(token).subscribe(console.log);
   }
   checkSessionStorageAndAssignValues() {
-    const potentialSpotifyToken = sessionStorage.getItem('spotifyAccessToken');
-    const potentialTwitchToken = sessionStorage.getItem('twitchAccessToken');
+    const potentialSpotifyToken = sessionStorage.getItem("spotifyAccessToken");
+    const potentialTwitchToken = sessionStorage.getItem("twitchAccessToken");
 
     if (potentialSpotifyToken || potentialTwitchToken) {
       if (potentialSpotifyToken) {
@@ -125,10 +134,10 @@ export class LoginComponent implements OnInit {
   isLoading = false;
 
   twitchAccessToken = undefined;
-  spotifyScope = 'user-modify-playback-state%20user-read-playback-state';
+  spotifyScope = "user-modify-playback-state%20user-read-playback-state";
 
-  localPath = 'http%3A%2F%2Flocalhost%3A4200';
-  spotifyClientId = '5b0a6304d93b4f2b9c6bbf27e7db5592';
+  localPath = "http%3A%2F%2Flocalhost%3A4200";
+  spotifyClientId = "5b0a6304d93b4f2b9c6bbf27e7db5592";
   redirectPathTwo = `https://id.twitch.tv/oauth2/authorize?client_id=n43pmbmxpn1xgtd36oraj6y4xxpp2h&redirect_uri=${this.localPath}&response_type=token&scope=channel%3Aread%3Aredemptions`;
 
   spotifyRedirectUri = `https://accounts.spotify.com/authorize?client_id=${this.spotifyClientId}&redirect_uri=${this.localPath}&response_type=token&scope=${this.spotifyScope}`;

@@ -21,6 +21,8 @@
     "@angular/platform-browser-dynamic": "~10.0.4",
     "@angular/router": "~10.0.4",
     "bootstrap": "^4.5.2",
+    "connect-dynamodb": "^2.0.4",
+    "express-session": "^1.17.1",
     "ng-wizard": "^1.0.0",
     "rxjs": "~6.5.5",
     "tslib": "^2.0.0",
