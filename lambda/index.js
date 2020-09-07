@@ -6,15 +6,13 @@ const AWSXRay = require('aws-xray-sdk-core');
 const AWS = AWSXRay.captureAWS(require('aws-sdk'));
 const fetch = require("node-fetch");
 
-// Create client outside of handler to reuse
-const lambda = new AWS.Lambda();
+const TABLE_NAME = "connections";
 
-let config = {apiVersion: '2012-08-10'}
-// if we are running locally, add the required property for communicating with 
-// a local instance of DynamoDB
-// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
-if (process.env["env"] === "local") {
-    let ep = new AWS.Endpoint("http://localhost:8000");
+// Localstack dynamo points to localhost:4566, but to connect to it from within the 
+// lambda container, we need the LOCALSTACK_HOSTNAME env variable
+let config = { apiVersion: '2012-08-10' }
+if ("LOCALSTACK_HOSTNAME" in process.env) {
+    let ep = new AWS.Endpoint(`http://${process.env["LOCALSTACK_HOSTNAME"]}:4566`);
     config.endpoint = ep;
 }
 var dynamo = new AWS.DynamoDB.DocumentClient(config);
@@ -59,15 +57,22 @@ async function queueSong(oauth, device, uri) {
     return response.json();
 }
 
-async function placeholderGetRecord(channelId) {
-    let response = {
-        "client_id": process.env["client_id"],
-        "client_secret": process.env["client_secret"],
-        "access_token": "foobar",
-        "refresh_token": "abc123",
-        "connection_status": "Active"
+async function fetchConnectionDetails(channelId) {
+    const params = {
+        TableName: TABLE_NAME,
+        Key: { "channel_id": channelId },
+        ConsistentRead: true,
+        ProjectionExpression: "channel_id, spotify.access_token, spotify.refresh_token, status"
     };
-    return new Promise((() => response, () => "Failed"));
+    dynamo.get(params, function(err, data) {
+        if (err) {
+            console.log(`Error occurred while fetching data from database for Channel ID: ${channelId}`)
+            console.log(err, err.stack);
+            throw err;
+        } else {
+            return new Promise((() => data, () => console.log("Something went wrong.")));
+        }
+    });
 }
 
 async function refreshSpotifyToken(clientId, clientSecret, refreshToken) {
@@ -77,12 +82,12 @@ async function refreshSpotifyToken(clientId, clientSecret, refreshToken) {
         "client_id": clientId,
         "client_secret": clientSecret
     }
-    
+
     let data = Object.
         entries(request).
         map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).
         join("&");
-    
+
     let response = await fetch("https://accounts.spotify.com/api/token", {
         method: "POST",
         mode: "cors",
@@ -110,7 +115,7 @@ exports.handler = async function (event, context) {
         let channelId = record.messageAttributes["channel_id"];
         let spotifyUri = record.body;
         // dynamo.getRecord(channelId) <- TODO: finish me
-        placeholderGetRecord(channelId).then((data) => {
+        fetchConnectionDetails(channelId).then((data) => {
             // if the connection statis is not active, then we shouldn't try to queue
             // a song.
             if (data.connection_status !== "Active") {
@@ -147,6 +152,6 @@ exports.handler = async function (event, context) {
             // I think if we fail to retrieve a record from dynamo, presumably because it 
             // doesn't exist, then we SHOULD be able to assume that the user explicitly 
             // chose to have us delete their data from the system (GDPR and CCPA?)
-        })
+        });
     });
 }
