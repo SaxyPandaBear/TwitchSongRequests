@@ -15,3 +15,25 @@ to read individual queue requests for a Spotify player.
 
 The lambda shouldn't be running very long. the Dynamo work will definitely be the 
 bottleneck here. 
+
+## Developing
+Developing code meant for lambda can be tricky. We are going to leverage 
+[localstack](https://github.com/localstack/localstack) to run everything, including
+this lambda code, so that will make this a little tricky for us, but manageable. 
+
+This code makes HTTP requests using the 
+[node-fetch](https://github.com/node-fetch/node-fetch) library, and since that is
+an external dependency, we are required to package the lambda ourselves the hard way.
+
+A `package.json` file is provided in the `lambda` module for this. Locally, you need to
+`npm install` the dependencies (they will be gitignored) so that they can be zipped 
+with the necessary dependencies. 
+
+Check out the instructions in the root [README](../README.md) to see how to get 
+localstack started up.
+
+When localstack is up:
+```bash
+curl http://localhost:4566/health
+```
+We can start using the local services to create our lambda.

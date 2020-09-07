@@ -153,3 +153,29 @@ What are the tools you need in order to start contributing on the project?
 1. Docker
 1. Python3
 1. [Pipenv](https://github.com/pypa/pipenv)
+
+The code for this is all written in Javascript with Node. We're using 
+[node-fetch](https://github.com/node-fetch/node-fetch) for handling HTTP request stuff.
+
+> all written in Javscript with Node
+
+If all of the code is written in JS, why is Python a requirement? We use Python mostly 
+for [localstack](https://github.com/localstack/localstack), which is a nifty tool that
+helps with local development in a simulated AWS environment (this is why we need 
+docker, too).
+
+To get started, just clone/fork the repo, and from the root, you will want to first 
+install the dependencies.
+
+```bash
+# 1. Install localstack and aws cli in the virtual env (provided in pipfile)
+pipenv install
+# 2. For UI developlment, move to the ui directory and install dependencies
+cd ./ui
+npm install
+cd ..
+# 3. For server-side code development, move to the server directory and install depdencies
+cd ./server
+npm install
+cd ..
+```
