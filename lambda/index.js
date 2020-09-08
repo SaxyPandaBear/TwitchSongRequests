@@ -2,8 +2,7 @@
  * Lambda handler that accepts events from SQS and attempts to queue songs into 
  * a connected Spotify player.
  */
-const AWSXRay = require('aws-xray-sdk-core');
-const AWS = AWSXRay.captureAWS(require('aws-sdk'));
+const AWS = require('aws-sdk');
 const fetch = require("node-fetch");
 
 const TABLE_NAME = "connections";
@@ -150,8 +149,9 @@ exports.handler = async function (event, context) {
         }).catch(err => {
             console.log(err);
             // I think if we fail to retrieve a record from dynamo, presumably because it 
-            // doesn't exist, then we SHOULD be able to assume that the user explicitly 
-            // chose to have us delete their data from the system (GDPR and CCPA?)
+            // doesn't exist, there's not much to do. We can just swallow the exception here.
+            // Does it make sense to write this error to the events table if we couldn't look
+            // up the channel ID in the connections table?
         });
     });
 }

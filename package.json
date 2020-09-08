@@ -1,14 +1,14 @@
 {
-    "name": "TwitchSongRequests",
+    "name": "twitch-song-requests",
     "version": "1.0.0",
     "description": "A Twitch integration that uses channel point redemption events to trigger enqueuing song requests in a connected Spotify player.",
     "scripts": {
-        "start-db": "./start-dynamo.sh",
+        "start-cloud": "./start-cloud.sh",
         "build-server": "cd ./server && npm i",
         "build-ui": "cd ./ui && npm i",
         "start-server": "cd ./server && npm run start-local",
         "start-ui": "cd ./ui && npm run start-local",
-        "start-local": "npm run start-db && (npm run build-server & npm run build-ui)  && (npm run start-server & npm run start-ui)"
+        "start-local": "npm run start-cloud && (npm run build-server & npm run build-ui)  && (npm run start-server & npm run start-ui)"
     },
     "repository": {
         "type": "git",

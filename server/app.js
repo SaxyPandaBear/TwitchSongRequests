@@ -16,8 +16,7 @@ const properties = {
 const express = require("express");
 const bodyParser = require("body-parser");
 
-const AWSXRay = require('aws-xray-sdk-core'); // add X-Ray metrics
-const AWS = AWSXRay.captureAWS(require('aws-sdk'));
+const AWS = require('aws-sdk');
 
 require("./auth.js")();
 var app = express();
