@@ -37,3 +37,5 @@ When localstack is up:
 curl http://localhost:4566/health
 ```
 We can start using the local services to create our lambda.
+
+TODO: put instructions for how to package our lambda

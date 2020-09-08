@@ -1,6 +1,7 @@
 #!/bin/bash
 
-localstack & echo "Waiting for localstack to finish setting up"
+# This assumes that we are already in the pipenv shell!
+localstack start & echo "Waiting for localstack to finish setting up"
 
 # pings localhost, waiting for when:
 # 1. it responds properly (something is running on the port)
