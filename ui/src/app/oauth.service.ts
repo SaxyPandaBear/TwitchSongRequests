@@ -24,10 +24,18 @@ export class OauthService {
       { withCredentials: true }
     );
   }
-  setTwitchAccessKey(twitchAccesKey: string) {
+  // setTwitchAccessKey(twitchAccesKey: string, channelId) {
+  //   return this.http.post(
+  //     this.twitchcEndpoint,
+  //     { accessKeysAndChannelId: { accessKey: twitchAccesKey, channelId } },
+  //     { withCredentials: true }
+  //   );
+  // }
+
+  setTwitchAccessKey(twitchCode: string) {
     return this.http.post(
       this.twitchcEndpoint,
-      { accessKey: twitchAccesKey },
+      { accessKey: twitchCode },
       { withCredentials: true }
     );
   }

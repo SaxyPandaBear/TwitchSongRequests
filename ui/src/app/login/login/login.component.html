@@ -4,7 +4,9 @@
     [description]="'Allow us to listen to your chat'"
   >
     <div *ngIf="!isLoading; else loading">
-      <a *ngIf="!twitchAccessToken; else continue" [href]="redirectPathTwo"
+      <a
+        *ngIf="!twitchAccessToken; else continue"
+        [href]="twitchRedirectPathCode"
         >Login to Twitch</a
       >
       <ng-template #continue>Move on to Spotify login.</ng-template>
@@ -18,7 +20,9 @@
     [description]="'Allow us to send song to your queu'"
   >
     <div *ngIf="!isLoading; else loading">
-      <a *ngIf="!spotifyAccessToken; else continue" [href]="spotifyRedirectUri"
+      <a
+        *ngIf="!spotifyAccessToken; else continue"
+        [href]="spotifyRedirectUriCode"
         >Login to Spotify</a
       >
       <ng-template #continue>Continue to monitor your current queu</ng-template>

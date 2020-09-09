@@ -22,7 +22,7 @@ const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 
 AWSXRay.setContextMissingStrategy(() => {});
 
-require("./auth.js")();
+// require("./auth.js")();
 
 const {
   intializeSesionStore,
