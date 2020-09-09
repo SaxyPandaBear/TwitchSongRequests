@@ -1,6 +1,11 @@
 # TwitchSongRequests
 This is yet another project that I will probably never finish. A Twitch 
-integration to enqueue song requests in Spotify
+integration to enqueue song requests in Spotify. This project was inspired by 
+[Kaije](https://www.twitch.tv/kaije), because their Twitch channel has a channel 
+point reward for requesting a song on Spotify. On that fateful day, I requested 
+multiple songs in quick succession, and they told me to hold off on requesting 
+songs because they have to stop working on art in order to manually copy the 
+Spotify URIs I was sending, in order to queue the songs in their Spotify player.
 
 ## Table of Contents
 1. [What does this project do?](#what-does-this-project-do)
