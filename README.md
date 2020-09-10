@@ -11,9 +11,9 @@ Spotify URIs I was sending, in order to queue the songs in their Spotify player.
 ## Table of Contents
 
 1. [What does this project do?](#what-does-this-project-do)
-   1. [How it works](#how-it-works)
-   1. [Required Twitch accesses](#required-twitch-accesses)
-   1. [Required Spotify accesses](#required-spotify-accesses)
+    1. [How it works](#how-it-works)
+    1. [Required Twitch accesses](#required-twitch-accesses)
+    1. [Required Spotify accesses](#required-spotify-accesses)
 1. [Running it locally](#running-it-locally)
 1. [Testing](#testing)
 1. [Secret management](#secret-management)

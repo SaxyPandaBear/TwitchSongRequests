@@ -9,7 +9,8 @@
     "description": "Main server code for the product that has a REST API to handle requests from the UI, and orchestrate connections to the Twitch PubSub API.",
     "scripts": {
         "start-local": "node app.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "format": "prettier --write ."
     },
     "dependencies": {
         "aws-sdk": "^2.744.0",

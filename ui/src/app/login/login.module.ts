@@ -6,15 +6,15 @@ import { LoginRoutingModule } from './login-routing.module';
 import { NgWizardModule, NgWizardConfig, THEME } from 'ng-wizard';
 
 const ngWizardConfig: NgWizardConfig = {
-  theme: THEME.default,
+    theme: THEME.default,
 };
 
 @NgModule({
-  declarations: [LoginComponent],
-  imports: [
-    CommonModule,
-    LoginRoutingModule,
-    NgWizardModule.forRoot(ngWizardConfig),
-  ],
+    declarations: [LoginComponent],
+    imports: [
+        CommonModule,
+        LoginRoutingModule,
+        NgWizardModule.forRoot(ngWizardConfig),
+    ],
 })
 export class LoginModule {}
