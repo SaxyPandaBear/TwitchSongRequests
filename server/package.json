@@ -21,12 +21,16 @@
         "express-session": "^1.17.1",
         "follow-redirects": "^1.13.0",
         "fs": "0.0.1-security",
+        "husky": "^4.3.0",
         "node-fetch": "^2.6.0",
+        "prettier": "^2.1.1",
+        "pretty-quick": "^3.0.1",
         "utf-8-validate": "^5.0.2",
         "ws": "^7.3.1"
     },
-    "devDependencies": {
-        "husky": "^4.3.0",
-        "pretty-quick": "^3.0.1"
+    "husky": {
+        "hooks": {
+            "pre-commit": "pretty-quick --staged"
+        }
     }
 }
