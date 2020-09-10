@@ -24,5 +24,9 @@
         "node-fetch": "^2.6.0",
         "utf-8-validate": "^5.0.2",
         "ws": "^7.3.1"
+    },
+    "devDependencies": {
+        "husky": "^4.3.0",
+        "pretty-quick": "^3.0.1"
     }
 }
