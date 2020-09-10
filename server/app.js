@@ -9,21 +9,21 @@
 //       and deployed.
 //       Use an environment variable to define the properties that we want to use.
 const properties = {
-  env: "local",
+    env: 'local',
 };
 // const properties = require("./properties.json");
 
-const express = require("express");
-const bodyParser = require("body-parser");
+const express = require('express');
+const bodyParser = require('body-parser');
 
-const AWS = require("aws-sdk");
+const AWS = require('aws-sdk');
 
 const {
-  intializeSesionStore,
-  checkForExistingSessionAndAssignAccessKeys,
-} = require("./session");
-const cors = require("./utils/cors");
-const sessionAuthRoutes = require("./api/session-auth");
+    intializeSesionStore,
+    checkForExistingSessionAndAssignAccessKeys,
+} = require('./session');
+const cors = require('./utils/cors');
+const sessionAuthRoutes = require('./api/session-auth');
 
 var app = express();
 
@@ -41,15 +41,14 @@ app.use(checkForExistingSessionAndAssignAccessKeys);
 /**
  * Create an SDK client for DynamoDB so we can use it to read/write records from the data store.
  */
-let config = { apiVersion: "2012-08-10" };
+let config = { apiVersion: '2012-08-10' };
 // if we are running locally, add the required property for communicating with
 // a local instance of DynamoDB
 // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
-if (properties.env === "local") {
-  let ep = new AWS.Endpoint("http://localhost:8000");
-  config.endpoint = ep;
+if (properties.env === 'local') {
+    let ep = new AWS.Endpoint('http://localhost:8000');
+    config.endpoint = ep;
 }
-var docClient = new AWS.DynamoDB.DocumentClient(config);
 
 /**
  * Handles validating the contents of a request that contains authentication details.
@@ -63,12 +62,12 @@ var docClient = new AWS.DynamoDB.DocumentClient(config);
  * @returns true if authorization_code is in body, false otherwise
  */
 function validateTwitchAuthRequestBody(body) {
-  if (!("authorization_code" in body)) {
-    return false;
-  }
+    if (!('authorization_code' in body)) {
+        return false;
+    }
 
-  let auth = body["authorization_code"];
-  return auth && auth.length > 0;
+    let auth = body['authorization_code'];
+    return auth && auth.length > 0;
 }
 
 /**
@@ -79,26 +78,30 @@ function validateTwitchAuthRequestBody(body) {
  * @param {object} body
  */
 function validateSpotifyAuthRequestBody(body) {
-  if (!("authorization_code" in body)) {
-    console.warn(
-      `Request ${JSON.stringify(body)} does not contain an authorization code.`
-    );
-    return false;
-  } else if (!("id" in body)) {
-    console.warn(
-      `Request ${JSON.stringify(body)} does not contain a Twitch channel ID.`
-    );
-    return false;
-  }
+    if (!('authorization_code' in body)) {
+        console.warn(
+            `Request ${JSON.stringify(
+                body
+            )} does not contain an authorization code.`
+        );
+        return false;
+    } else if (!('id' in body)) {
+        console.warn(
+            `Request ${JSON.stringify(
+                body
+            )} does not contain a Twitch channel ID.`
+        );
+        return false;
+    }
 
-  let auth = body["authorization_code"];
-  let twitchId = body["id"];
-  return auth && twitchId && auth.length > 0 && twitchId.length > 0;
+    let auth = body['authorization_code'];
+    let twitchId = body['id'];
+    return auth && twitchId && auth.length > 0 && twitchId.length > 0;
 }
 
 // basic ping endpoint to get the ball rolling
-app.get("/ping", function (req, res) {
-  res.status(200).send("pong");
+app.get('/ping', function (req, res) {
+    res.status(200).send('pong');
 });
 
 /**
@@ -112,26 +115,26 @@ app.get("/ping", function (req, res) {
  * associated with this request in order to use it as an ID in our database,
  * and to return to the UI so it can poll afterwards.
  */
-app.post("/twitch", function (req, res) {
-  if (!validateTwitchAuthRequestBody(req.body)) {
-    res.status(400).send("Missing 'authorization_code' in request body");
-    return;
-  }
-  res.status(202).send("Twitch Channel ID");
+app.post('/twitch', function (req, res) {
+    if (!validateTwitchAuthRequestBody(req.body)) {
+        res.status(400).send("Missing 'authorization_code' in request body");
+        return;
+    }
+    res.status(202).send('Twitch Channel ID');
 });
 
 /**
  * Retrieve an OAuth token for Spotify with the given authorization code,
  * and insert it into the record with the given twitch channel ID
  */
-app.post("/spotify", function (req, res) {
-  if (!validateSpotifyAuthRequestBody(req.body)) {
-    res.status(400).send("Missing 'authorization_code' in request body");
-  }
-  res.status(201).send("Spotify credentials saved");
+app.post('/spotify', function (req, res) {
+    if (!validateSpotifyAuthRequestBody(req.body)) {
+        res.status(400).send("Missing 'authorization_code' in request body");
+    }
+    res.status(201).send('Spotify credentials saved');
 });
 
-app.use("/api/session", sessionAuthRoutes);
+app.use('/api/session', sessionAuthRoutes);
 app.listen(process.env.PORT || 8080, () =>
-  console.log(`Listening to port ${process.env.PORT || 8080}`)
+    console.log(`Listening to port ${process.env.PORT || 8080}`)
 );
