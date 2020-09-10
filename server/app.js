@@ -70,6 +70,9 @@ function validateTwitchAuthRequestBody(body) {
     return auth && auth.length > 0;
 }
 
+console.log('hello')
+
+
 /**
  * Validates whether or not the payload is valid for the Spotify endpoint.
  * This includes an `authorization_code` value, and a `id` value.
