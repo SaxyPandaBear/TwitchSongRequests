@@ -54,7 +54,7 @@ function subscribeToChannelTopic(channelId, oauth_token) {
             type: "LISTEN",
             nonce: "abc123",
             data: {
-                topics: [`channel-points-channel-v1.${channelId}`],
+            topics: [`channel-points-channel-v1.${channelId}`],
                 auth_token: oauth_token
             },
         };

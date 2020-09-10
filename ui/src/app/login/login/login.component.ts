@@ -67,7 +67,6 @@ export class LoginComponent implements OnInit {
           device: { is_active, name: deviceName },
           item: { name: songName },
         }) => {
-          console.log({ deviceName, is_active, songName });
           if (is_active) {
             this.currentSong = songName;
             this.playingOn = deviceName;

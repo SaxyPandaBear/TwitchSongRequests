@@ -49,7 +49,6 @@ module.exports = {
     clientSecret,
     authorizationCode
   ) {
-    console.log({ authorizationCode });
     let request = {
       grant_type: "authorization_code",
       code: authorizationCode,
@@ -104,7 +103,6 @@ module.exports = {
     return response.json();
   },
   fetchTwitchChannel: async function (token, clientId) {
-    console.log("in fetch chanell");
     let response = await fetch("https://api.twitch.tv/kraken/channel", {
       method: "GET",
       mode: "cors",
