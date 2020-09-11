@@ -9,18 +9,29 @@
     "description": "Main server code for the product that has a REST API to handle requests from the UI, and orchestrate connections to the Twitch PubSub API.",
     "scripts": {
         "start-local": "node app.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "format": "prettier --write ."
     },
     "dependencies": {
         "aws-sdk": "^2.744.0",
         "aws-xray-sdk-core": "^3.1.0",
         "body-parser": "^1.19.0",
         "bufferutil": "^4.0.1",
+        "connect-dynamodb": "^2.0.4",
         "express": "^4.17.1",
+        "express-session": "^1.17.1",
         "follow-redirects": "^1.13.0",
         "fs": "0.0.1-security",
+        "husky": "^4.3.0",
         "node-fetch": "^2.6.0",
+        "prettier": "^2.1.1",
+        "pretty-quick": "^3.0.1",
         "utf-8-validate": "^5.0.2",
         "ws": "^7.3.1"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "pretty-quick --staged"
+        }
     }
 }
