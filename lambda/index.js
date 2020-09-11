@@ -5,7 +5,7 @@
 const AWS = require('aws-sdk');
 const fetch = require("node-fetch");
 
-const TABLE_NAME = "connections";
+const TABLE_NAME = 'connections';
 
 // Localstack dynamo points to localhost:4566, but to connect to it from within the 
 // lambda container, we need the LOCALSTACK_HOSTNAME env variable
