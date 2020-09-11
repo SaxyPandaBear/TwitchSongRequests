@@ -59,7 +59,7 @@ aws s3 mb s3://twitch-song-requests --endpoint-url http://localhost:4566
 
 # Then, we can package and deploy the lambda function to S3
 cd ./lambda
-./package.sh && ./deploy.sh
+./build.sh && ./deploy.sh
 
 cd ..
 # Now we can use the cloudformation template to create all of our services.
