@@ -31,11 +31,6 @@ const SessionAuthController = {
                     token_type,
                 };
                 req.twitchTokenConfiguration = twitchTokenConfiguration;
-                // req.session.accessKeys.twitchToken = {
-                //     access_token,
-                //     refresh_token,
-                //     token_type,
-                // };
 
                 return fetchTwitchChannel(access_token, twitchClientId);
             })
@@ -43,8 +38,6 @@ const SessionAuthController = {
                 const { _id: channelId } = channelResponse;
                 req.channelId = channelId;
                 next();
-                // req.session.accessKeys.twitchToken.channelId = channelId;
-                //res.status(200).json({ success: true });
             })
             .catch((err) => {
                 console.log({ err });
@@ -70,12 +63,6 @@ const SessionAuthController = {
                     scope,
                 };
                 req.spotifyTokenConfiguration = spotifyTokenConfiguration;
-                // req.session.accessKeys.spotifyToken = {
-                //     access_token,
-                //     refresh_token,
-                //     scope,
-                //     token_type,
-                // };
                 next();
             })
             .catch((err) =>
