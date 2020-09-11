@@ -1,5 +1,5 @@
 /**
- * Lambda handler that accepts events from SQS and attempts to queue songs into 
+ * Lambda handler that accepts events from SQS and attempts to queue songs into
  * a connected Spotify player.
  */
 const AWS = require('aws-sdk');
@@ -19,10 +19,12 @@ var dynamo = new AWS.DynamoDB.DocumentClient(config);
 /**
  * Find the first active computer device. If there is no active computer device to connect to,
  * return null
- * @param {array} devices 
+ * @param {array} devices
  */
 function findFirstComputer(devices) {
-    let computers = devices.filter(device => device.type === "Computer" && device.is_active);
+    let computers = devices.filter(
+        (device) => device.type === 'Computer' && device.is_active
+    );
     if (computers.length < 1) {
         return null;
     } else {
@@ -32,27 +34,30 @@ function findFirstComputer(devices) {
 
 // Get all devices for a user
 async function getDevices(oauth) {
-    let response = await fetch("https://api.spotify.com/v1/me/player/devices", {
-        method: "GET",
-        mode: "cors",
+    let response = await fetch('https://api.spotify.com/v1/me/player/devices', {
+        method: 'GET',
+        mode: 'cors',
         headers: {
-            "Authorization": `Bearer ${oauth}`,
-            "Accept": "application/json"
-        }
+            Authorization: `Bearer ${oauth}`,
+            Accept: 'application/json',
+        },
     });
     return response.json();
 }
 
 // queue a song URI for the given active player
 async function queueSong(oauth, device, uri) {
-    let response = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}&device_id=${device.id}`, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-            "Authorization": `Bearer ${oauth}`,
-            "Accept": "application/json"
+    let response = await fetch(
+        `https://api.spotify.com/v1/me/player/queue?uri=${uri}&device_id=${device.id}`,
+        {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                Authorization: `Bearer ${oauth}`,
+                Accept: 'application/json',
+            },
         }
-    });
+    );
     return response.json();
 }
 
@@ -92,9 +97,9 @@ async function refreshSpotifyToken(clientId, clientSecret, refreshToken) {
         mode: "cors",
         body: data,
         headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
+            Accept: 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
     });
     return response.json();
 }
@@ -108,10 +113,10 @@ exports.handler = async function (event, context) {
      * attribute appended to the message, which tells us which channel ID
      * this queue event belongs to.
      */
-    event.Records.forEach(record => {
+    event.Records.forEach((record) => {
         // get the message attributes to figure out which channel this request
         // is for
-        let channelId = record.messageAttributes["channel_id"];
+        let channelId = record.messageAttributes['channel_id'];
         let spotifyUri = record.body;
         // dynamo.getRecord(channelId) <- TODO: finish me
         fetchConnectionDetails(channelId).then((data) => {
@@ -154,4 +159,4 @@ exports.handler = async function (event, context) {
             // up the channel ID in the connections table?
         });
     });
-}
+};
