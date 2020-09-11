@@ -12,7 +12,7 @@ const {
 } = require('../config/credentials.json');
 
 const SessionAuthController = {
-    postClientTwitchAccessCode(req, res) {
+    postClientTwitchAccessCode(req, res, next) {
         const {
             body: { accessKey },
         } = req;
@@ -25,25 +25,25 @@ const SessionAuthController = {
                     token_type,
                 } = twitchResponse;
 
-                req.session.accessKeys.twitchToken = {
+                const twitchTokenConfiguration = {
                     access_token,
                     refresh_token,
                     token_type,
                 };
+                req.twitchTokenConfiguration = twitchTokenConfiguration;
 
                 return fetchTwitchChannel(access_token, twitchClientId);
             })
             .then((channelResponse) => {
                 const { _id: channelId } = channelResponse;
-
-                req.session.accessKeys.twitchToken.channelId = channelId;
-                res.status(200).json({ success: true });
+                req.channelId = channelId;
+                next();
             })
             .catch((err) => {
                 console.log({ err });
             });
     },
-    postClientSpotifyAccessCode(req, res) {
+    postClientSpotifyAccessCode(req, res, next) {
         const {
             body: { accessKey },
         } = req;
@@ -56,13 +56,14 @@ const SessionAuthController = {
                     token_type,
                     scope,
                 } = spotifyResponse;
-                req.session.accessKeys.spotifyToken = {
+                const spotifyTokenConfiguration = {
                     access_token,
                     refresh_token,
-                    scope,
                     token_type,
+                    scope,
                 };
-                res.status(200).json({ success: true });
+                req.spotifyTokenConfiguration = spotifyTokenConfiguration;
+                next();
             })
             .catch((err) =>
                 res
@@ -71,11 +72,18 @@ const SessionAuthController = {
             );
     },
     getClientAuthStatus(req, res) {
-        const { twitchToken, spotifyToken } = req.session.accessKeys;
-        res.json({
-            twitchToken: !!twitchToken,
-            spotifyToken: !!spotifyToken,
-        });
+        if (req.session) {
+            const { twitchToken, spotifyToken } = req.session.accessKeys;
+            res.json({
+                twitchToken: !!twitchToken,
+                spotifyToken: !!spotifyToken,
+            });
+        } else {
+            res.json({
+                twitchToken: false,
+                spotifyToken: false,
+            });
+        }
     },
 };
 
