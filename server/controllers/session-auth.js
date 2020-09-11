@@ -68,11 +68,10 @@ const SessionAuthController = {
             .catch((err) =>
                 res
                     .status(500)
-                    .json({ error: "Something went wrong with spotify oauth" })
+                    .json({ error: 'Something went wrong with spotify oauth' })
             );
     },
     getClientAuthStatus(req, res) {
-        // We need to initially check if session is even initiated
         if (req.session) {
             const { twitchToken, spotifyToken } = req.session.accessKeys;
             res.json({
