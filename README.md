@@ -34,7 +34,7 @@ songs to an active player.
 
 The overall proposed archicture is shown below, and explained in greater detail:
 
-![Overall Architecture](architecture/big_picture_architecture.png)
+![Overall Architecture](architecture/architecture.png)
 
 How it will work is that there will be a website that people interact with. On this
 site, they will walk through authorizing the app to read/modify data in Twitch and
