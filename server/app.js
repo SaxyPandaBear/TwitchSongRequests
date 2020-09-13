@@ -17,11 +17,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const AWS = require('aws-sdk');
-
-const {
-    intializeSesionStore,
-    checkForExistingSessionAndAssignAccessKeys,
-} = require('./session');
+const { intializeSesionStoreIfCookieIsPresentInRequest } = require('./session');
 const cors = require('./utils/cors');
 const sessionAuthRoutes = require('./api/session-auth');
 
@@ -35,8 +31,7 @@ app.use(bodyParser.json());
 
 app.use(cors);
 
-app.use(intializeSesionStore());
-app.use(checkForExistingSessionAndAssignAccessKeys);
+app.use(intializeSesionStoreIfCookieIsPresentInRequest);
 
 /**
  * Create an SDK client for DynamoDB so we can use it to read/write records from the data store.
