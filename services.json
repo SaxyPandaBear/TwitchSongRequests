@@ -1,13 +1,154 @@
 {
-    "AWSTemplateFormatVersion" : "2010-09-09",
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters": {
+        "TwitchClientId": {
+            "Type": "String"
+        },
+        "TwitchClientSecret": {
+            "Type": "String"
+        },
+        "SpotifyClientId": {
+            "Type": "String"
+        },
+        "SpotifyClientSecret": {
+            "Type": "String"
+        }
+    },
     "Resources": {
-        "SongRequestsQueue" : {
-            "Type" : "AWS::SQS::Queue",
-            "Properties" : {
+        "SongRequestQueue": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
                 "MaximumMessageSize": 1024,
                 "MessageRetentionPeriod": 3600,
                 "QueueName": "song-requests"
             }
+        },
+        "ConnectionsTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": "connections",
+                "BillingMode": "PAY_PER_REQUEST",
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "ChannelId",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "ChannelId",
+                        "KeyType": "HASH"
+                    }
+                ]
+            }
+        },
+        "SongRequestFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Description": "Lambda function that accepts messages from SQS, in order to queue songs to Spotify",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaExecutionRole",
+                        "Arn"
+                    ]
+                },
+                "Code": {
+                    "S3Bucket": "twitch-song-requests",
+                    "S3Key": "function.zip"
+                },
+                "Runtime": "nodejs12.x",
+                "Environment": {
+                    "Variables": {
+                        "SpotifyClientId": {
+                            "Ref": "SpotifyClientId"
+                        },
+                        "SpotifyClientSecret": {
+                            "Ref": "SpotifyClientSecret"
+                        }
+                    }
+                }
+            }
+        },
+        "SongRequestListener": {
+            "Type": "AWS::Lambda::EventSourceMapping",
+            "Properties": {
+                "BatchSize": 1,
+                "Enabled": true,
+                "EventSourceArn": {
+                    "Fn::GetAtt": [
+                        "SongRequestQueue",
+                        "Arn"
+                    ]
+                },
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "SongRequestFunction",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "LambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "accessLogs",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:*"
+                                    ],
+                                    "Resource": "arn:aws:logs:*:*:*"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "accessQueue",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sqs:ReceiveMessage",
+                                        "sqs:DeleteMessage",
+                                        "sqs:GetQueueAttributes"
+                                    ],
+                                    "Resource": {
+                                        "Fn::GetAtt": [
+                                            "SongRequestQueue",
+                                            "Arn"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
         }
-     }
+    }
 }

@@ -3,15 +3,15 @@
  * a connected Spotify player.
  */
 const AWS = require('aws-sdk');
-const fetch = require("node-fetch");
+const fetch = require('node-fetch');
 
 const TABLE_NAME = 'connections';
 
 // Localstack dynamo points to localhost:4566, but to connect to it from within the 
 // lambda container, we need the LOCALSTACK_HOSTNAME env variable
 let config = { apiVersion: '2012-08-10' }
-if ("LOCALSTACK_HOSTNAME" in process.env) {
-    let ep = new AWS.Endpoint(`http://${process.env["LOCALSTACK_HOSTNAME"]}:4566`);
+if ('LOCALSTACK_HOSTNAME' in process.env) {
+    let ep = new AWS.Endpoint(`http://${process.env['LOCALSTACK_HOSTNAME']}:4566`);
     config.endpoint = ep;
 }
 var dynamo = new AWS.DynamoDB.DocumentClient(config);
@@ -64,37 +64,37 @@ async function queueSong(oauth, device, uri) {
 async function fetchConnectionDetails(channelId) {
     const params = {
         TableName: TABLE_NAME,
-        Key: { "channel_id": channelId },
+        Key: { 'channel_id': channelId },
         ConsistentRead: true,
-        ProjectionExpression: "channel_id, spotify.access_token, spotify.refresh_token, status"
+        ProjectionExpression: 'ChannelId, Session, Status'
     };
-    dynamo.get(params, function(err, data) {
+    dynamo.get(params, function (err, data) {
         if (err) {
             console.log(`Error occurred while fetching data from database for Channel ID: ${channelId}`)
             console.log(err, err.stack);
             throw err;
         } else {
-            return new Promise((() => data, () => console.log("Something went wrong.")));
+            return new Promise((() => data, () => console.log('Something went wrong.')));
         }
     });
 }
 
 async function refreshSpotifyToken(clientId, clientSecret, refreshToken) {
     let request = {
-        "grant_type": "refresh_token",
-        "refresh_token": refreshToken,
-        "client_id": clientId,
-        "client_secret": clientSecret
+        'grant_type': 'refresh_token',
+        'refresh_token': refreshToken,
+        'client_id': clientId,
+        'client_secret': clientSecret
     }
 
     let data = Object.
         entries(request).
         map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).
-        join("&");
+        join('&');
 
-    let response = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        mode: "cors",
+    let response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        mode: 'cors',
         body: data,
         headers: {
             Accept: 'application/json',
@@ -106,6 +106,8 @@ async function refreshSpotifyToken(clientId, clientSecret, refreshToken) {
 
 // Handler
 exports.handler = async function (event, context) {
+    const clientId = process.env['SpotifyClientId'];
+    const clientSecret = process.env['SpotifyClientSecret'];
     /**
      * for each message received from SQS, parse the event body,
      * to get the message, which should just be the Spotify entity URI.
@@ -122,15 +124,15 @@ exports.handler = async function (event, context) {
         fetchConnectionDetails(channelId).then((data) => {
             // if the connection statis is not active, then we shouldn't try to queue
             // a song.
-            if (data.connection_status !== "Active") {
-                console.log("User disconnected, dropping record");
+            if (data.connection_status !== 'Active') {
+                console.log('User disconnected, dropping record');
             } else {
                 getDevices(data.access_token).then(foundDevices => {
                     console.log(`GET devices responded with ${JSON.stringify(foundDevices)}`);
                     let devices = foundDevices.devices;
                     let activeDevice = findFirstComputer(devices);
                     if (activeDevice === null) {
-                        console.log("No active device found. Write error to dynamo");
+                        console.log('No active device found. Write error to dynamo');
                     } else {
                         queueSong(data.access_token, activeDevice, spotifyUri).then(data => {
                             console.log(`Successfully queued song. Spotify responded with ${JSON.stringify(data)}`);
@@ -139,7 +141,7 @@ exports.handler = async function (event, context) {
                             // to refresh it and write the new token back to dynamo.
                             // TODO: how do we handle actual errors here? 
                             console.log(err);
-                            console.error("oopsie");
+                            console.error('oopsie');
                         })
                     }
                 }).catch(err => {
@@ -148,7 +150,7 @@ exports.handler = async function (event, context) {
                     // need to refresh it and write the new token back to dynamo. 
                     // TODO: how do we handle actual errors? do we throw the message back in the queue? 
                     //       or do we just drop the message, writing the error to dynamo for triaging?
-                    console.error("oopsie");
+                    console.error('oopsie');
                 });
             }
         }).catch(err => {

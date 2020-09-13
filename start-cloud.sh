@@ -23,9 +23,8 @@ if [[ -z "$SPOTIFY_CLIENT_SECRET" ]] ; then
     exit 1
 fi
 
-echo "Credentials are set. Starting up localstack.."
-
-localstack start &
+# For some reason, we can't run `localstack start` here
+echo "Credentials are set. Checking localstack health"
 
 # pings localhost, waiting for when:
 # 1. it responds properly (something is running on the port)
@@ -69,4 +68,7 @@ aws cloudformation create-stack \
     --endpoint-url http://localhost:4566 \
     --stack-name song-requests \
     --template-body file://services.json \
-    --parameters ParameterKey
+    --parameters ParameterKey=TwitchClientId,ParameterValue="$TWITCH_CLIENT_ID" \
+                 ParameterKey=TwitchClientSecret,ParameterValue="$TWITCH_CLIENT_SECRET" \
+                 ParameterKey=SpotifyClientId,ParameterValue="$SPOTIFY_CLIENT_ID" \
+                 ParameterKey=SpotifyClientSecret,ParameterValue="$SPOTIFY_CLIENT_SECRET"
