@@ -20,6 +20,7 @@ const AWS = require('aws-sdk');
 const { intializeSesionStoreIfCookieIsPresentInRequest } = require('./session');
 const cors = require('./utils/cors');
 const sessionAuthRoutes = require('./api/session-auth');
+const connectionStatusRoutes = require('./api/connection-status');
 
 var app = express();
 
@@ -130,6 +131,9 @@ app.post('/spotify', function (req, res) {
 });
 
 app.use('/api/session', sessionAuthRoutes);
+app.use('/api/connection-status', connectionStatusRoutes);
+
+app;
 app.listen(process.env.PORT || 8080, () =>
     console.log(`Listening to port ${process.env.PORT || 8080}`)
 );
