@@ -67,7 +67,8 @@
                             "Ref": "SpotifyClientSecret"
                         }
                     }
-                }
+                },
+                "DependsOn": "LambdaExecutionRole"
             }
         },
         "SongRequestListener": {
@@ -86,7 +87,8 @@
                         "SongRequestFunction",
                         "Arn"
                     ]
-                }
+                },
+                "DependsOn": "SongRequestFunction"
             }
         },
         "LambdaExecutionRole": {
@@ -147,7 +149,8 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "DependsOn": "SongRequestQueue"
             }
         }
     }

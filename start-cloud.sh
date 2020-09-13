@@ -54,7 +54,7 @@ echo "Localstack is running!"
 
 # First, we need to create S3 bucket to put lambda code in
 echo "Making bucket at s3://twitch-song-requests"
-aws s3 mb s3://twitch-song-requests --endpoint-url http://localhost:4566
+aws s3 mb s3://twitch-song-requests --endpoint-url http://localhost:4566 --region us-east-1
 
 # Then, we can package and deploy the lambda function to S3
 cd ./lambda
@@ -65,6 +65,7 @@ cd ..
 # We can read client credentials from the environment because they are necessary before we can do any of this work.
 echo "Creating CloudFormation stack..."
 aws cloudformation create-stack \
+    --region us-east-1 \
     --endpoint-url http://localhost:4566 \
     --stack-name song-requests \
     --template-body file://services.json \
