@@ -13,9 +13,9 @@ function queryDynamoByChannel(channelId) {
     const params = {
         TableName: 'twitch-sessions',
         Key: {
-            channelId: { S: `channel${channelId}` },
+            channelId: { S: `${channelId}` },
         },
-        ProjectionExpression: 'sess',
+        ProjectionExpression: 'connectionStatus',
     };
 
     return new Promise((res, rej) => {
@@ -29,11 +29,11 @@ function queryDynamoByChannel(channelId) {
     });
 }
 
-function updateConnectionStatus(channelId, connectionStatus) {
+function updateConnectionStatusByChannelId(channelId, connectionStatus) {
     var params = {
         TableName: 'twitch-sessions',
         Key: {
-            channelId: `channel${channelId}`,
+            channelId: `${channelId}`,
         },
         UpdateExpression: 'set connectionStatus = :c',
         ExpressionAttributeValues: {
@@ -51,4 +51,4 @@ function updateConnectionStatus(channelId, connectionStatus) {
         });
     });
 }
-module.exports = { queryDynamoByChannel, updateConnectionStatus };
+module.exports = { queryDynamoByChannel, updateConnectionStatusByChannelId };

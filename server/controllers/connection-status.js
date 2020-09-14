@@ -1,14 +1,8 @@
 const {
     queryDynamoByChannel,
-    updateConnectionStatus,
+    updateConnectionStatusByChannelId,
 } = require('../lib/dynamoDao');
 
-// TO BE USED LATER AS SOME KIND OF TYPESAFE ENUM VALIDATION
-const CONNECTION_STATUS = {
-    ACTIVE: 'active',
-    INACTIVE: 'inactive',
-    STARTING: 'starting',
-};
 const ConnectionStatusController = {
     getConnectionStatus(req, res) {
         const channelId = req.params.channelId;
@@ -29,16 +23,33 @@ const ConnectionStatusController = {
                 res.status(500).json({ err });
             });
     },
-    updateConnectionStatus(channelId, connectionStatus) {
-        updateConnectionStatus(channelId, connectionStatus)
-            .then((item) => {
-                res.json({ item });
-            })
-            .catch((err) => {
-                res.status(500).json({ err });
-            });
+    updateConnectionStatus(req, res) {
+        const channelId = req.params.channelId;
+        const { connectionStatus } = req.body;
+        if (this.validConnectionStatus(connectionStatus)) {
+            updateConnectionStatusByChannelId(channelId, connectionStatus)
+                .then((item) => {
+                    res.json({ item });
+                })
+                .catch((err) => {
+                    res.status(500).json({ err });
+                });
+        } else {
+            return res
+                .status(400)
+                .json({ err: 'Provide a valid connection status' });
+        }
+    },
+    isValidConnectionStatus: function (connectionStatus) {
+        return Object.values(this.validConnectionStatus).includes(
+            connectionStatus
+        );
+    },
+    validConnectionStatus: {
+        ACTIVE: 'active',
+        INACTIVE: 'inactive',
+        STARTING: 'starting',
     },
 };
 
-//ConnectionStatusController.getConnectionStatus('577228983');
 module.exports = ConnectionStatusController;
