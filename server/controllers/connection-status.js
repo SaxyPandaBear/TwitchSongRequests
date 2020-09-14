@@ -6,7 +6,6 @@ const {
 const ConnectionStatusController = {
     getConnectionStatus(req, res) {
         const channelId = req.params.channelId;
-        console.log({ channelId });
 
         queryDynamoByChannel(channelId)
             .then((item) => {
@@ -19,7 +18,6 @@ const ConnectionStatusController = {
                 }
             })
             .catch((err) => {
-                console.log(err);
                 res.status(500).json({ err });
             });
     },
