@@ -64,7 +64,11 @@ async function queueSong(oauth, device, uri) {
             },
         }
     );
-    return response.json();
+    if (response.ok) {
+        return {};
+    } else {
+        return { "error": response.text() };
+    }
 }
 
 function fetchConnectionDetails(channelId) {
@@ -81,11 +85,8 @@ function fetchConnectionDetails(channelId) {
     console.log("Getting stuff from dynamo");
     return dynamo.getItem(params, function (err, data) {
         if (err) {
-            console.log('oopsie whoopsie ddb fetch failed', err);
             console.log(err);
         } else {
-            console.log('found a record', data.Item);
-
             return data.Item;
         }
     }).promise();
@@ -121,15 +122,17 @@ exports.handler = async function (event, context, callback) {
     const clientId = process.env['SpotifyClientId'];
     const clientSecret = process.env['SpotifyClientSecret'];
 
-    console.log(`Client ID: ${clientId}`);
-    console.log(`Client secret: ${clientSecret}`);
-
     /**
      * for each message received from SQS, parse the event body,
      * to get the message, which should just be the Spotify entity URI.
      * We associate this request with a Twitch channel by the message
      * attribute appended to the message, which tells us which channel ID
      * this queue event belongs to.
+     * 
+     * https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
+     * Because the handler is async, we have to await for a response on the stuff we have
+     * in here, or else it will fire and forget, and we will not see any result in the 
+     * lambda logs. On top of that, a foreach is async. 
      */
     for (const record of event.Records) {
         // get the message attributes to figure out which channel this request
@@ -141,53 +144,34 @@ exports.handler = async function (event, context, callback) {
         console.log(`Channel ID is: ${channelId}`);
         console.log(`Spotify URI is: ${spotifyUri}`);
 
-        await fetchConnectionDetails(channelId).then((data) => {
-            console.log("Got our stuff from dynamo");
-            console.log(data);
-            // if the connection statis is not active, then we shouldn't try to queue
-            // a song.
-            if (data.Item.connectionStatus.S !== 'Active') {
-                console.log('User disconnected, dropping record');
+        const data = await fetchConnectionDetails(channelId);
+        console.log("Got our stuff from dynamo");
+        console.log(JSON.stringify(data));
+        // if the connection statis is not active, then we shouldn't try to queue
+        // a song.
+        if (data.Item.connectionStatus.S !== 'Active') {
+            console.log('User is not connected, dropping record');
+        } else {
+            // need to parse the session object to get the spotify credentials
+            let sessionObj = JSON.parse(data.Item.sess.S);
+            let accessToken = sessionObj.accessKeys.spotifyToken.access_token;
+            let refreshToken = sessionObj.accessKeys.spotifyToken.refresh_token;
+
+            console.log(`Access token from Spotify: ${accessToken}`);
+            console.log(`Refresh token from Spotify: ${refreshToken}`);
+
+            const foundDevices = await getDevices(accessToken)
+            console.log(`GET devices responded with ${JSON.stringify(foundDevices)}`);
+            let devices = foundDevices.devices;
+            let activeDevice = findFirstComputer(devices);
+            if (activeDevice === null) {
+                console.log('No active device found. Write error to dynamo');
             } else {
-                // need to parse the session object to get the spotify credentials
-                let sessionObj = JSON.parse(data.Item.sess.S);
-                let accessToken = sessionObj.accessKeys.spotifyToken.access_token;
-                let refreshToken = sessionObj.accessKeys.spotifyToken.refresh_token;
-                getDevices(accessToken).then(foundDevices => {
-                    console.log(`GET devices responded with ${JSON.stringify(foundDevices)}`);
-                    let devices = foundDevices.devices;
-                    let activeDevice = findFirstComputer(devices);
-                    if (activeDevice === null) {
-                        console.log('No active device found. Write error to dynamo');
-                    } else {
-                        queueSong(data.access_token, activeDevice, spotifyUri).then(data => {
-                            console.log(`Successfully queued song. Spotify responded with ${JSON.stringify(data)}`);
-                        }).catch(err => {
-                            // need to check if the error is because of an invalid token. if it is, we need
-                            // to refresh it and write the new token back to dynamo.
-                            // TODO: how do we handle actual errors here? 
-                            console.log(err);
-                            console.error('oopsie');
-                        })
-                    }
-                }).catch(err => {
-                    console.log(err);
-                    // need to check if the error is because of an invalid token. if it is, we
-                    // need to refresh it and write the new token back to dynamo. 
-                    // TODO: how do we handle actual errors? do we throw the message back in the queue? 
-                    //       or do we just drop the message, writing the error to dynamo for triaging?
-                    console.error('oopsie');
-                });
+                const queueResponse = await queueSong(accessToken, activeDevice, spotifyUri)
+                let message = `Successfully queued song. Spotify responded with ${JSON.stringify(queueResponse)}`
+                console.log(message);
             }
-        }).catch(err => {
-            console.log("oopsie");
-            console.log(err);
-            // I think if we fail to retrieve a record from dynamo, presumably because it 
-            // doesn't exist, there's not much to do. We can just swallow the exception here.
-            // Does it make sense to write this error to the events table if we couldn't look
-            // up the channel ID in the connections table?
-        });
-        console.log("finished working on this record");
+        }
     }
-    return {};
+    return "Successfully queued songs!";
 };

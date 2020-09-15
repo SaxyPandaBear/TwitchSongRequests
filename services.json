@@ -21,6 +21,7 @@
                 "MaximumMessageSize": 1024,
                 "MessageRetentionPeriod": 3600,
                 "QueueName": "song-requests",
+                "VisibilityTimeout": 60,
                 "DependsOn": "ConnectionsTable"
             }
         },
@@ -60,7 +61,7 @@
                 },
                 "Runtime": "nodejs12.x",
                 "MemorySize": 512,
-                "Timeout": 15,
+                "Timeout": 30,
                 "Environment": {
                     "Variables": {
                         "SpotifyClientId": {
