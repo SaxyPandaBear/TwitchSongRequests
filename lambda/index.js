@@ -61,21 +61,23 @@ async function queueSong(oauth, device, uri) {
     return response.json();
 }
 
-async function fetchConnectionDetails(channelId) {
+function fetchConnectionDetails(channelId) {
     const params = {
         TableName: TABLE_NAME,
-        Key: { 'channel_id': channelId },
-        ConsistentRead: true,
-        ProjectionExpression: 'ChannelId, Session, Status'
+        Key: { channelId: `${channelId}` },
+        ConsistentRead: true
     };
-    dynamo.get(params, function (err, data) {
-        if (err) {
-            console.log(`Error occurred while fetching data from database for Channel ID: ${channelId}`)
-            console.log(err, err.stack);
-            throw err;
-        } else {
-            return new Promise((() => data, () => console.log('Something went wrong.')));
-        }
+    console.log("Getting stuff from dynamo");
+    return new Promise((res, rej) => {
+        dynamo.get(params, function (err, data) {
+            if (err) {
+                console.log("oopsie whoopsie ddb fetch failed");
+                rej(err);
+            } else {
+                console.log("found a record");
+                res(data.Item);
+            }
+        });
     });
 }
 
@@ -118,13 +120,19 @@ exports.handler = async function (event, context) {
     event.Records.forEach((record) => {
         // get the message attributes to figure out which channel this request
         // is for
-        let channelId = record.messageAttributes['channel_id'];
+        console.log("Received a new record to process")
+        let channelId = record.messageAttributes['channelId']["stringValue"];
         let spotifyUri = record.body;
-        // dynamo.getRecord(channelId) <- TODO: finish me
+
+        console.log(`Channel ID is: ${channelId}`);
+        console.log(`Spotify URI is: ${spotifyUri}`);
+        
         fetchConnectionDetails(channelId).then((data) => {
+            console.log("Got our stuff from dynamo");
+            console.log(data);
             // if the connection statis is not active, then we shouldn't try to queue
             // a song.
-            if (data.connection_status !== 'Active') {
+            if (data.status !== 'Active') {
                 console.log('User disconnected, dropping record');
             } else {
                 getDevices(data.access_token).then(foundDevices => {
@@ -160,5 +168,6 @@ exports.handler = async function (event, context) {
             // Does it make sense to write this error to the events table if we couldn't look
             // up the channel ID in the connections table?
         });
+        console.log("processed record");
     });
 };

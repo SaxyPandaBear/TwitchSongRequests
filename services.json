@@ -30,13 +30,13 @@
                 "BillingMode": "PAY_PER_REQUEST",
                 "AttributeDefinitions": [
                     {
-                        "AttributeName": "ChannelId",
+                        "AttributeName": "channelId",
                         "AttributeType": "S"
                     }
                 ],
                 "KeySchema": [
                     {
-                        "AttributeName": "ChannelId",
+                        "AttributeName": "channelId",
                         "KeyType": "HASH"
                     }
                 ]
@@ -58,6 +58,8 @@
                     "S3Key": "function.zip"
                 },
                 "Runtime": "nodejs12.x",
+                "MemorySize": 512,
+                "Timeout": 15,
                 "Environment": {
                     "Variables": {
                         "SpotifyClientId": {
