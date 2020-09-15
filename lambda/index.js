@@ -131,7 +131,7 @@ exports.handler = async function (event, context, callback) {
      * attribute appended to the message, which tells us which channel ID
      * this queue event belongs to.
      */
-    event.Records.forEach((record) => {
+    for (const record of event.Records) {
         // get the message attributes to figure out which channel this request
         // is for
         console.log("Received a new record to process")
@@ -141,7 +141,7 @@ exports.handler = async function (event, context, callback) {
         console.log(`Channel ID is: ${channelId}`);
         console.log(`Spotify URI is: ${spotifyUri}`);
 
-        fetchConnectionDetails(channelId).then((data) => {
+        await fetchConnectionDetails(channelId).then((data) => {
             console.log("Got our stuff from dynamo");
             console.log(data);
             // if the connection statis is not active, then we shouldn't try to queue
@@ -183,6 +183,7 @@ exports.handler = async function (event, context, callback) {
             // Does it make sense to write this error to the events table if we couldn't look
             // up the channel ID in the connections table?
         });
-        console.log("processed record");
-    });
+        console.log("finished working on this record");
+    }
+    return {};
 };
