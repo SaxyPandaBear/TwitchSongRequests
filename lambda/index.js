@@ -37,13 +37,13 @@ function findFirstComputer(devices) {
 }
 
 // Get all devices for a user
-async function getDevices(oauth) {
+async function getDevices(accessToken) {
     console.log("getDevices");
     let response = await fetch('https://api.spotify.com/v1/me/player/devices', {
         method: 'GET',
         mode: 'cors',
         headers: {
-            Authorization: `Bearer ${oauth}`,
+            Authorization: `Bearer ${accessToken}`,
             Accept: 'application/json',
         },
     });
@@ -146,10 +146,14 @@ exports.handler = async function (event, context, callback) {
             console.log(data);
             // if the connection statis is not active, then we shouldn't try to queue
             // a song.
-            if (data.connectionStatus !== 'Active') {
+            if (data.Item.connectionStatus.S !== 'Active') {
                 console.log('User disconnected, dropping record');
             } else {
-                getDevices(data.access_token).then(foundDevices => {
+                // need to parse the session object to get the spotify credentials
+                let sessionObj = JSON.parse(data.Item.sess.S);
+                let accessToken = sessionObj.accessKeys.spotifyToken.access_token;
+                let refreshToken = sessionObj.accessKeys.spotifyToken.refresh_token;
+                getDevices(accessToken).then(foundDevices => {
                     console.log(`GET devices responded with ${JSON.stringify(foundDevices)}`);
                     let devices = foundDevices.devices;
                     let activeDevice = findFirstComputer(devices);
