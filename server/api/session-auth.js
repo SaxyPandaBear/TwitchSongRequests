@@ -13,9 +13,11 @@ router.post(
     intializeSesionStore(),
     checkForExistingSessionAndAssignAccessKeys,
     assignTwitchTokenToSession,
-    (req, res) => {
+    (req, res, next) => {
         res.status(200).json({ success: true });
-    }
+        next();
+    },
+    sessionAuthController.connectToTwitchChat
 );
 router.post(
     '/spotify',

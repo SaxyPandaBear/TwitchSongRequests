@@ -96,7 +96,7 @@ export class LoginComponent implements OnInit {
     spotifyClientId = '5b0a6304d93b4f2b9c6bbf27e7db5592';
     redirectPathTwo = `https://id.twitch.tv/oauth2/authorize?client_id=n43pmbmxpn1xgtd36oraj6y4xxpp2h&redirect_uri=${this.localPath}&response_type=token&scope=channel_read`;
 
-    twitchRedirectPathCode = `https://id.twitch.tv/oauth2/authorize?client_id=n43pmbmxpn1xgtd36oraj6y4xxpp2h&redirect_uri=${this.localPath}&response_type=code&scope=channel_read`;
+    twitchRedirectPathCode = `https://id.twitch.tv/oauth2/authorize?client_id=n43pmbmxpn1xgtd36oraj6y4xxpp2h&redirect_uri=${this.localPath}&response_type=code&scope=channel_read+channel:read:redemptions`;
 
     spotifyRedirectUri = `https://accounts.spotify.com/authorize?client_id=${this.spotifyClientId}&redirect_uri=${this.localPath}&response_type=token&scope=${this.spotifyScope}`;
     spotifyRedirectUriCode = `https://accounts.spotify.com/authorize?client_id=${this.spotifyClientId}&redirect_uri=${this.localPath}&response_type=code&scope=${this.spotifyScope}`;
