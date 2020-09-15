@@ -20,7 +20,8 @@
             "Properties": {
                 "MaximumMessageSize": 1024,
                 "MessageRetentionPeriod": 3600,
-                "QueueName": "song-requests"
+                "QueueName": "song-requests",
+                "DependsOn": "ConnectionsTable"
             }
         },
         "ConnectionsTable": {
@@ -144,6 +145,26 @@
                                     "Resource": {
                                         "Fn::GetAtt": [
                                             "SongRequestQueue",
+                                            "Arn"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "accessDynamo",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:GetItem"
+                                    ],
+                                    "Resource": {
+                                        "Fn::GetAtt": [
+                                            "ConnectionsTable",
                                             "Arn"
                                         ]
                                     }
