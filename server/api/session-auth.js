@@ -5,8 +5,9 @@ const {
     assignTwitchTokenToSession,
     assignSpotifyTokenToSession,
 } = require('../session');
-const router = express.Router();
 const sessionAuthController = require('../controllers/session-auth');
+const { updateConnectionStatusByChannelId } = require('../lib/dynamoDao');
+const router = express.Router();
 router.post(
     '/twitch',
     sessionAuthController.postClientTwitchAccessCode,
@@ -14,10 +15,28 @@ router.post(
     checkForExistingSessionAndAssignAccessKeys,
     assignTwitchTokenToSession,
     (req, res, next) => {
+        const { channelId } = req;
+        updateConnectionStatusByChannelId(channelId, 'starting')
+            .then((status) => {
+                console.log({ status });
+                next();
+            })
+            .catch(console.error);
+    },
+    (req, res, next) => {
         res.status(200).json({ success: true });
         next();
     },
-    sessionAuthController.connectToTwitchChat
+    sessionAuthController.connectToTwitchChat,
+    (req, res, next) => {
+        const { channelId } = req;
+        updateConnectionStatusByChannelId(channelId, 'active')
+            .then((status) => {
+                console.log({ status });
+                next();
+            })
+            .catch(console.error);
+    }
 );
 router.post(
     '/spotify',

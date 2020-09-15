@@ -86,14 +86,14 @@ const SessionAuthController = {
             });
         }
     },
-    connectToTwitchChat(req, res) {
+    connectToTwitchChat(req, res, next) {
         const { channelId } = req;
         const {
             accessKeys: {
                 twitchToken: { access_token: accesToken },
             },
         } = req.session;
-        openSocketConnectionWithChannelId(channelId, accesToken);
+        openSocketConnectionWithChannelId(channelId, accesToken, next);
     },
 };
 

@@ -1,7 +1,8 @@
 const fetch = require('node-fetch');
 const WebSocket = require('ws');
 
-function openSocketConnectionWithChannelId(channelId, oauth_token) {
+//ANDREW PLEASE
+function openSocketConnectionWithChannelId(channelId, oauth_token, callBack) {
     ws = new WebSocket('wss://pubsub-edge.twitch.tv');
 
     function heartbeat() {
@@ -29,6 +30,8 @@ function openSocketConnectionWithChannelId(channelId, oauth_token) {
             },
         };
         ws.send(JSON.stringify(listenEvent));
+        //DONE to signal succesfull connection -- another way to handle this is to direclty inject the DAO here but that's too tightly coupled
+        callBack();
     };
 
     ws.onerror = function (error) {
