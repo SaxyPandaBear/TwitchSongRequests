@@ -21,7 +21,7 @@ const options = {
         endpoint: new AWS.Endpoint('http://localhost:8000'),
     }),
     hashKey: 'channelId',
-    prefix: 'channel:',
+    prefix: '',
 
     // Optional ProvisionedThroughput params, defaults to 5
     // readCapacityUnits: 25,
