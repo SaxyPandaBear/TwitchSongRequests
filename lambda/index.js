@@ -25,7 +25,7 @@ var dynamo = new AWS.DynamoDB(config);
  * @param {array} devices
  */
 function findFirstComputer(devices) {
-    console.log("findFirstComputer");
+    console.log('findFirstComputer');
     let computers = devices.filter(
         (device) => device.type === 'Computer' && device.is_active
     );
@@ -38,7 +38,7 @@ function findFirstComputer(devices) {
 
 // Get all devices for a user
 async function getDevices(accessToken) {
-    console.log("getDevices");
+    console.log('getDevices');
     let response = await fetch('https://api.spotify.com/v1/me/player/devices', {
         method: 'GET',
         mode: 'cors',
@@ -52,7 +52,7 @@ async function getDevices(accessToken) {
 
 // queue a song URI for the given active player
 async function queueSong(oauth, device, uri) {
-    console.log("queueSong");
+    console.log('queueSong');
     let response = await fetch(
         `https://api.spotify.com/v1/me/player/queue?uri=${uri}&device_id=${device.id}`,
         {
@@ -67,7 +67,7 @@ async function queueSong(oauth, device, uri) {
     if (response.ok) {
         return {};
     } else {
-        return { "error": response.text() };
+        return { 'error': response.text() };
     }
 }
 
@@ -76,13 +76,13 @@ function fetchConnectionDetails(channelId) {
         TableName: TABLE_NAME,
         Key: {
             channelId: {
-                "S": `${channelId}`
+                'S': `${channelId}`
             }
         },
         ConsistentRead: true,
-        ProjectionExpression: "sess, connectionStatus"
+        ProjectionExpression: 'sess, connectionStatus'
     };
-    console.log("Getting stuff from dynamo");
+    console.log('Getting stuff from dynamo');
     return dynamo.getItem(params, function (err, data) {
         if (err) {
             console.log(err);
@@ -137,15 +137,15 @@ exports.handler = async function (event, context, callback) {
     for (const record of event.Records) {
         // get the message attributes to figure out which channel this request
         // is for
-        console.log("Received a new record to process")
-        let channelId = record.messageAttributes['channelId']["stringValue"];
+        console.log('Received a new record to process')
+        let channelId = record.messageAttributes['channelId']['stringValue'];
         let spotifyUri = record.body;
 
         console.log(`Channel ID is: ${channelId}`);
         console.log(`Spotify URI is: ${spotifyUri}`);
 
         const data = await fetchConnectionDetails(channelId);
-        console.log("Got our stuff from dynamo");
+        console.log('Got our stuff from dynamo');
         console.log(JSON.stringify(data));
         // if the connection statis is not active, then we shouldn't try to queue
         // a song.
@@ -173,5 +173,5 @@ exports.handler = async function (event, context, callback) {
             }
         }
     }
-    return "Successfully queued songs!";
+    return 'Successfully queued songs!';
 };
