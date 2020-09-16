@@ -149,7 +149,7 @@ exports.handler = async function (event, context, callback) {
         console.log(JSON.stringify(data));
         // if the connection statis is not active, then we shouldn't try to queue
         // a song.
-        if (data.Item.connectionStatus.S !== 'Active') {
+        if (data.Item.connectionStatus.S !== 'active') {
             console.log('User is not connected, dropping record');
         } else {
             // need to parse the session object to get the spotify credentials
