@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 const WebSocket = require('ws');
 
 //ANDREW PLEASE
-function openSocketConnectionWithChannelId(channelId, oauth_token, callBack) {
+function openSocketConnectionWithChannelId(channelId, oauthToken, callBack) {
     ws = new WebSocket('wss://pubsub-edge.twitch.tv');
 
     function heartbeat() {
@@ -16,7 +16,7 @@ function openSocketConnectionWithChannelId(channelId, oauth_token, callBack) {
     var reconnectInterval = 1000 * 3; //ms to wait before reconnect
     var heartbeatHandle;
     ws.onopen = function (event) {
-        console.log('INFO: Socket Opened');
+        console.info('INFO: Socket Opened');
         heartbeat();
         heartbeatHandle = setInterval(heartbeat, heartbeatInterval);
 
@@ -26,7 +26,7 @@ function openSocketConnectionWithChannelId(channelId, oauth_token, callBack) {
             nonce: 'abc123',
             data: {
                 topics: [`channel-points-channel-v1.${channelId}`],
-                auth_token: oauth_token,
+                auth_token: oauthToken,
             },
         };
         ws.send(JSON.stringify(listenEvent));
@@ -43,7 +43,7 @@ function openSocketConnectionWithChannelId(channelId, oauth_token, callBack) {
         message = JSON.parse(event.data);
         console.log({ message });
         if (message.type == 'RECONNECT') {
-            console.log('INFO: Reconnecting...');
+            console.info('INFO: Reconnecting...');
             setTimeout(
                 openSocketConnectionWithChannelId(channelId),
                 reconnectInterval
@@ -52,9 +52,9 @@ function openSocketConnectionWithChannelId(channelId, oauth_token, callBack) {
     };
 
     ws.onclose = function () {
-        console.log('INFO: Socket Closed');
+        console.info('INFO: Socket Closed');
         clearInterval(heartbeatHandle);
-        console.log('INFO: Reconnecting...');
+        console.info('INFO: Reconnecting...');
         setTimeout(
             openSocketConnectionWithChannelId(channelId),
             reconnectInterval
