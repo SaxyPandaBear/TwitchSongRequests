@@ -24,7 +24,7 @@ if [[ -z "$SPOTIFY_CLIENT_SECRET" ]] ; then
 fi
 
 # For some reason, we can't run `localstack start` here
-echo "Credentials are set. Checking localstack health"
+echo "Credentials are set properly. Moving on..."
 
 # pings localhost, waiting for when:
 # 1. it responds properly (something is running on the port)
@@ -44,6 +44,7 @@ function healthcheck {
     done
 }
 
+echo "Waiting for localstack to be up and running..."
 healthcheck
 echo "Localstack is running!"
 
@@ -57,6 +58,7 @@ echo "Making bucket at s3://twitch-song-requests"
 aws s3 mb s3://twitch-song-requests --endpoint-url http://localhost:4566 --region us-east-1
 
 # Then, we can package and deploy the lambda function to S3
+echo "Packaging lambda code and writing the zip file to the S3 bucket"
 cd ./lambda
 ./build.sh && ./deploy.sh
 
@@ -73,3 +75,5 @@ aws cloudformation create-stack \
                  ParameterKey=TwitchClientSecret,ParameterValue="$TWITCH_CLIENT_SECRET" \
                  ParameterKey=SpotifyClientId,ParameterValue="$SPOTIFY_CLIENT_ID" \
                  ParameterKey=SpotifyClientSecret,ParameterValue="$SPOTIFY_CLIENT_SECRET"
+
+echo "Finished standing up infrastructure! Refer to the workshop.sh to get started on using it."

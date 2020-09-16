@@ -38,4 +38,19 @@ curl http://localhost:4566/health
 ```
 We can start using the local services to create our lambda.
 
-TODO: put instructions for how to package our lambda
+There are convenience scripts here to do the work we need.
+
+To build the lambda, just run the `./build.sh` script in this directory.
+
+To "deploy" the lambda to local S3 in localstack, run the `./deploy.sh` script.
+
+Note that both of these scripts are used in the orchestration script `../start-cloud.sh`
+
+## Testing
+
+After making code changes, we want to deploy this to lambda and validate that it works.
+To save cost cycles, we leverage `localstack`. If you run the `start-cloud.sh` script
+in the root of the project, it packages the lambda code, deploys it to lambda, and 
+hooks it up to the SQS queue that it needs to read from. Then you can simply just
+post a new SQS message to the queue, and then read through the CloudWatch logs to see
+what happened in the lambda execution.

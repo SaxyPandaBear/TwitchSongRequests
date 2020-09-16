@@ -41,7 +41,11 @@
                         "AttributeName": "channelId",
                         "KeyType": "HASH"
                     }
-                ]
+                ],
+                "TimeToLiveSpecification": {
+                    "AttributeName": "expires",
+                    "Enabled": true
+                }
             }
         },
         "SongRequestFunction": {
