@@ -27,10 +27,10 @@ aws logs --endpoint-url http://localhost:4566 describe-log-groups
 # list log streams for a log group 
 aws logs describe-log-streams \
     --endpoint-url http://localhost:4566 \
-    --log-group-name /aws/lambda/song-requests-lambda-fc439959
+    --log-group-name /aws/lambda/song-requests-lambda-bab303ef
 
 # fetch the logs for a log stream
 aws logs get-log-events \
     --endpoint-url http://localhost:4566 \
-    --log-group-name /aws/lambda/song-requests-lambda-fc439959 \
-    --log-stream-name 2020/09/15/[LATEST]48907af6 >> sandbox/log.json
+    --log-group-name /aws/lambda/song-requests-lambda-bab303ef \
+    --log-stream-name 2020/09/17/[LATEST]7284f594 >> sandbox/log.json

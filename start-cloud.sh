@@ -6,6 +6,7 @@
 # They are needed to run all of the services (the lambda, the main server code, etc).
 # We expect the following: 
 #   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
+echo "Checking environment for required credentials"
 if [[ -z "$TWITCH_CLIENT_ID" ]] ; then
     echo "Missing TWITCH_CLIENT_ID env var"
     exit 1

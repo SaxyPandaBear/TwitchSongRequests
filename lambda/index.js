@@ -18,18 +18,6 @@ if ('LOCALSTACK_HOSTNAME' in process.env) {
 }
 var dynamo = new AWS.DynamoDB(config);
 
-/**
- * Find and return the first active computer device. If there is no active 
- * computer device to connect to, return null
- * @param {array} devices
- */
-function findFirstActiveComputer(devices) {
-    let activeComputers = devices.filter(
-        device => device.type === 'Computer' && device.is_active
-    );
-    return activeComputers.length > 0 ? computers[0] : null;
-}
-
 // Get all devices for a user
 async function getDevices(accessToken) {
     let response = await fetch('https://api.spotify.com/v1/me/player/devices', {
@@ -140,13 +128,13 @@ exports.handler = async function (event, context, callback) {
 
             const foundDevices = await getDevices(accessToken);
             let devices = foundDevices.devices;
-            let activeDevice = findFirstActiveComputer(devices);
-            if (activeDevice === null) {
+            let activeDevice = devices.find(device => device.type === 'Computer' && device.is_active);
+            if (activeDevice === undefined) {
                 // TODO: after events table is implemented, write an error about this to the table
                 console.warn('There was no active player that Spotify could connect to');
             } else {
                 const queueResponse = await queueSong(accessToken, activeDevice, spotifyUri);
-                if (error in queueResponse) {
+                if (Object.keys(queueResponse).find(key => key === 'error')) {
                     // TODO: after events table is implemented, write an error about this to the table
                     console.warn(`Spotify responded with an error: ${queueResponse.error}`);
                 } else {
