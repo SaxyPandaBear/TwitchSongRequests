@@ -34,7 +34,7 @@ function subscribeToChannelTopic(channelId, oauth_token) {
         message = {
             type: 'PING',
         };
-        console.log('SENT: ' + JSON.stringify(message));
+        console.info('SENT: ' + JSON.stringify(message));
         ws.send(JSON.stringify(message));
     }
     var heartbeatInterval = 1000 * 60; //ms between PING's
@@ -44,7 +44,7 @@ function subscribeToChannelTopic(channelId, oauth_token) {
     ws = new WebSocket('wss://pubsub-edge.twitch.tv');
 
     ws.onopen = function (event) {
-        console.log('INFO: Socket Opened');
+        console.info('Socket Opened');
         heartbeat();
         heartbeatHandle = setInterval(heartbeat, heartbeatInterval);
 
@@ -61,23 +61,22 @@ function subscribeToChannelTopic(channelId, oauth_token) {
     };
 
     ws.onerror = function (error) {
-        console.log('ERR: ' + JSON.stringify(error));
+        console.error(JSON.stringify(error));
     };
 
     ws.onmessage = function (event) {
         // TODO: add Spotify integration here
         message = JSON.parse(event.data);
-        console.log({ message });
         if (message.type == 'RECONNECT') {
-            console.log('INFO: Reconnecting...');
+            console.info('Reconnecting...');
             setTimeout(subscribeToChannelTopic(channelId), reconnectInterval);
         }
     };
 
     ws.onclose = function () {
-        console.log('INFO: Socket Closed');
+        console.info('Socket Closed');
         clearInterval(heartbeatHandle);
-        console.log('INFO: Reconnecting...');
+        console.info('Reconnecting...');
         setTimeout(subscribeToChannelTopic(channelId), reconnectInterval);
     };
 }
