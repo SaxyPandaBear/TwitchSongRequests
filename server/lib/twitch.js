@@ -16,7 +16,7 @@ function openSocketConnectionWithChannelId(channelId, oauthToken, callBack) {
     var reconnectInterval = 1000 * 3; //ms to wait before reconnect
     var heartbeatHandle;
     ws.onopen = function (event) {
-        console.info('INFO: Socket Opened');
+        console.info('Socket Opened');
         heartbeat();
         heartbeatHandle = setInterval(heartbeat, heartbeatInterval);
 
@@ -43,7 +43,7 @@ function openSocketConnectionWithChannelId(channelId, oauthToken, callBack) {
         message = JSON.parse(event.data);
         console.log({ message });
         if (message.type == 'RECONNECT') {
-            console.info('INFO: Reconnecting...');
+            console.info('Reconnecting...');
             setTimeout(
                 openSocketConnectionWithChannelId(channelId),
                 reconnectInterval
@@ -52,9 +52,9 @@ function openSocketConnectionWithChannelId(channelId, oauthToken, callBack) {
     };
 
     ws.onclose = function () {
-        console.info('INFO: Socket Closed');
+        console.info('Socket Closed');
         clearInterval(heartbeatHandle);
-        console.info('INFO: Reconnecting...');
+        console.info('Reconnecting...');
         setTimeout(
             openSocketConnectionWithChannelId(channelId),
             reconnectInterval
