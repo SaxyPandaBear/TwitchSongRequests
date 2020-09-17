@@ -19,19 +19,15 @@ if ('LOCALSTACK_HOSTNAME' in process.env) {
 var dynamo = new AWS.DynamoDB(config);
 
 /**
- * Find the first active computer device. If there is no active computer device to connect to,
- * return null
+ * Find and return the first active computer device. If there is no active 
+ * computer device to connect to, return null
  * @param {array} devices
  */
-function findFirstComputer(devices) {
-    let computers = devices.filter(
-        (device) => device.type === 'Computer' && device.is_active
+function findFirstActiveComputer(devices) {
+    let activeComputers = devices.filter(
+        device => device.type === 'Computer' && device.is_active
     );
-    if (computers.length < 1) {
-        return null;
-    } else {
-        return computers[0];
-    }
+    return activeComputers.length > 0 ? computers[0] : null;
 }
 
 // Get all devices for a user
@@ -78,14 +74,7 @@ function fetchConnectionDetails(channelId) {
         ConsistentRead: true,
         ProjectionExpression: 'sess, connectionStatus'
     };
-    return dynamo.getItem(params, function (err, data) {
-        if (err) {
-            console.error(err);
-            throw err;
-        } else {
-            return data.Item;
-        }
-    }).promise();
+    return dynamo.getItem(params).promise();
 }
 
 // TODO: add this to the implementation
@@ -151,7 +140,7 @@ exports.handler = async function (event, context, callback) {
 
             const foundDevices = await getDevices(accessToken);
             let devices = foundDevices.devices;
-            let activeDevice = findFirstComputer(devices);
+            let activeDevice = findFirstActiveComputer(devices);
             if (activeDevice === null) {
                 // TODO: after events table is implemented, write an error about this to the table
                 console.warn('There was no active player that Spotify could connect to');
