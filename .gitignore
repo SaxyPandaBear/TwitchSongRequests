@@ -5,3 +5,5 @@
 # sandbox files to ignore
 sandbox/*.js
 sandbox/*.json
+
+**/*.zip

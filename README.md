@@ -18,6 +18,7 @@ Spotify URIs I was sending, in order to queue the songs in their Spotify player.
 1. [Testing](#testing)
 1. [Secret management](#secret-management)
 1. [Deployments](#deployments)
+1. [Developing](#developing)
 
 ## What does this project do?
 
@@ -158,3 +159,53 @@ reading in the raw JSON file, and referencing keys in the JSON object directly.
 ## Deployments
 
 TBD
+
+## Developing
+What are the tools you need in order to start contributing on the project? 
+
+1. NodeJS
+1. Docker
+1. Python3
+1. [Pipenv](https://github.com/pypa/pipenv)
+
+The code for this is all written in Javascript with Node. We're using 
+[node-fetch](https://github.com/node-fetch/node-fetch) for handling HTTP request stuff.
+
+> all written in Javscript with Node
+
+If all of the code is written in JS, why is Python a requirement? We use Python mostly 
+for [localstack](https://github.com/localstack/localstack), which is a nifty tool that
+helps with local development in a simulated AWS environment (this is why we need 
+docker, too).
+
+To get started, just clone/fork the repo, and from the root, you will want to first 
+install the dependencies.
+
+```bash
+# 1. Install localstack and aws cli in the virtual env (provided in pipfile)
+pipenv install
+# 2. For UI developlment, move to the ui directory and install dependencies
+cd ./ui
+npm install
+cd ..
+# 3. For server-side code development, move to the server directory and install depdencies
+cd ./server
+npm install
+cd ..
+# 4. Start up localstack (in another shell)
+# START COMMANDS ON DIFFERENT SHELL TERMINAL
+pipenv shell
+localstack start # Make sure you have Docker running on your machine before this step
+# END COMMANDS ON DIFFERENT SHELL TERMINAL
+# 5. while localstack starts up, we can run the orchestration script, since it waits
+#    for localstack to be healthy before continuing. Before we can run the script, we
+#    have to inject credentials to our environment variables. The orchestration script
+#    uses them to inject credentials into the local AWS services (like lambda)
+export TWITCH_CLIENT_ID=abc123
+export TWITCH_CLIENT_SECRET=abc234
+export SPOTIFY_CLIENT_ID=abc345
+export SPOTIFY_CLIENT_SECRET=abc456
+./start-cloud.sh
+
+#[DONE] Now that the infrastructure is all built, we can work with all of our services!
+```

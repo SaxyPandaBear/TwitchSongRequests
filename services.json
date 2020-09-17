@@ -1,0 +1,185 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters": {
+        "TwitchClientId": {
+            "Type": "String"
+        },
+        "TwitchClientSecret": {
+            "Type": "String"
+        },
+        "SpotifyClientId": {
+            "Type": "String"
+        },
+        "SpotifyClientSecret": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "SongRequestQueue": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+                "MaximumMessageSize": 1024,
+                "MessageRetentionPeriod": 3600,
+                "QueueName": "song-requests",
+                "VisibilityTimeout": 60,
+                "DependsOn": "ConnectionsTable"
+            }
+        },
+        "ConnectionsTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": "connections",
+                "BillingMode": "PAY_PER_REQUEST",
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "channelId",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "channelId",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "TimeToLiveSpecification": {
+                    "AttributeName": "expires",
+                    "Enabled": true
+                }
+            }
+        },
+        "SongRequestFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Description": "Lambda function that accepts messages from SQS, in order to queue songs to Spotify",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaExecutionRole",
+                        "Arn"
+                    ]
+                },
+                "Code": {
+                    "S3Bucket": "twitch-song-requests",
+                    "S3Key": "function.zip"
+                },
+                "Runtime": "nodejs12.x",
+                "MemorySize": 512,
+                "Timeout": 30,
+                "Environment": {
+                    "Variables": {
+                        "SpotifyClientId": {
+                            "Ref": "SpotifyClientId"
+                        },
+                        "SpotifyClientSecret": {
+                            "Ref": "SpotifyClientSecret"
+                        }
+                    }
+                },
+                "DependsOn": "LambdaExecutionRole"
+            }
+        },
+        "SongRequestListener": {
+            "Type": "AWS::Lambda::EventSourceMapping",
+            "Properties": {
+                "BatchSize": 1,
+                "Enabled": true,
+                "EventSourceArn": {
+                    "Fn::GetAtt": [
+                        "SongRequestQueue",
+                        "Arn"
+                    ]
+                },
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "SongRequestFunction",
+                        "Arn"
+                    ]
+                },
+                "DependsOn": "SongRequestFunction"
+            }
+        },
+        "LambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "accessLogs",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:*"
+                                    ],
+                                    "Resource": "arn:aws:logs:*:*:*"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "accessQueue",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sqs:ReceiveMessage",
+                                        "sqs:DeleteMessage",
+                                        "sqs:GetQueueAttributes"
+                                    ],
+                                    "Resource": {
+                                        "Fn::GetAtt": [
+                                            "SongRequestQueue",
+                                            "Arn"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "accessDynamo",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:GetItem"
+                                    ],
+                                    "Resource": {
+                                        "Fn::GetAtt": [
+                                            "ConnectionsTable",
+                                            "Arn"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "DependsOn": "SongRequestQueue"
+            }
+        }
+    }
+}
