@@ -5,7 +5,7 @@ import { SpotifyService } from '../../spotify.service';
 import { OauthService } from '../../oauth.service';
 import { TwitchService } from '../../twitch.service';
 import { take, finalize } from 'rxjs/operators';
-
+import { environment } from '../../../environments/environment';
 @Component({
     selector: 'app-login',
     templateUrl: './login.component.html',
@@ -21,6 +21,12 @@ export class LoginComponent implements OnInit {
     config: NgWizardConfig;
 
     ngOnInit(): void {
+        const { spotifyClientId, twitchClientId } = environment;
+        this.spotifyClientId = spotifyClientId;
+        this.twitchClientId = twitchClientId;
+        this.twitchRedirectPathCode = `https://id.twitch.tv/oauth2/authorize?client_id=${this.twitchClientId}&redirect_uri=${this.localPath}&response_type=code&scope=channel_read+channel:read:redemptions`;
+        this.spotifyRedirectUriCode = `https://accounts.spotify.com/authorize?client_id=${this.spotifyClientId}&redirect_uri=${this.localPath}&response_type=code&scope=${this.spotifyScope}`;
+
         this.oauthService
             .getOauthStatus()
             .pipe(
@@ -91,15 +97,12 @@ export class LoginComponent implements OnInit {
 
     twitchAccessToken = undefined;
     spotifyScope = 'user-modify-playback-state%20user-read-playback-state';
-
     localPath = 'http%3A%2F%2Flocalhost%3A4200';
-    spotifyClientId = '5b0a6304d93b4f2b9c6bbf27e7db5592';
-    redirectPathTwo = `https://id.twitch.tv/oauth2/authorize?client_id=n43pmbmxpn1xgtd36oraj6y4xxpp2h&redirect_uri=${this.localPath}&response_type=token&scope=channel_read`;
+    spotifyClientId;
+    twitchClientId;
+    twitchRedirectPathCode;
 
-    twitchRedirectPathCode = `https://id.twitch.tv/oauth2/authorize?client_id=n43pmbmxpn1xgtd36oraj6y4xxpp2h&redirect_uri=${this.localPath}&response_type=code&scope=channel_read`;
-
-    spotifyRedirectUri = `https://accounts.spotify.com/authorize?client_id=${this.spotifyClientId}&redirect_uri=${this.localPath}&response_type=token&scope=${this.spotifyScope}`;
-    spotifyRedirectUriCode = `https://accounts.spotify.com/authorize?client_id=${this.spotifyClientId}&redirect_uri=${this.localPath}&response_type=code&scope=${this.spotifyScope}`;
+    spotifyRedirectUriCode;
 
     spotifyAccessToken = undefined;
 

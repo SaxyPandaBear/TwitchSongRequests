@@ -3,13 +3,14 @@ const {
     fetchTwitchToken,
     fetchTwitchChannel,
 } = require('../lib/auth');
-
 const {
     spotifyClientId,
     spotifyClientSecret,
     twitchClientSecret,
     twitchClientId,
 } = require('../config/credentials.json');
+
+const openSocketConnectionWithChannelId = require('../lib/twitch');
 
 const SessionAuthController = {
     postClientTwitchAccessCode(req, res, next) {
@@ -84,6 +85,15 @@ const SessionAuthController = {
                 spotifyToken: false,
             });
         }
+    },
+    connectToTwitchChat(req, res, next) {
+        const { channelId } = req;
+        const {
+            accessKeys: {
+                twitchToken: { access_token: accesToken },
+            },
+        } = req.session;
+        openSocketConnectionWithChannelId(channelId, accesToken, next);
     },
 };
 
