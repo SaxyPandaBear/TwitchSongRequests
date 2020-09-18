@@ -18,6 +18,15 @@ if ('LOCALSTACK_HOSTNAME' in process.env) {
 }
 var dynamo = new AWS.DynamoDB(config);
 
+// return true if there is no error in the object, false otherwise
+function isSuccessfulResponseObj(obj) {
+    if (Object.keys(obj).find(key => key === 'error')) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 // Get all devices for a user
 async function getDevices(accessToken) {
     let response = await fetch('https://api.spotify.com/v1/me/player/devices', {
@@ -65,7 +74,32 @@ function fetchConnectionDetails(channelId) {
     return dynamo.getItem(params).promise();
 }
 
-// TODO: add this to the implementation
+function updateAccessToken(channelId, session) {
+    const params = {
+        TableName: TABLE_NAME,
+        Key: {
+            channelId: {
+                'S': `${channelId}`
+            }
+        },
+        UpdateExpression: 'set sess=:session',
+        ExpressionAttributeValues: {
+            ':session': {'S': JSON.stringify(session)}
+        },
+        ReturnValues: 'UPDATED_NEW'
+    }
+    return dynamo.updateItem(params).promise();
+}
+
+/**
+ * When we get an error from Spotify about expired auth, it looks like this:
+ * { error: { status: 401, message: 'The access token expired' } }
+ * In this case, we want to catch it, refresh our access token, and write it back to
+ * the database. 
+ * @param {string} clientId 
+ * @param {string} clientSecret 
+ * @param {string} refreshToken 
+ */
 async function refreshSpotifyToken(clientId, clientSecret, refreshToken) {
     let request = {
         'grant_type': 'refresh_token',
@@ -114,8 +148,13 @@ exports.handler = async function (event, context, callback) {
         let channelId = record.messageAttributes['channelId']['stringValue'];
         let spotifyUri = record.body;
 
-
-        const connectionDetails = await fetchConnectionDetails(channelId);
+        let connectionDetails;
+        try {
+            connectionDetails = await fetchConnectionDetails(channelId);
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
         // if the connection statis is not active, then we shouldn't try to queue
         // a song.
         if (connectionDetails.Item.connectionStatus.S !== 'active') {
@@ -126,17 +165,62 @@ exports.handler = async function (event, context, callback) {
             let accessToken = sessionObj.accessKeys.spotifyToken.access_token;
             let refreshToken = sessionObj.accessKeys.spotifyToken.refresh_token; // TODO: use refresh token
 
-            const foundDevices = await getDevices(accessToken);
+            let foundDevices;
+            try {
+                foundDevices = await getDevices(accessToken);
+            } catch (err) {
+                console.error(err);
+                throw err;
+            }
+
+            // check for an unauthorized response
+            if (!isSuccessfulResponseObj(foundDevices)) {
+                // we only want to do it on the case where the status is 401.
+                if (foundDevices.error.status === 401) {
+                    let refreshTokenResponse;
+                    try {
+                        refreshTokenResponse = await refreshSpotifyToken(clientId, clientSecret, refreshToken);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                    if (!isSuccessfulResponseObj(refreshTokenResponse)) {
+                        // now we're just unlucky.
+                        throw refreshTokenResponse.error;
+                    } else {
+                        // write the response back to the database
+                        sessionObj.accessKeys.spotifyToken.access_token = refreshTokenResponse.access_token;
+                        let updateSessionResponse;
+                        try {
+                            updateSessionResponse = await updateAccessToken(channelId, sessionObj);
+                        } catch (err) {
+                            console.error(err);
+                            throw err;
+                        }
+                    }                
+                } else {
+                    console.error(foundDevices);
+                }
+                // we throw an error so that the Lambda does not fully consume the SQS message,
+                // and retries it.
+                throw JSON.stringify(foundDevices.error);
+            }
+            
             let devices = foundDevices.devices;
             let activeDevice = devices.find(device => device.type === 'Computer' && device.is_active);
             if (activeDevice === undefined) {
                 // TODO: after events table is implemented, write an error about this to the table
-                console.warn('There was no active player that Spotify could connect to');
+                console.info('There was no active player that Spotify could connect to');
             } else {
-                const queueResponse = await queueSong(accessToken, activeDevice, spotifyUri);
-                if (Object.keys(queueResponse).find(key => key === 'error')) {
+                let queueResponse;
+                try {
+                    queueResponse = await queueSong(accessToken, activeDevice, spotifyUri);
+                } catch (err) {
+                    console.error(err);
+                    throw err;
+                }
+                if (!isSuccessfulResponseObj(queueResponse)) {
                     // TODO: after events table is implemented, write an error about this to the table
-                    console.warn(`Spotify responded with an error: ${queueResponse.error}`);
+                    console.error(`Spotify responded with an error: ${queueResponse.error}`);
                 } else {
                     console.info(`Successfully queued song. Spotify responded with ${JSON.stringify(queueResponse)}`);
                 }

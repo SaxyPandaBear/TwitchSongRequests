@@ -17,7 +17,7 @@ aws sqs list-queues --endpoint-url http://localhost:4566
 # send message to SQS to queue a JJBA song
 aws sqs send-message \
     --endpoint-url http://localhost:4566 \
-    --message-body spotify:track:2TsyTag2aNa4wmUNmExzcI \
+    --message-body spotify:track:5Cjkfft7iRWJp4elZXgjkc \
     --message-attributes '{"channelId": {"DataType": "String", "StringValue": "1599883101"}}' \
     --queue-url http://localhost:4566/000000000000/song-requests
 
@@ -27,10 +27,10 @@ aws logs --endpoint-url http://localhost:4566 describe-log-groups
 # list log streams for a log group 
 aws logs describe-log-streams \
     --endpoint-url http://localhost:4566 \
-    --log-group-name /aws/lambda/song-requests-lambda-bab303ef
+    --log-group-name /aws/lambda/song-requests-lambda-38762d93
 
 # fetch the logs for a log stream
 aws logs get-log-events \
     --endpoint-url http://localhost:4566 \
-    --log-group-name /aws/lambda/song-requests-lambda-bab303ef \
-    --log-stream-name 2020/09/17/[LATEST]7284f594 >> sandbox/log.json
+    --log-group-name /aws/lambda/song-requests-lambda-38762d93 \
+    --log-stream-name 2020/09/18/[LATEST]70ef1b81 >> sandbox/log.json
