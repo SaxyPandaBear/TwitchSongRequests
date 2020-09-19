@@ -173,27 +173,20 @@ module.exports = function (connect) {
      * @api public
      */
 
-    DynamoDBStore.prototype.set = function (sid, sess, fn) {
-        sid = this.prefix + sid;
-        var expires = this.getExpiresValue(sess);
+    DynamoDBStore.prototype.set = function (channelId, sess, fn) {
+        // var expires = this.getExpiresValue(sess);
         sess = JSON.stringify(sess);
 
-        var params = {
+        const params = {
             TableName: this.table,
-            Item: {
-                expires: {
-                    N: JSON.stringify(expires),
-                },
-                type: {
-                    S: 'connect-session',
-                },
-                sess: {
-                    S: sess,
-                },
+            Key: {
+                channelId: { S: `${channelId}` },
             },
-        };
-        params.Item[this.hashKey] = {
-            S: sid,
+            UpdateExpression: 'set sess = :s',
+
+            ExpressionAttributeValues: {
+                ':s': { S: sess },
+            },
         };
 
         this.client.updateItem(params, fn);
