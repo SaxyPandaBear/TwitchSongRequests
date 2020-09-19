@@ -27,16 +27,7 @@ router.post(
         res.status(200).json({ success: true });
         next();
     },
-    sessionAuthController.connectToTwitchChat,
-    (req, res, next) => {
-        const { channelId } = req;
-        updateConnectionStatusByChannelId(channelId, 'active')
-            .then((status) => {
-                console.log({ status });
-                next();
-            })
-            .catch(console.error);
-    }
+    sessionAuthController.connectToTwitchChat
 );
 router.post(
     '/spotify',

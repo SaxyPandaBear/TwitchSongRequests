@@ -30,6 +30,7 @@ function openSocketConnectionWithChannelId(channelId, oauthToken, callBack) {
             },
         };
         ws.send(JSON.stringify(listenEvent));
+
         //DONE to signal succesfull connection -- another way to handle this is to direclty inject the DAO here but that's too tightly coupled
         callBack();
     };

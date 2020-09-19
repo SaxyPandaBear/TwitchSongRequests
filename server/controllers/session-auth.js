@@ -9,6 +9,7 @@ const {
     twitchClientSecret,
     twitchClientId,
 } = require('../config/credentials.json');
+const { updateConnectionStatusByChannelId } = require('../lib/dynamoDao');
 
 const openSocketConnectionWithChannelId = require('../lib/twitch');
 
@@ -93,7 +94,19 @@ const SessionAuthController = {
                 twitchToken: { access_token: accesToken },
             },
         } = req.session;
-        openSocketConnectionWithChannelId(channelId, accesToken, next);
+        const updateStatusToActive = () => {
+            updateConnectionStatusByChannelId(channelId, 'active')
+                .then((status) => {
+                    console.log({ status });
+                    next();
+                })
+                .catch(console.error);
+        };
+        openSocketConnectionWithChannelId(
+            channelId,
+            accesToken,
+            updateStatusToActive
+        );
     },
 };
 
