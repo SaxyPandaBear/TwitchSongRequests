@@ -5,18 +5,9 @@
  * will handle processing the data.
  */
 
-// TODO: figure out how to get dynamic properties set up so that it can run locally
-//       and deployed.
-//       Use an environment variable to define the properties that we want to use.
-const properties = {
-    env: 'local',
-};
-// const properties = require("./properties.json");
-
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const AWS = require('aws-sdk');
 const { intializeSesionStoreIfCookieIsPresentInRequest } = require('./session');
 const cors = require('./utils/cors');
 const sessionAuthRoutes = require('./api/session-auth');
@@ -33,18 +24,6 @@ app.use(bodyParser.json());
 app.use(cors);
 
 app.use(intializeSesionStoreIfCookieIsPresentInRequest);
-
-/**
- * Create an SDK client for DynamoDB so we can use it to read/write records from the data store.
- */
-let config = { apiVersion: '2012-08-10' };
-// if we are running locally, add the required property for communicating with
-// a local instance of DynamoDB
-// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
-if (properties.env === 'local') {
-    let ep = new AWS.Endpoint('http://localhost:8000');
-    config.endpoint = ep;
-}
 
 /**
  * Handles validating the contents of a request that contains authentication details.

@@ -1,8 +1,3 @@
-/*!
- * Connect - DynamoDB
- * Copyright(c) 2020 introvert.com LLC <support@introvert.com>
- * MIT Licensed
- */
 /**
  * Module dependencies.
  */
@@ -12,7 +7,7 @@ var AWS = require('aws-sdk');
  * One day in milliseconds.
  */
 
-var oneDayInMilliseconds = 86400000;
+const oneDayInMilliseconds = 86400000;
 
 /**
  * Return the `DynamoDBStore` extending `connect`'s session Store.

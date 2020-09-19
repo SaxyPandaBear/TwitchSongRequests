@@ -81,4 +81,9 @@ aws cloudformation create-stack \
                  ParameterKey=SpotifyClientId,ParameterValue="$SPOTIFY_CLIENT_ID" \
                  ParameterKey=SpotifyClientSecret,ParameterValue="$SPOTIFY_CLIENT_SECRET"
 
+# Listing queues here so that we can inject the queue url from this into the environment
+# for the server code
+echo "Listing SQS queues in the environment"
+aws sqs list-queues --endpoint-url http://localhost:4566
+
 echo "Finished standing up infrastructure! Refer to the workshop.sh to get started on using it."

@@ -2,10 +2,18 @@ const AWS = require('aws-sdk');
 const session = require('express-session');
 const DynamoDBStore = require('./lib/dynamoSessionStore')(session);
 const cookieIsPresent = require('./lib/getCookies');
-AWS.config.update({
+
+const awsConfig = {
     region: 'us-east-1',
-    endpoint: process.env.DYNAMO_ENDPOINT || 'http://localhost:4566',
-});
+};
+// see start-cloud.sh in the root of the project for context.
+// use the existence of the LOCALSTACK key to know to use a different endpoint
+if ('LOCALSTACK' in process.env) {
+    console.info('======= RUNNING LAMBDA IN LOCALSTACK ======');
+    let ep = new AWS.Endpoint(`http://localhost:4566`);
+    awsConfig.endpoint = ep;
+}
+AWS.config.update(awsConfig);
 
 const options = {
     // Optional DynamoDB table name, defaults to 'connections'
@@ -17,9 +25,7 @@ const options = {
     // Optional JSON object of AWS credentials and configuration
 
     // Optional client for alternate endpoint, such as DynamoDB Local
-    client: new AWS.DynamoDB({
-        endpoint: new AWS.Endpoint('http://localhost:4566'),
-    }),
+    client: new AWS.DynamoDB(awsConfig),
     hashKey: 'channelId',
     prefix: '',
 
@@ -36,11 +42,6 @@ function checkForExistingSessionAndAssignAccessKeys(req, res, next) {
 }
 
 function intializeSesionStore() {
-    AWS.config.update({
-        region: 'us-east-1',
-        endpoint: 'http://localhost:8000',
-    });
-
     return session({
         store: new DynamoDBStore(options),
         //TODO: use a more robust secret
@@ -82,4 +83,5 @@ module.exports = {
     assignTwitchTokenToSession,
     assignSpotifyTokenToSession,
     intializeSesionStoreIfCookieIsPresentInRequest,
+    awsConfig,
 };

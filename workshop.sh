@@ -23,7 +23,7 @@ aws sqs list-queues --endpoint-url http://localhost:4566
 aws sqs send-message \
     --endpoint-url http://localhost:4566 \
     --message-body spotify:track:5Cjkfft7iRWJp4elZXgjkc \
-    --message-attributes '{"channelId": {"DataType": "String", "StringValue": "1599883101"}}' \
+    --message-attributes '{"channelId": {"DataType": "String", "StringValue": "106060203"}}' \
     --queue-url http://localhost:4566/000000000000/song-requests
 
 # list log groups first

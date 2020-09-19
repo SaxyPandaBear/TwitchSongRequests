@@ -1,7 +1,39 @@
-const fetch = require('node-fetch');
 const WebSocket = require('ws');
+const AWS = require('aws-sdk');
+const { awsConfig } = require('../session');
 
-//ANDREW PLEASE
+var sqsClient = new AWS.SQS(awsConfig);
+
+// We require the Queue URL in order to know what queue to send the message to.
+// this should be defined in environment variables.
+// Note: This env var should be injected by the cloudformation template when it
+//       stands up the whole infrastructure.
+const queueUrl = process.env['QUEUE_URL'];
+
+const spotifyTrackPattern = /(spotify:track:(\w||\d)+)/y;
+
+// we have to ensure that there is at least some indication that the channel point
+// redemption is related to a song request. we are declaring that a song request
+// that we act on is something that has "song request" in the title
+function isSongRequest(rewardTitle) {
+    return rewardTitle.toLowerCase().includes('song request');
+}
+
+// spotify:track:5Cjkfft7iRWJp4elZXgjkc
+function matchesSpotifyUri(uri) {
+    const matches = uri.match(spotifyTrackPattern);
+    // if it fails to match at all, the result of matches will be null
+    if (matches) {
+        // if something matches, the regex we have still allows for extraneous input
+        // after the match, so just do a sanity check on the raw input.
+        // Because of how the regex is structured, we can pattern match on whitespace.
+        // if we split on whitespace, we should only get one result back.
+        return uri.split(/(\s+)/).length === 1;
+    } else {
+        return false;
+    }
+}
+
 function openSocketConnectionWithChannelId(channelId, oauthToken, callBack) {
     ws = new WebSocket('wss://pubsub-edge.twitch.tv');
 
@@ -40,15 +72,39 @@ function openSocketConnectionWithChannelId(channelId, oauthToken, callBack) {
     };
 
     ws.onmessage = function (event) {
-        // TODO: add Spotify integration here
-        message = JSON.parse(event.data);
-        console.log({ message });
-        if (message.type == 'RECONNECT') {
+        let message = JSON.parse(event.data);
+        if (message.type === 'RECONNECT') {
             console.info('Reconnecting...');
             setTimeout(
                 openSocketConnectionWithChannelId(channelId),
                 reconnectInterval
             );
+        } else if (message.type === 'MESSAGE') {
+            // The data is deeply nested. Bear with me.
+            const innerMessage = JSON.parse(message.data.message);
+            const redemption = innerMessage.data.redemption;
+            const rewardTitle = redemption.reward.title;
+            const spotifyUri = redemption.user_input;
+            if (isSongRequest(rewardTitle) && matchesSpotifyUri(spotifyUri)) {
+                // if the input is validated, send a message to SQS so that the
+                // lambda can pick up work on this.
+                const params = {
+                    MessageBody: spotifyUri,
+                    QueueUrl: queueUrl,
+                    MessageAttributes: {
+                        channelId: {
+                            DataType: 'String',
+                            StringValue: channelId,
+                        },
+                    },
+                };
+                // TODO: clean this up
+                sqsClient.sendMessage(params, function (err, data) {
+                    if (err) console.log(err, err.stack);
+                    // an error occurred
+                    else console.log(data); // successful response
+                });
+            }
         }
     };
 
