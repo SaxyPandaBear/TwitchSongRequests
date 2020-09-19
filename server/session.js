@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 const session = require('express-session');
-const DynamoDBStore = require('connect-dynamodb')(session);
+const DynamoDBStore = require('./lib/dynamoSessionStore')(session);
 const cookieIsPresent = require('./lib/getCookies');
 AWS.config.update({
     region: 'us-east-1',
