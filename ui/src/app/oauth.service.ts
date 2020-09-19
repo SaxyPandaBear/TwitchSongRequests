@@ -5,10 +5,10 @@ import { HttpClient } from '@angular/common/http';
     providedIn: 'root',
 })
 export class OauthService {
-    endpoint = 'http://localhost:8080/api/session';
-    spotifyEndpoint = `${this.endpoint}/spotify`;
-    twitchcEndpoint = `${this.endpoint}/twitch`;
-    accessKeysEndpoint = `${this.endpoint}/access-keys`;
+    baseUrl = 'http://localhost:7474/api/session';
+    spotifyEndpoint = `${this.baseUrl}/spotify`;
+    twitchcEndpoint = `${this.baseUrl}/twitch`;
+    accessKeysEndpoint = `${this.baseUrl}/access-keys`;
 
     constructor(private http: HttpClient) {}
 

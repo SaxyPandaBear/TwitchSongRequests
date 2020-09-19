@@ -4,12 +4,12 @@ const DynamoDBStore = require('connect-dynamodb')(session);
 const cookieIsPresent = require('./lib/getCookies');
 AWS.config.update({
     region: 'us-east-1',
-    endpoint: process.env.DYNAMO_ENDPOINT || 'http://localhost:8000',
+    endpoint: process.env.DYNAMO_ENDPOINT || 'http://localhost:4566',
 });
 
 const options = {
-    // Optional DynamoDB table name, defaults to 'sessions'
-    table: 'twitch-sessions',
+    // Optional DynamoDB table name, defaults to 'connections'
+    table: 'connections',
 
     // Optional path to AWS credentials and configuration file
     // AWSConfigPath: './path/to/credentials.json',
@@ -18,7 +18,7 @@ const options = {
 
     // Optional client for alternate endpoint, such as DynamoDB Local
     client: new AWS.DynamoDB({
-        endpoint: new AWS.Endpoint('http://localhost:8000'),
+        endpoint: new AWS.Endpoint('http://localhost:4566'),
     }),
     hashKey: 'channelId',
     prefix: '',
@@ -52,6 +52,7 @@ function intializeSesionStore() {
         },
     });
 }
+
 function assignTwitchTokenToSession(req, res, next) {
     const { twitchTokenConfiguration } = req;
     console.log({ twitchTokenConfiguration });
@@ -66,6 +67,7 @@ function assignSpotifyTokenToSession(req, res, next) {
     req.session.accessKeys.spotifyToken = spotifyTokenConfiguration;
     next();
 }
+
 function intializeSesionStoreIfCookieIsPresentInRequest(req, res, next) {
     if (cookieIsPresent(req)) {
         return intializeSesionStore()(req, res, next);
@@ -73,6 +75,7 @@ function intializeSesionStoreIfCookieIsPresentInRequest(req, res, next) {
         return next();
     }
 }
+
 module.exports = {
     intializeSesionStore,
     checkForExistingSessionAndAssignAccessKeys,

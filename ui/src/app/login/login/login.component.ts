@@ -3,7 +3,6 @@ import { NgWizardConfig, THEME, NgWizardService } from 'ng-wizard';
 import { ActivatedRoute } from '@angular/router';
 import { SpotifyService } from '../../spotify.service';
 import { OauthService } from '../../oauth.service';
-import { TwitchService } from '../../twitch.service';
 import { take, finalize } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 @Component({

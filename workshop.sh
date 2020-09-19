@@ -11,6 +11,11 @@ aws dynamodb put-item \
     --table-name connections \
     --item file://sandbox/demo-ddb-record.json
 
+# scan table
+aws dynamodb scan \
+    --endpoint-url http://localhost:4566 \
+    --table-name connections
+
 # list queues
 aws sqs list-queues --endpoint-url http://localhost:4566
 

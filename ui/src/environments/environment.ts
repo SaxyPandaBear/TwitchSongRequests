@@ -4,6 +4,8 @@
 
 export const environment = {
     production: false,
+    twitchClientId: 'mySuperPublicTwitchClientId',
+    spotifyClientId: 'mySuperPublicSpotifyClientId',
 };
 
 /*

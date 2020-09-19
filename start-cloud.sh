@@ -49,6 +49,10 @@ echo "Waiting for localstack to be up and running..."
 healthcheck
 echo "Localstack is running!"
 
+# For the other services, we are going to inject an environment variable
+# to let them know to use localstack rather than live AWS
+export LOCALSTACK="localstack" # the value isn't that important. we just want the key to exist
+
 # after confirming the health of localstack, we can create our services
 # TODO: write cloudformation template to create SQS queue, lambda, dynamo
 # Before we can create the lambda, we need to put our function code that we zipped up ourselves into S3,

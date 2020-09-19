@@ -1,17 +1,21 @@
 const AWS = require('aws-sdk');
-var dynamodb = new AWS.DynamoDB({
-    region: 'us-east-1',
-    endpoint: 'http://localhost:8000',
-});
 
-AWS.config.update({
-    region: 'us-east-1',
-    endpoint: 'http://localhost:8000',
-});
-var docClient = new AWS.DynamoDB.DocumentClient();
+let config = { apiVersion: '2012-08-10', region: 'us-east-1' };
+// see start-cloud.sh in the root of the project for context.
+// use the existence of the LOCALSTACK key to know to use a different endpoint
+if ('LOCALSTACK' in process.env) {
+    console.info('======= RUNNING LAMBDA IN LOCALSTACK ======');
+    AWS.config.update({ region: 'us-east-1' });
+    let ep = new AWS.Endpoint(`http://localhost:4566`);
+    config.endpoint = ep;
+}
+AWS.config.update(config);
+
+var dynamodb = new AWS.DynamoDB(config);
+var docClient = new AWS.DynamoDB.DocumentClient(config);
 function queryDynamoByChannel(channelId) {
     const params = {
-        TableName: 'twitch-sessions',
+        TableName: 'connections',
         Key: {
             channelId: { S: `${channelId}` },
         },
@@ -31,7 +35,7 @@ function queryDynamoByChannel(channelId) {
 
 function updateConnectionStatusByChannelId(channelId, connectionStatus) {
     var params = {
-        TableName: 'twitch-sessions',
+        TableName: 'connections',
         Key: {
             channelId: `${channelId}`,
         },

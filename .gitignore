@@ -6,4 +6,10 @@
 sandbox/*.js
 sandbox/*.json
 
+# ignore local UI configs
+**/environment.local.ts
+
+# Not keeping the built Angular app
+**/dist/**
+
 **/*.zip

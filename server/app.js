@@ -133,6 +133,6 @@ app.post('/spotify', function (req, res) {
 app.use('/api/session', sessionAuthRoutes);
 app.use('/api/connection-status', connectionStatusRoutes);
 
-app.listen(process.env.PORT || 8080, () =>
-    console.log(`Listening to port ${process.env.PORT || 8080}`)
+app.listen(process.env.PORT || 7474, () =>
+    console.log(`Listening to port ${process.env.PORT || 7474}`)
 );

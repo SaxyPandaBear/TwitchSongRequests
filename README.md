@@ -91,13 +91,10 @@ The main server code in the `server` directory (maybe a little too on-the-nose).
 This requires a `./server/config/credentials.json` file to run. That file is gitignored, so
 it's safe to create it and drop it next to the main app code.
 
-Create a `credentials.json` file and place it in the config directory, `./server/config/credentials.json`.
-The `./server/app.js` file uses the credentials file template as a guideline.
+Create a `credentials.json` file and place it in the config directory, `./server/config/credentials.json`. Use the credentials file template as a guideline.
 
 Place all of the required sensitive data in that file so that the app can read
 from it and reference that data.
-
-TODO: Define a process for injecting a properties file
 
 ### Running the app
 
@@ -161,24 +158,25 @@ reading in the raw JSON file, and referencing keys in the JSON object directly.
 TBD
 
 ## Developing
-What are the tools you need in order to start contributing on the project? 
+
+What are the tools you need in order to start contributing on the project?
 
 1. NodeJS
 1. Docker
 1. Python3
 1. [Pipenv](https://github.com/pypa/pipenv)
 
-The code for this is all written in Javascript with Node. We're using 
+The code for this is all written in Javascript with Node. We're using
 [node-fetch](https://github.com/node-fetch/node-fetch) for handling HTTP request stuff.
 
 > all written in Javscript with Node
 
-If all of the code is written in JS, why is Python a requirement? We use Python mostly 
+If all of the code is written in JS, why is Python a requirement? We use Python mostly
 for [localstack](https://github.com/localstack/localstack), which is a nifty tool that
-helps with local development in a simulated AWS environment (this is why we need 
+helps with local development in a simulated AWS environment (this is why we need
 docker, too).
 
-To get started, just clone/fork the repo, and from the root, you will want to first 
+To get started, just clone/fork the repo, and from the root, you will want to first
 install the dependencies.
 
 ```bash
