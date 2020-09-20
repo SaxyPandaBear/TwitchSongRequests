@@ -11,7 +11,7 @@ const TABLE_NAME = 'connections';
 // lambda container, we need the LOCALSTACK_HOSTNAME env variable
 let config = { apiVersion: '2012-08-10', region: 'us-east-1' }
 if ('LOCALSTACK_HOSTNAME' in process.env) {
-    console.info('======= RUNNING LAMBDA IN LOCALSTACK ======');
+    console.info('======= RUNNING IN LOCALSTACK ======');
     AWS.config.update({ region: 'us-east-1' });
     let ep = new AWS.Endpoint(`http://${process.env['LOCALSTACK_HOSTNAME']}:4566`);
     config.endpoint = ep;

@@ -64,7 +64,7 @@ aws s3 mb s3://twitch-song-requests --endpoint-url http://localhost:4566 --regio
 
 # Then, we can package and deploy the lambda function to S3
 echo "Packaging lambda code and writing the zip file to the S3 bucket"
-cd ./lambda
+cd ./queue-song-lambda
 ./build.sh && ./deploy.sh
 
 cd ..

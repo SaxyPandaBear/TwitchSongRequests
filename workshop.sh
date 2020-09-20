@@ -38,4 +38,4 @@ aws logs describe-log-streams \
 aws logs get-log-events \
     --endpoint-url http://localhost:4566 \
     --log-group-name /aws/lambda/song-requests-lambda-38762d93 \
-    --log-stream-name 2020/09/18/[LATEST]70ef1b81 >> sandbox/log.json
+    --log-stream-name 2020/09/18/[LATEST]70ef1b81 >> log.json

@@ -10,6 +10,6 @@ sandbox/*.json
 **/environment.local.ts
 
 # Not keeping the built Angular app
-**/dist/**
+**/dist
 
 **/*.zip

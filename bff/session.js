@@ -9,7 +9,7 @@ const awsConfig = {
 // see start-cloud.sh in the root of the project for context.
 // use the existence of the LOCALSTACK key to know to use a different endpoint
 if ('LOCALSTACK' in process.env) {
-    console.info('======= RUNNING LAMBDA IN LOCALSTACK ======');
+    console.info('======= RUNNING IN LOCALSTACK ======');
     let ep = new AWS.Endpoint(`http://localhost:4566`);
     awsConfig.endpoint = ep;
 }
