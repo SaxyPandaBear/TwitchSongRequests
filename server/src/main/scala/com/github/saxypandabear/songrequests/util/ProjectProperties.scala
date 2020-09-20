@@ -119,11 +119,14 @@ class ProjectProperties {
     }
 
     /**
-     * Get a boolean value from the map, given the input key.
+     * Get a boolean value from the map, given the input key. This should throw
+     * an exception when the value this tries to parse is not able to be parsed
+     * into a boolean value.
      *
      * @param key key to use in order to fetch data from the map
      * @return Some(value) if the key exists in the map, and the raw value
      *         can be interpreted as a boolean, else None
+     * @throws IllegalArgumentException when the input is not able to be parsed as a boolean
      */
     def getBoolean(key: String): Option[Boolean] = {
         internalMap.get(key).map(v => v.toBoolean)

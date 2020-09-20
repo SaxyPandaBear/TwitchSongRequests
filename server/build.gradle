@@ -27,6 +27,19 @@ repositories {
 dependencies {
     implementation 'org.scala-lang:scala-library:2.12.8'
 
+    // Dependencies for the HTTP server
+    implementation 'org.eclipse.jetty:jetty-server:9.4.0.M0'
+    implementation 'org.glassfish.jersey.containers:jersey-container-servlet:2.31'
+    implementation 'org.glassfish.jersey.containers:jersey-container-jetty-http:2.31'
+    implementation 'org.glassfish.jersey.containers:jersey-container-jetty-servlet:2.31'
+    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.0.0-M1'
+
+    // Dependencies for dealing with JSON
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+    implementation 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.11.2'
+
+    // Testing
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.scalatest:scalatest_2.12:3.0.5'
 
