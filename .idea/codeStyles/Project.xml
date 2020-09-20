@@ -18,5 +18,16 @@
         </value>
       </option>
     </JetCodeStyleSettings>
+    <ScalaCodeStyleSettings>
+      <option name="SD_BLANK_LINE_BEFORE_TAGS" value="false" />
+      <option name="REFORMAT_ON_COMPILE" value="true" />
+    </ScalaCodeStyleSettings>
+    <codeStyleSettings language="Scala">
+      <indentOptions>
+        <option name="INDENT_SIZE" value="4" />
+        <option name="CONTINUATION_INDENT_SIZE" value="4" />
+        <option name="TAB_SIZE" value="4" />
+      </indentOptions>
+    </codeStyleSettings>
   </code_scheme>
 </component>
