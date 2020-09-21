@@ -32,7 +32,9 @@ dependencies {
     implementation 'org.glassfish.jersey.containers:jersey-container-servlet:2.31'
     implementation 'org.glassfish.jersey.containers:jersey-container-jetty-http:2.31'
     implementation 'org.glassfish.jersey.containers:jersey-container-jetty-servlet:2.31'
-    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.0.0-M1'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:2.31'
+    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.31'
+    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:2.1.6' // anything past this version breaks
 
     // Dependencies for dealing with JSON
     implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'
@@ -40,9 +42,22 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.11.2'
 
     // Testing
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'io.rest-assured:rest-assured:4.3.1'
+    testImplementation('io.rest-assured:scala-support:4.3.1') {
+        exclude group: 'org.scala-lang', module: 'scala-library' // this pulls in scala 2.13 which clashes
+    }
+    testImplementation('junit:junit:4.12') {
+        exclude group: 'org.hamcrest', module: 'hamcrest-core'
+    }
     testImplementation 'org.scalatest:scalatest_2.12:3.0.5'
 
     // Need scala-xml at test runtime
     testRuntimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.1.1'
+}
+
+test {
+    testLogging {
+        outputs.upToDateWhen {false}
+        showStandardStreams = true
+    }
 }
