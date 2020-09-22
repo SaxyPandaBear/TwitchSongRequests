@@ -17,7 +17,7 @@
 
     <ng-wizard-step
         [title]="'Login with Spotify'"
-        [description]="'Allow us to send song to your queu'"
+        [description]="'Allow us to send song to your queue'"
     >
         <div *ngIf="!isLoading; else loading">
             <a
@@ -26,14 +26,14 @@
                 >Login to Spotify</a
             >
             <ng-template #continue
-                >Continue to monitor your current queu</ng-template
+                >Continue to monitor your current queue</ng-template
             >
         </div>
     </ng-wizard-step>
 
     <ng-wizard-step
         [title]="'Enjoy'"
-        [description]="'Monitor your queu and what songs are currently playing'"
+        [description]="'Monitor your queue and what songs are currently playing'"
     >
         <span>
             <div *ngIf="playerIsActive; else notActive">
