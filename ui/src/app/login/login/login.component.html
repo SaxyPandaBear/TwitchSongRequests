@@ -33,7 +33,9 @@
 
     <ng-wizard-step
         [title]="'Enjoy'"
-        [description]="'Monitor your queue and what songs are currently playing'"
+        [description]="
+            'Monitor your queue and what songs are currently playing'
+        "
     >
         <span>
             <div *ngIf="playerIsActive; else notActive">
@@ -44,9 +46,7 @@
             <ng-template #notActive>
                 You are currently not listenting to any songs
             </ng-template>
-            <button (click)="getUserDevices()" class="btn btn-primary">
-                Make Spotify Call
-            </button>
+            <button class="btn btn-primary">Make Spotify Call</button>
         </span>
     </ng-wizard-step>
 </ng-wizard>
