@@ -16,18 +16,9 @@ describe('AppComponent', () => {
         expect(app).toBeTruthy();
     });
 
-    it(`should have as title 'TwitchSongRequestsUi'`, () => {
+    it(`should have as title 'TwitchSongRequests'`, () => {
         const fixture = TestBed.createComponent(AppComponent);
         const app = fixture.componentInstance;
-        expect(app.title).toEqual('TwitchSongRequestsUi');
-    });
-
-    it('should render title', () => {
-        const fixture = TestBed.createComponent(AppComponent);
-        fixture.detectChanges();
-        const compiled = fixture.nativeElement;
-        expect(compiled.querySelector('.content span').textContent).toContain(
-            'TwitchSongRequestsUi app is running!'
-        );
+        expect(app.title).toEqual('TwitchSongRequests');
     });
 });
