@@ -32,7 +32,7 @@ class ConnectionResource {
     }
 
     @PUT
-    @Path("/disconnect")
+    @Path("/disconnect/{channel}")
     @Consumes(Array(MediaType.APPLICATION_JSON))
     def disconnect(@PathParam("channel") channel: String): Response = {
         Response.noContent().build()

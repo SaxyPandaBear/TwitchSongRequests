@@ -54,4 +54,18 @@ class ConnectionResourceSpec extends UnitSpec with BeforeAndAfterEach with Befor
             .body()
             .asString() should be(s"Initiated connection to channel $id")
     }
+
+    "Submitting a request to disconnect from a Twitch channel" should "return a 204 on success" in {
+        val id = "12345"
+
+        RestAssured
+            .`given`()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.TEXT)
+            .pathParam("channel", id)
+            .put(s"http://localhost:$port/api/disconnect/{channel}")
+            .`then`()
+            .assertThat()
+            .statusCode(204)
+    }
 }
