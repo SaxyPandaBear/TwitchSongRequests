@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { NgWizardConfig, THEME, NgWizardService } from 'ng-wizard';
 import { ActivatedRoute } from '@angular/router';
-import { SpotifyService } from '../../spotify.service';
 import { OauthService } from '../../oauth.service';
 import { take, finalize } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -14,7 +13,6 @@ export class LoginComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private ngWizardService: NgWizardService,
-        private spotifyService: SpotifyService,
         private oauthService: OauthService
     ) {}
     config: NgWizardConfig;
@@ -65,23 +63,6 @@ export class LoginComponent implements OnInit {
             this.twitchAccessToken = true;
             this.ngWizardService.next();
         });
-    }
-
-    getUserDevices() {
-        this.spotifyService
-            .getPlayer(this.spotifyAccessToken)
-            .subscribe(
-                ({
-                    device: { is_active, name: deviceName },
-                    item: { name: songName },
-                }) => {
-                    if (is_active) {
-                        this.currentSong = songName;
-                        this.playingOn = deviceName;
-                        this.playerIsActive = is_active;
-                    }
-                }
-            );
     }
 
     setCode(code) {
