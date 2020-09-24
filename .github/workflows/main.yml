@@ -33,6 +33,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Use Node.js 12.8
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.8
+      - name: Install UI dependencies
+        run: npm ci
+        working-directory: ./ui
       - name: Install Angular CLI
         run: sudo npm install -g @angular/cli
       - name: Test UI
