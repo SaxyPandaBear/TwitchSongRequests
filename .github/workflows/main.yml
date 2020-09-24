@@ -17,6 +17,7 @@ jobs:
           node-version: 12.8
       - name: Install UI dependencies
         run: npm ci
+        working-directory: ./ui
       - name: Install Angular CLI
         run: npm install -g @angular/cli
         working-directory: ./ui
