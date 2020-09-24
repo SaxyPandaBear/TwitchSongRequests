@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: UI
+        run: ng build --aot
+        shell: bash
+        working-directory: ./ui
+      - name: Server
+        run: gradle clean assemble testClasses
+        shell: bash
+        working-directory: ./server
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: UI
+        run: ng test
+        shell: bash
+        working-directory: ./ui
+      - name: Server
+        run: gradle test
+        shell: bash
+        working-directory: ./server
