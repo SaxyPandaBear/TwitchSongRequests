@@ -16,7 +16,7 @@ object JettyServerBuilder {
         ctx.setContextPath("/")
 
         val resourceConfig = new ResourceConfig()
-        resourceConfig.packages("com.github.saxypandabear.songrequests.jetty")
+        resourceConfig.packages("com.github.saxypandabear.songrequests.server")
         val servletContainer = new ServletContainer(resourceConfig)
         val servletHolder = new ServletHolder(servletContainer)
         ctx.addServlet(servletHolder, "/*")
