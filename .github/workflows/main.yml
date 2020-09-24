@@ -19,7 +19,7 @@ jobs:
         run: npm ci
         working-directory: ./ui
       - name: Install Angular CLI
-        run: npm install -g @angular/cli
+        run: sudo npm install -g @angular/cli
         working-directory: ./ui
       - name: Build UI
         run: ng build --aot --prod
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Angular CLI
-        run: npm install -g @angular/cli
+        run: sudo npm install -g @angular/cli
       - name: Test UI
         run: ng test
         shell: bash
