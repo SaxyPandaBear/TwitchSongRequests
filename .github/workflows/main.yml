@@ -11,11 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: UI
-        run: ng build --aot
+      - name: Use Node.js 12.8
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.8
+      - name: Install UI dependencies
+        run: npm ci
+        working-directory: ./ui
+      - name: Build UI
+        run: ng build --aot --prod
         shell: bash
         working-directory: ./ui
-      - name: Server
+      - name: Build server
         run: gradle clean assemble testClasses
         shell: bash
         working-directory: ./server
@@ -23,11 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: UI
+      - name: Test UI
         run: ng test
         shell: bash
         working-directory: ./ui
-      - name: Server
+      - name: Test server
         run: gradle test
         shell: bash
         working-directory: ./server
