@@ -1,7 +1,7 @@
-package com.github.saxypandabear.songrequests.jetty
+package com.github.saxypandabear.songrequests.server
 
 import com.github.saxypandabear.songrequests.UnitSpec
-import com.github.saxypandabear.songrequests.jetty.model.Channel
+import com.github.saxypandabear.songrequests.server.model.Channel
 import com.github.saxypandabear.songrequests.util.JsonUtil
 import io.restassured.RestAssured
 import io.restassured.http.ContentType

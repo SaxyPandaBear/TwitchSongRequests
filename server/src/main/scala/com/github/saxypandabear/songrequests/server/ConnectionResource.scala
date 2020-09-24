@@ -1,6 +1,6 @@
-package com.github.saxypandabear.songrequests.jetty
+package com.github.saxypandabear.songrequests.server
 
-import com.github.saxypandabear.songrequests.jetty.model.Channel
+import com.github.saxypandabear.songrequests.server.model.Channel
 import javax.ws.rs.core.{MediaType, Response}
 import javax.ws.rs._
 

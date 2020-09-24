@@ -1,4 +1,4 @@
-package com.github.saxypandabear.songrequests.jetty
+package com.github.saxypandabear.songrequests.server
 
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
