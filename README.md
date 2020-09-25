@@ -235,6 +235,32 @@ The "server" code, which is mostly for handling the WebSocket connections to
 Twitch is written in Scala, with a REST API in front of it to handle requests
 to start listening to a connection, or to stop listening to a specific topic.
 
+### The table structure
+We are using a NoSQL database for storing our data, and a record in DynamoDB should
+look something like this:
+
+```json5
+{
+    "connectionStatus": {
+        "S": "active"
+    },
+    "expires": {
+        "N": "1600617110"
+    },
+    "type": {
+        "S": "connect-session"
+    },
+    "channelId": {
+        "S": "577228983"
+    },
+    "sess": {
+        "S": "{\"cookie\":{\"originalMaxAge\":null,\"expires\":null,\"httpOnly\":true,\"path\":\"/\"},\"accessKeys\":{\"twitchToken\":{\"access_token\":\"42qs6jwou1py7r3uwg6a8xoxiwfctl\",\"refresh_token\":\"6mqwooa856rgp3adttrcxcqgbrngn6w75l1t4a0ogw6u4o1yzj\",\"token_type\":\"bearer\"},\"spotifyToken\":{\"access_token\":\"BQDCO8CfoJO0jXAwCQ1-hM3V_zl09rRkU6ugly8cIpDB9Thvm8bczM7-1J5Jd7zzxYa7ux0R-MIzh6cQ6EBykAnN7S_0B-36fccZCBPSHqKjzF0Xq_wi8T95MxROcf-laO0HPGFZ2qHiX_4h-Pypl7xmZU09_VS0fmmdbfZ6xIKaDIs\",\"refresh_token\":\"AQD0BCXZUMupQmssmgYMoa3g1I9ixR2Ulzoh7hxeFi86Nn4a48CoI3WygfAzdtt1Yq_uyuhothventKPB7w95Wa47JiCAtlHjzZ9xj7TfTEwm1zUpHZnABklrD6VWo34YLM\",\"token_type\":\"Bearer\",\"scope\":\"user-modify-playback-state user-read-playback-state\"}}}"
+    }
+}
+```
+
+Note that the `sess` value is a nested JSON blob, but stored as a String.
+
 ### Running the components
 
 To get started, just clone/fork the repo, and from the root, you will want to first

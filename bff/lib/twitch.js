@@ -19,7 +19,6 @@ function isSongRequest(rewardTitle) {
     return rewardTitle.toLowerCase().includes('song request');
 }
 
-// spotify:track:5Cjkfft7iRWJp4elZXgjkc
 function matchesSpotifyUri(uri) {
     const matches = uri.match(spotifyTrackPattern);
     // if it fails to match at all, the result of matches will be null
