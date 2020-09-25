@@ -1,6 +1,6 @@
 package com.github.saxypandabear.songrequests.server
 
-import com.github.saxypandabear.songrequests.UnitSpec
+import com.github.saxypandabear.songrequests.{RotatingTestPort, UnitSpec}
 import com.github.saxypandabear.songrequests.server.model.Channel
 import com.github.saxypandabear.songrequests.util.JsonUtil
 import io.restassured.RestAssured
@@ -8,9 +8,13 @@ import io.restassured.http.ContentType
 import org.eclipse.jetty.server.Server
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
-class ConnectionResourceSpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAfterAll {
+class ConnectionResourceSpec extends UnitSpec
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with RotatingTestPort {
+
     private var server: Server = _
-    private val port = 7777
+    private var port: Int = _
 
     override def beforeAll(): Unit = {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
@@ -18,6 +22,7 @@ class ConnectionResourceSpec extends UnitSpec with BeforeAndAfterEach with Befor
     }
 
     override def beforeEach(): Unit = {
+        port = randomPort()
         server = JettyServerBuilder.build(port)
         server.start()
     }

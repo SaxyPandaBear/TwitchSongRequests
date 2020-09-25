@@ -25,21 +25,21 @@ class TwitchSocket(channelId: String,
      */
     @OnWebSocketConnect
     def onConnect(session: Session): Unit = {
-        this.listeners.foreach(_.onConnectEvent(session))
+        this.listeners.foreach(_.onConnectEvent(channelId, session))
     }
 
     @OnWebSocketClose
     def onClose(session: Session, statusCode: Int, reason: String): Unit = {
-        this.listeners.foreach(_.onCloseEvent(session, statusCode, reason))
+        this.listeners.foreach(_.onCloseEvent(channelId, session, statusCode, reason))
     }
 
     @OnWebSocketError
     def onError(session: Session, cause: Throwable): Unit = {
-        listeners.foreach(_.onErrorEvent(session, cause))
+        listeners.foreach(_.onErrorEvent(channelId, session, cause))
     }
 
     @OnWebSocketMessage
     def onMessage(session: Session, message: String): Unit = {
-        listeners.foreach(_.onMessageEvent(session, message))
+        listeners.foreach(_.onMessageEvent(channelId, session, message))
     }
 }
