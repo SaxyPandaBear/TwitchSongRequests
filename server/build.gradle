@@ -51,6 +51,8 @@ dependencies {
 
     // WebSocket stuff
     implementation 'org.eclipse.jetty.websocket:websocket-client:9.4.27.v20200227'
+    testImplementation 'org.eclipse.jetty.websocket:websocket-server:9.4.27.v20200227'
+    testImplementation 'org.eclipse.jetty.websocket:websocket-servlet:9.4.27.v20200227'
 
     // Dependencies for dealing with JSON
     implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'

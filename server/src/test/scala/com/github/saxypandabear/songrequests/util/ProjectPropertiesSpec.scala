@@ -2,7 +2,7 @@ package com.github.saxypandabear.songrequests.util
 
 import java.util.Properties
 
-import com.github.saxypandabear.songrequests.UnitSpec
+import com.github.saxypandabear.songrequests.lib.UnitSpec
 
 class ProjectPropertiesSpec extends UnitSpec {
     "Calling toMap on an empty properties object" should "return an empty map" in {

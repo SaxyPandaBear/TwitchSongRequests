@@ -1,8 +1,8 @@
-package com.github.saxypandabear.songrequests
+package com.github.saxypandabear.songrequests.lib
 
 import org.junit.runner.RunWith
-import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
  * This base class is used in order to provide a simple workaround for

@@ -1,6 +1,6 @@
 package com.github.saxypandabear.songrequests.server
 
-import com.github.saxypandabear.songrequests.{RotatingTestPort, UnitSpec}
+import com.github.saxypandabear.songrequests.lib.{RotatingTestPort, UnitSpec}
 import com.github.saxypandabear.songrequests.server.model.Channel
 import com.github.saxypandabear.songrequests.util.JsonUtil
 import io.restassured.RestAssured
@@ -23,7 +23,7 @@ class ConnectionResourceSpec extends UnitSpec
 
     override def beforeEach(): Unit = {
         port = randomPort()
-        server = JettyServerBuilder.build(port)
+        server = JettyUtil.build(port)
         server.start()
     }
 

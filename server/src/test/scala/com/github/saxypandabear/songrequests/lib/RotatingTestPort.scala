@@ -1,4 +1,4 @@
-package com.github.saxypandabear.songrequests
+package com.github.saxypandabear.songrequests.lib
 
 import scala.util.Random
 

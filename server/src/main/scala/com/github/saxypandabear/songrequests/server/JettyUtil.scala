@@ -5,7 +5,7 @@ import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 
-object JettyServerBuilder {
+object JettyUtil {
 
     def build(port: Int): Server = {
         val server = new Server(port)
