@@ -1,12 +1,18 @@
 package com.github.saxypandabear.songrequests.oauth
 
-trait OauthTokenManager {
+import scala.collection.mutable
+
+class TestTokenManager extends OauthTokenManager {
+    val refreshEvents = new mutable.HashMap[String, String]()
+    val acceptedCredentials = Map("abc123" -> "foo")
+
+    var accessToken: String = _
 
     /**
      * Retrieve an access token
      * @return an OAuth access token
      */
-    def getAccessToken: String
+    override def getAccessToken: String = ???
 
     /**
      * Initiate a request to refresh the OAuth token, presumably because
@@ -17,8 +23,5 @@ trait OauthTokenManager {
      * @param uri          URI to request the token from
      * @return a POJO that represents the successful response from the authentication server
      */
-    def refresh(clientId: String,
-                clientSecret: String,
-                refreshToken: String,
-                uri: String): OauthResponse
+    override def refresh(clientId: String, clientSecret: String, refreshToken: String, uri: String): OauthResponse = ???
 }

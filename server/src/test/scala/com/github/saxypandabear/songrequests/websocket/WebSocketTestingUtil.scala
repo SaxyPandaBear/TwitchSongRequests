@@ -12,7 +12,7 @@ object WebSocketTestingUtil {
 
     // keeps track of the channel IDs that are allowed to interact with the server.
     // this helps to manage paths for testing, i.e.: which channel IDs trigger error events, etc.
-    val acceptedChannelIds = Set("abc123", "foobar1")
+    val acceptedChannelIds = Set("abc123")
 
     // Locking mechanisms to block on events
     var onConnect = new Semaphore(1)
