@@ -22,6 +22,7 @@ class TwitchSocketSpec extends UnitSpec
 
     private var server: Server = _
     private var port: Int = _
+    private var webSocketClient: WebSocketClient = _
 
     override def beforeEach(): Unit = {
         testListener.flush()
@@ -30,17 +31,21 @@ class TwitchSocketSpec extends UnitSpec
         port = randomPort()
         server = WebSocketTestingUtil.build(port)
         server.start()
+        webSocketClient = new WebSocketClient()
+        webSocketClient.start()
     }
 
     override def afterEach(): Unit = {
+        webSocketClient.stop()
         server.stop()
     }
 
-    it should "work" in {
+    // TODO: write tests :)
+    ignore should "work" in {
         val uri = new URI(s"ws://localhost:$port")
         val channelId = "abc123"
 
-        val client = new WebSocketClient()
         val socket = new TwitchSocket(channelId, testTokenManager, Seq(testListener))
+        webSocketClient.connect(socket, uri)
     }
 }
