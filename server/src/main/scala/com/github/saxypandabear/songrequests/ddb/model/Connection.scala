@@ -1,5 +1,6 @@
 package com.github.saxypandabear.songrequests.ddb.model
 
+import com.amazonaws.services.dynamodbv2.document.Item
 import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -95,11 +96,41 @@ case class Connection(@JsonProperty("channelId") channelId: String,
      * we need to update our session object that we have in memory.
      * This should not update DynamoDB. We should let the ConnectionDataStore deal with
      * that.
+     *
+     * Note that we don't need to update any internal variable other than the session
+     * JSON string, because the accessToken is parsed from the session object every time,
+     * and is not cached.
      * @param token new access token that is retrieved from the server
      */
     @JsonIgnore
     def updateAccessToken(token: String): Unit = {
-        extractTwitchFromSession().put("access_token", token)
+        val sessionObject = objectMapper.readTree(sess).asInstanceOf[ObjectNode]
+
+        // shouldn't use the `extractTwitchFromSession` method because
+        // it returns an object that is nested deeper than the root session object.
+        sessionObject
+            .get("accessKeys")
+            .get("twitchToken")
+            .asInstanceOf[ObjectNode]
+            .put("access_token", token)
+
+        // now we need to write this back to the session variable
+        sess = objectMapper.writeValueAsString(sessionObject)
+    }
+
+    /**
+     * Convert this Connection object into a DynamoDB interface so that we can persist it
+     * to DynamoDB
+     * @return
+     */
+    @JsonIgnore
+    def toItem: Item = {
+        new Item()
+            .withPrimaryKey("channelId", channelId)
+            .withString("connectionStatus", connectionStatus)
+            .withNumber("expires", expires)
+            .withString("type", `type`)
+            .withString("sess", sess)
     }
 
     /**

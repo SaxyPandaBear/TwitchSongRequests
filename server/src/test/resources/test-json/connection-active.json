@@ -3,7 +3,7 @@
     "S": "active"
   },
   "expires": {
-    "N": "192837465"
+    "N": "9876543210"
   },
   "type": {
     "S": "connect-session"
