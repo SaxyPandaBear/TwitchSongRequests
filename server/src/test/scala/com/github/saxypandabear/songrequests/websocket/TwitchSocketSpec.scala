@@ -1,51 +1,36 @@
 package com.github.saxypandabear.songrequests.websocket
 
-import java.net.URI
+import com.github.saxypandabear.songrequests.lib.UnitSpec
 
-import com.github.saxypandabear.songrequests.lib.{RotatingTestPort, UnitSpec}
-import com.github.saxypandabear.songrequests.oauth.TestTokenManager
-import com.github.saxypandabear.songrequests.websocket.listener.TestingWebSocketListener
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.websocket.client.WebSocketClient
-import org.scalatest.BeforeAndAfterEach
-
-/**
- * Test class that should validate the functionality of the Twitch WebSocket handler.
- * It should test how the handler deals with connect requests, message events, errors, and close events.
- */
-class TwitchSocketSpec extends UnitSpec
-    with RotatingTestPort
-    with BeforeAndAfterEach {
-
-    private val testListener = new TestingWebSocketListener()
-    private val testTokenManager = new TestTokenManager()
-
-    private var server: Server = _
-    private var port: Int = _
-    private var webSocketClient: WebSocketClient = _
-
-    override def beforeEach(): Unit = {
-        testListener.flush()
-        WebSocketTestingUtil.reset()
-
-        port = randomPort()
-        server = WebSocketTestingUtil.build(port)
-        server.start()
-        webSocketClient = new WebSocketClient()
-        webSocketClient.start()
+class TwitchSocketSpec extends UnitSpec {
+    "Checking a valid user input Spotify URI" should "return true" in {
+        val socket = new TwitchSocket("", null)
+        socket.inputMatchesSpotifyUri("spotify:track:abc123") should be(true)
     }
 
-    override def afterEach(): Unit = {
-        webSocketClient.stop()
-        server.stop()
+    "Checking a valid user input Spotify URI that has extra whitespace" should "return true" in {
+        val socket = new TwitchSocket("", null)
+        socket.inputMatchesSpotifyUri("  spotify:track:abc123    \n") should be(true)
     }
 
-    // TODO: write tests :)
-    ignore should "work" in {
-        val uri = new URI(s"ws://localhost:$port")
-        val channelId = "abc123"
+    "Checking a user input that contains a valid Spotify URI but has other characters" should "return false" in {
+        val socket = new TwitchSocket("", null)
+        socket.inputMatchesSpotifyUri("before spotify:track:abc123") should be(false)
+        socket.inputMatchesSpotifyUri("spotify:track:abc123 \nafter") should be(false)
+    }
 
-        val socket = new TwitchSocket(channelId, testTokenManager, Seq(testListener))
-        webSocketClient.connect(socket, uri)
+    "Checking an invalid input, like an album URI" should "return false" in {
+        val socket = new TwitchSocket("", null)
+        socket.inputMatchesSpotifyUri("spotify:album:foobarbaz987") should be(false)
+    }
+
+    "Checking a null Spotify URI" should "return false" in {
+        val socket = new TwitchSocket("", null)
+        socket.inputMatchesSpotifyUri(null) should be(false)
+    }
+
+    "Checking an empty string" should "return false" in {
+        val socket = new TwitchSocket("", null)
+        socket.inputMatchesSpotifyUri("") should be(false)
     }
 }
