@@ -36,7 +36,7 @@ class TestTokenManager(clientId: String, clientSecret: String, refreshToken: Str
 }
 
 object TestTokenManager {
-    // this tracks the acceptable client ID -> secret pairing. This should not change between tests
+    // this tracks the acceptable client ID -> secret -> refresh token grouping. This should not change between tests
     val acceptedCredentials = Seq(("abc123", "foo", "bar"))
 
     // keep track of refresh events that happen in this manager

@@ -14,7 +14,6 @@ class ConnectionResourceSpec extends UnitSpec
     with RotatingTestPort {
 
     private var server: Server = _
-    private var port: Int = _
 
     override def beforeAll(): Unit = {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
@@ -22,12 +21,13 @@ class ConnectionResourceSpec extends UnitSpec
     }
 
     override def beforeEach(): Unit = {
-        port = randomPort()
+        super.beforeEach()
         server = JettyUtil.build(port)
         server.start()
     }
 
     override def afterEach(): Unit = {
+        super.afterEach()
         server.stop()
     }
 

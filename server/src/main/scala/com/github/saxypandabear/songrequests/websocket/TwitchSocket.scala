@@ -17,7 +17,7 @@ import org.eclipse.jetty.websocket.api.annotations._
 class TwitchSocket(channelId: String,
                    oauthTokenManager: OauthTokenManager,
                    listeners: Seq[WebSocketListener] = Seq.empty) {
-    // /(spotify:track:(\w|\d)+)/y
+
     private val spotifyUriPattern = "^(spotify:track:(\\w|\\d)+)$".r
 
     /**
