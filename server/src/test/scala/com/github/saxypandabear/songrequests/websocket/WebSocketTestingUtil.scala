@@ -2,8 +2,11 @@ package com.github.saxypandabear.songrequests.websocket
 
 import java.util.concurrent.Semaphore
 
+import com.fasterxml.jackson.databind.JsonNode
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
+
+import scala.collection.mutable
 
 object WebSocketTestingUtil {
 
@@ -19,6 +22,11 @@ object WebSocketTestingUtil {
     var onClose = new Semaphore(1)
     var onError = new Semaphore(1)
     var onMessage = new Semaphore(1)
+
+    // Stores server state that tracks which events occur when handling messages
+    val pingMessages = new mutable.ArrayBuffer[JsonNode]()
+    val listenMessages = new mutable.ArrayBuffer[JsonNode]()
+    val unlistenMessages = new mutable.ArrayBuffer[JsonNode]()
 
     def build(port: Int): Server = {
         val server = new Server(port)
@@ -42,5 +50,9 @@ object WebSocketTestingUtil {
         onClose = new Semaphore(1)
         onError = new Semaphore(1)
         onMessage = new Semaphore(1)
+
+        pingMessages.clear()
+        listenMessages.clear()
+        unlistenMessages.clear()
     }
 }
