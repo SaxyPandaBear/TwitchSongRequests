@@ -25,6 +25,7 @@ class TestResponseSocket extends WebSocketAdapter with StrictLogging {
         WebSocketTestingUtil.onError.release()
     }
 
+    // note: do not release the semaphore on a ping event
     override def onWebSocketText(message: String): Unit = {
         super.onWebSocketText(message)
         logger.info(s"Received message event: Message=$message")
@@ -32,12 +33,11 @@ class TestResponseSocket extends WebSocketAdapter with StrictLogging {
         // need to acknowledge PING, LISTEN, and UNLISTEN type messages
         val parsedJson = objectMapper.readTree(message)
         handleMessage(parsedJson)
-
-        WebSocketTestingUtil.onMessage.release()
     }
 
     private def handleMessage(jsonMessage: JsonNode): Unit = {
         val messageType = jsonMessage.get("type").asText()
+        logger.info("Message type received: {}", messageType)
         messageType match {
             case "PING" => handlePingMessage(jsonMessage)
             case "LISTEN" => handleListenMessage(jsonMessage)
@@ -53,10 +53,12 @@ class TestResponseSocket extends WebSocketAdapter with StrictLogging {
     private def handleListenMessage(jsonNode: JsonNode): Unit = {
         logger.info("Listen message received")
         WebSocketTestingUtil.listenMessages += jsonNode
+        WebSocketTestingUtil.onMessage.release()
     }
 
     private def handleUnlistenMessage(jsonNode: JsonNode): Unit = {
         logger.info("Unlisten message received")
         WebSocketTestingUtil.unlistenMessages += jsonNode
+        WebSocketTestingUtil.onMessage.release()
     }
 }

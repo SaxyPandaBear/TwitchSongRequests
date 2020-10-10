@@ -34,16 +34,15 @@ class TwitchSocket(channelId: String,
     @OnWebSocketConnect
     def onConnect(session: Session): Unit = {
         this.session = session
-        this.listeners.foreach(_.onConnectEvent(channelId, session))
         startPing()
         sendListenEvent()
+        this.listeners.foreach(_.onConnectEvent(channelId, session))
     }
 
     @OnWebSocketClose
     def onClose(statusCode: Int, reason: String): Unit = {
-        this.listeners.foreach(_.onCloseEvent(channelId, session, statusCode, reason))
-
         stopPing()
+        this.listeners.foreach(_.onCloseEvent(channelId, session, statusCode, reason))
     }
 
     @OnWebSocketError
@@ -99,6 +98,6 @@ class PingTimedTask(session: Session) extends TimerTask {
           |""".stripMargin
 
     override def run(): Unit = {
-        session.getRemote.sendString(PING_MESSAGE)
+        session.getRemote.sendStringByFuture(PING_MESSAGE)
     }
 }
