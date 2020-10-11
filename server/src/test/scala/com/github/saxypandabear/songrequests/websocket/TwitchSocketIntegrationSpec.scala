@@ -171,12 +171,12 @@ class TwitchSocketIntegrationSpec
         pingMessage.fields().asScala.length == 1
       } should be(true)
       testListener.messageEvents
-        .getOrElse(channelId, fail())
+        .getOrElse(channelId, fail(s"Channel ID $channelId does not exist"))
         .map(objectMapper.readTree)
         .count(node =>
           node.has("type") && node.get("type").asText() == "PONG"
         ) should
-        be(WebSocketTestingUtil.pingMessages.length +- 1)
+        be(WebSocketTestingUtil.pingMessages.length +- 2)
     }
 
     connectedChannelIds += channelId
