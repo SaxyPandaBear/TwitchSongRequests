@@ -14,6 +14,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Seconds, Span}
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 /**
@@ -37,6 +38,7 @@ class TwitchSocketIntegrationSpec extends UnitSpec
     override def beforeEach(): Unit = {
         super.beforeEach()
 
+        connectedChannelIds.clear()
         testListener.flush()
         WebSocketTestingUtil.reset()
 
@@ -126,9 +128,18 @@ class TwitchSocketIntegrationSpec extends UnitSpec
         WebSocketTestingUtil.onConnect.availablePermits() should be(0)
 
         // If we have a frequency of a ping every 10ms, we can expect roughly 10 pings in 100ms (more or less)
+        // each ping message should only contain a single field, that looks like:
+        // { "type": "PING" }
         eventually(timeout(Span(100, Millis))) {
             WebSocketTestingUtil.pingMessages.length should be(10 +- 1)
+            WebSocketTestingUtil.pingMessages.forall(pingMessage => {
+                pingMessage.has("type") &&
+                    pingMessage.get("type").asText() == "PING" &&
+                    pingMessage.fields().asScala.length == 1
+            }) should be(true)
         }
+
+        connectedChannelIds += channelId
     }
 
     // =================== End onConnect Tests ===================
