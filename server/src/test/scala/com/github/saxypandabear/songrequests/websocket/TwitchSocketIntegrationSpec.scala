@@ -48,6 +48,7 @@ class TwitchSocketIntegrationSpec
 
     connectedChannelIds.clear()
     testListener.clear()
+    testingSongQueue.clear()
     WebSocketTestingUtil.reset()
 
     server = WebSocketTestingUtil.build(port)
@@ -185,7 +186,7 @@ class TwitchSocketIntegrationSpec
 
   // =================== Start onMessage Tests ===================
   /* The main piece to test with onMessage is how it parses and handles input
-   * from the server */
+   * from the server. */
 
   // =================== End onMessage Tests ===================
 

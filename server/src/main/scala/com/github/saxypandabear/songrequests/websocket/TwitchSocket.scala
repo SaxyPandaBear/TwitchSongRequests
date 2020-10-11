@@ -2,6 +2,7 @@ package com.github.saxypandabear.songrequests.websocket
 
 import java.util.{Timer, TimerTask}
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.github.saxypandabear.songrequests.oauth.OauthTokenManager
 import com.github.saxypandabear.songrequests.queue.SongQueue
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
@@ -83,8 +84,52 @@ class TwitchSocket(
   def onMessage(message: String): Unit = {
     val parsed       = objectMapper.readTree(message)
     val rootDataNode = parsed.get("data")
+
+    rootDataNode.get("type").asText() match {
+      case "RECONNECT" => handleReconnect(rootDataNode)
+      case "MESSAGE"   => handleTwitchMessage(rootDataNode)
+      case "PONG"      => handlePong(rootDataNode)
+    }
+
     listeners.foreach(_.onMessageEvent(channelId, session, message))
   }
+
+  /**
+   * When the server sends a RECONNECT message, we are to reconnect to the server.
+   * https://dev.twitch.tv/docs/pubsub#connection-management
+   * @param message the JSON reconnect message
+   */
+  private[websocket] def handleReconnect(message: JsonNode): Unit = {
+    // TODO: figure out how to initiate a reconnect from here
+  }
+
+  /**
+   * When the server sends a regular message, this indicates that we received a
+   * channel point redemption event, so we have to parse it. Part of the message
+   * is string representation of JSON, so it will require more nested parsing.
+   * We
+   * @param message the JSON channel redemption event message
+   */
+  private[websocket] def handleTwitchMessage(message: JsonNode): Unit = {
+    val event          =
+      objectMapper.readTree(message.get("data").get("message").asText())
+    val redemptionNode = event.get("data").get("redemption")
+    val spotifyUri     = redemptionNode.get("user_input").asText()
+    val rewardTitle    = redemptionNode.get("reward").get("title").asText()
+    if (isSongRequest(rewardTitle) && inputMatchesSpotifyUri(spotifyUri)) {
+      songQueue.queue(channelId, spotifyUri)
+    }
+  }
+
+  // TODO: If a client does not receive a PONG message within 10 seconds of
+  //       issuing a PING command, it should reconnect to the server.
+  //       https://dev.twitch.tv/docs/pubsub#connection-management
+  //       Will most likely have to use thread locals for this
+  /**
+   * This doesn't need to do anything really. The PONG message can be dropped
+   * @param message the JSON pong message
+   */
+  private[websocket] def handlePong(message: JsonNode): Unit = {}
 
   /**
    * We have to PING the server every X seconds in order to let Twitch know we are still listening
@@ -96,6 +141,14 @@ class TwitchSocket(
 
   private[websocket] def inputMatchesSpotifyUri(userInput: String): Boolean =
     userInput != null && spotifyUriPattern.findFirstIn(userInput.trim).isDefined
+
+  /**
+   * Simple check on the reward title to make sure that it contains the phrase "song request"
+   * @param rewardTitle Title of the channel point redemption
+   * @return true if the title contains "song request", false otherwise
+   */
+  private[websocket] def isSongRequest(rewardTitle: String): Boolean =
+    rewardTitle != null && rewardTitle.toLowerCase().contains("song request")
 }
 
 class PingTimedTask(session: Session) extends TimerTask {

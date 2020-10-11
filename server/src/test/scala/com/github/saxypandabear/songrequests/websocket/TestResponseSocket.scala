@@ -1,5 +1,7 @@
 package com.github.saxypandabear.songrequests.websocket
 
+import java.util.TimerTask
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
 import com.typesafe.scalalogging.StrictLogging
@@ -68,5 +70,36 @@ class TestResponseSocket extends WebSocketAdapter with StrictLogging {
     logger.info("Unlisten message received")
     WebSocketTestingUtil.unlistenMessages += jsonNode
     WebSocketTestingUtil.onMessage.release()
+  }
+}
+
+class RespondTimedTask(session: Session) extends TimerTask {
+
+  /**
+   * This needs to check the testing utility for whether we are allowed
+   * to send messages, and if so, send so long as we have permits on the
+   * semaphores. This should be able to mix redemption and reconnect
+   * messages, in order to act like a real server (pseudo-chaos testing).
+   * This should check for redeem events first, then check for
+   */
+  override def run(): Unit = {
+    if (
+        WebSocketTestingUtil.shouldSendRedeemEvent
+          .get() && WebSocketTestingUtil.redeemEvents.availablePermits() > 0
+    ) {
+      WebSocketTestingUtil.redeemEvents.acquire()
+      session.getRemote.sendStringByFuture(
+          WebSocketTestingUtil.createRedeemEvent()
+      )
+    }
+    if (
+        WebSocketTestingUtil.shouldSendReconnectEvent
+          .get() && WebSocketTestingUtil.reconnectEvents.availablePermits() > 0
+    ) {
+      WebSocketTestingUtil.reconnectEvents.acquire()
+      session.getRemote.sendStringByFuture(
+          WebSocketTestingUtil.createReconnectEvent()
+      )
+    }
   }
 }
