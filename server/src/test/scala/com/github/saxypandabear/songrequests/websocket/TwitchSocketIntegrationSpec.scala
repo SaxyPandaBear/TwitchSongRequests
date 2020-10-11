@@ -181,8 +181,13 @@ class TwitchSocketIntegrationSpec
 
     connectedChannelIds += channelId
   }
-
   // =================== End onConnect Tests ===================
+
+  // =================== Start onMessage Tests ===================
+  /* The main piece to test with onMessage is how it parses and handles input
+   * from the server */
+
+  // =================== End onMessage Tests ===================
 
   private def validateListenEvent(
       event: JsonNode,
