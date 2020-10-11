@@ -22,9 +22,10 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-/** Test class that should validate the functionality of the Twitch WebSocket handler.
-  * It should test how the handler deals with connect requests, message events, errors, and close events.
-  */
+/**
+ * Test class that should validate the functionality of the Twitch WebSocket handler.
+ * It should test how the handler deals with connect requests, message events, errors, and close events.
+ */
 class TwitchSocketIntegrationSpec
     extends UnitSpec
     with RotatingTestPort

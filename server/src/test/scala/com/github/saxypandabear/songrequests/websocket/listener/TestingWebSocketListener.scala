@@ -16,48 +16,67 @@ import scala.collection.mutable
  */
 class TestingWebSocketListener extends WebSocketListener {
 
-    private val lockObject = new Object()
-    val connectEvents = new mutable.HashSet[String]()
-    val closeEvents = new mutable.HashMap[String, mutable.ArrayBuffer[(Int, String)]]()
-    val messageEvents = new mutable.HashMap[String, mutable.ArrayBuffer[String]]()
-    val errorEvents = new mutable.HashMap[String, mutable.ArrayBuffer[Throwable]]()
+  val connectEvents      = new mutable.HashSet[String]()
+  val closeEvents        =
+    new mutable.HashMap[String, mutable.ArrayBuffer[(Int, String)]]()
+  val messageEvents      = new mutable.HashMap[String, mutable.ArrayBuffer[String]]()
+  val errorEvents        =
+    new mutable.HashMap[String, mutable.ArrayBuffer[Throwable]]()
+  private val lockObject = new Object()
 
-    override def onConnectEvent(channelId: String, session: Session): Unit = {
-        lockObject.synchronized {
-            connectEvents += channelId
-        }
+  override def onConnectEvent(channelId: String, session: Session): Unit =
+    lockObject.synchronized {
+      connectEvents += channelId
     }
 
-    override def onCloseEvent(channelId: String, session: Session, statusCode: Int, reason: String): Unit = {
-        lockObject.synchronized {
-            val eventsForChannel = closeEvents.getOrElseUpdate(channelId, new mutable.ArrayBuffer[(Int, String)]())
-            eventsForChannel += ((statusCode, reason))
-        }
+  override def onCloseEvent(
+      channelId: String,
+      session: Session,
+      statusCode: Int,
+      reason: String
+  ): Unit =
+    lockObject.synchronized {
+      val eventsForChannel = closeEvents.getOrElseUpdate(
+          channelId,
+          new mutable.ArrayBuffer[(Int, String)]()
+      )
+      eventsForChannel += ((statusCode, reason))
     }
 
-    override def onMessageEvent(channelId: String, session: Session, message: String): Unit = {
-        lockObject.synchronized {
-            val eventsForChannel = messageEvents.getOrElseUpdate(channelId, new mutable.ArrayBuffer[String]())
-            eventsForChannel += message
-        }
+  override def onMessageEvent(
+      channelId: String,
+      session: Session,
+      message: String
+  ): Unit =
+    lockObject.synchronized {
+      val eventsForChannel = messageEvents.getOrElseUpdate(
+          channelId,
+          new mutable.ArrayBuffer[String]()
+      )
+      eventsForChannel += message
     }
 
-    override def onErrorEvent(channelId: String, session: Session, error: Throwable): Unit = {
-        lockObject.synchronized {
-            val eventsForChannel = errorEvents.getOrElseUpdate(channelId, new mutable.ArrayBuffer[Throwable]())
-            eventsForChannel += error
-        }
+  override def onErrorEvent(
+      channelId: String,
+      session: Session,
+      error: Throwable
+  ): Unit =
+    lockObject.synchronized {
+      val eventsForChannel = errorEvents.getOrElseUpdate(
+          channelId,
+          new mutable.ArrayBuffer[Throwable]()
+      )
+      eventsForChannel += error
     }
 
-    /**
-     * Clear out all of the events that are currently stored in this listener
-     */
-    def clear(): Unit = {
-        lockObject.synchronized {
-            connectEvents.clear()
-            closeEvents.clear()
-            messageEvents.clear()
-            errorEvents.clear()
-        }
+  /**
+   * Clear out all of the events that are currently stored in this listener
+   */
+  def clear(): Unit =
+    lockObject.synchronized {
+      connectEvents.clear()
+      closeEvents.clear()
+      messageEvents.clear()
+      errorEvents.clear()
     }
 }

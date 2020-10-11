@@ -1,8 +1,12 @@
 package com.github.saxypandabear.songrequests.oauth
 
-case class OauthRequest(clientId: String, clientSecret: String, refreshToken: String) {
-    def toJsonString: String =
-        f"""
+case class OauthRequest(
+    clientId: String,
+    clientSecret: String,
+    refreshToken: String
+) {
+  def toJsonString: String =
+    f"""
            |{
            |    "grant_type": "refresh_token",
            |    "refresh_token": "$refreshToken",

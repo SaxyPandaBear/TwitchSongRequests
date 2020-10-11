@@ -53,105 +53,104 @@ import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
  * with DynamoDB itself.
  */
 @JsonDeserialize(using = classOf[ConnectionDeserializer])
-case class Connection(@JsonProperty("channelId") channelId: String,
-                      @JsonProperty("connectionStatus") connectionStatus: String,
-                      @JsonProperty("expires") expires: Long,
-                      @JsonProperty("type") `type`: String,
-                      @JsonProperty("sess") var sess: String) {
-    @JsonCreator
-    def this() {
-        this("", "", 0L, "", "")
+case class Connection(
+    @JsonProperty("channelId") channelId: String,
+    @JsonProperty("connectionStatus") connectionStatus: String,
+    @JsonProperty("expires") expires: Long,
+    @JsonProperty("type") `type`: String,
+    @JsonProperty("sess") var sess: String
+) {
+  // the refresh token doesn't change. when we parse the session object the
+  // first time,
+  // we can store it here so we can reference it instead of parsing the object
+  // again
+  private var refreshToken: String = _
+
+  @JsonCreator
+  def this() {
+    this("", "", 0L, "", "")
+  }
+
+  /**
+   * Since the session can change state at any point, we have to parse it every time.
+   * Parse the session JSON string to get the Twitch access token.
+   * @return the Twitch access token associated with this channel ID
+   */
+  @JsonIgnore
+  def retrieveAccessToken(): String =
+    extractAccessToken(extractTwitchFromSession())
+
+  private def extractAccessToken(twitchToken: ObjectNode): String =
+    twitchToken.get("access_token").asText()
+
+  /**
+   * The refresh token value doesn't change. We can/should cache this value so we
+   * don't have to parse the session object every time we need to refresh - just
+   * the first time.
+   * @return the Twitch refresh token associated with this channel ID
+   */
+  @JsonIgnore
+  def retrieveRefreshToken(): String = {
+    if (refreshToken == null) {
+      refreshToken = extractRefreshToken(extractTwitchFromSession())
     }
+    refreshToken
+  }
 
-    // the refresh token doesn't change. when we parse the session object the first time,
-    // we can store it here so we can reference it instead of parsing the object again
-    private var refreshToken: String = _
+  /**
+   * Parse the JSON object that represents the session state, and return a Jackson
+   * ObjectNode. We cast it to an ObjectNode because a JsonNode does not provide a
+   * way to update the value in the tree (see `setAccessToken`).
+   * @return the parsed JSON object
+   */
+  private def extractTwitchFromSession(): ObjectNode =
+    objectMapper
+      .readTree(sess)
+      .get("accessKeys")
+      .get("twitchToken")
+      .asInstanceOf[ObjectNode]
 
-    /**
-     * Since the session can change state at any point, we have to parse it every time.
-     * Parse the session JSON string to get the Twitch access token.
-     * @return the Twitch access token associated with this channel ID
-     */
-    @JsonIgnore
-    def retrieveAccessToken(): String = {
-        extractAccessToken(extractTwitchFromSession())
-    }
+  private def extractRefreshToken(twitchToken: ObjectNode): String =
+    twitchToken.get("refresh_token").asText()
 
-    /**
-     * The refresh token value doesn't change. We can/should cache this value so we
-     * don't have to parse the session object every time we need to refresh - just
-     * the first time.
-     * @return the Twitch refresh token associated with this channel ID
-     */
-    @JsonIgnore
-    def retrieveRefreshToken(): String = {
-        if (refreshToken == null) {
-            refreshToken = extractRefreshToken(extractTwitchFromSession())
-        }
-        refreshToken
-    }
+  /**
+   * Assuming that we retrieve a new access token from the authentication server,
+   * we need to update our session object that we have in memory.
+   * This should not update DynamoDB. We should let the ConnectionDataStore deal with
+   * that.
+   *
+   * Note that we don't need to update any internal variable other than the session
+   * JSON string, because the accessToken is parsed from the session object every time,
+   * and is not cached.
+   * @param token new access token that is retrieved from the server
+   */
+  @JsonIgnore
+  def updateAccessToken(token: String): Unit = {
+    val sessionObject = objectMapper.readTree(sess).asInstanceOf[ObjectNode]
 
-    /**
-     * Assuming that we retrieve a new access token from the authentication server,
-     * we need to update our session object that we have in memory.
-     * This should not update DynamoDB. We should let the ConnectionDataStore deal with
-     * that.
-     *
-     * Note that we don't need to update any internal variable other than the session
-     * JSON string, because the accessToken is parsed from the session object every time,
-     * and is not cached.
-     * @param token new access token that is retrieved from the server
-     */
-    @JsonIgnore
-    def updateAccessToken(token: String): Unit = {
-        val sessionObject = objectMapper.readTree(sess).asInstanceOf[ObjectNode]
+    // shouldn't use the `extractTwitchFromSession` method because
+    // it returns an object that is nested deeper than the root session object.
+    sessionObject
+      .get("accessKeys")
+      .get("twitchToken")
+      .asInstanceOf[ObjectNode]
+      .put("access_token", token)
 
-        // shouldn't use the `extractTwitchFromSession` method because
-        // it returns an object that is nested deeper than the root session object.
-        sessionObject
-            .get("accessKeys")
-            .get("twitchToken")
-            .asInstanceOf[ObjectNode]
-            .put("access_token", token)
+    // now we need to write this back to the session variable
+    sess = objectMapper.writeValueAsString(sessionObject)
+  }
 
-        // now we need to write this back to the session variable
-        sess = objectMapper.writeValueAsString(sessionObject)
-    }
-
-    /**
-     * Convert this Connection object into a DynamoDB interface so that we can persist it
-     * to DynamoDB
-     * @return
-     */
-    @JsonIgnore
-    def toItem: Item = {
-        new Item()
-            .withPrimaryKey("channelId", channelId)
-            .withString("connectionStatus", connectionStatus)
-            .withNumber("expires", expires)
-            .withString("type", `type`)
-            .withString("sess", sess)
-    }
-
-    /**
-     * Parse the JSON object that represents the session state, and return a Jackson
-     * ObjectNode. We cast it to an ObjectNode because a JsonNode does not provide a
-     * way to update the value in the tree (see `setAccessToken`).
-     * @return the parsed JSON object
-     */
-    private def extractTwitchFromSession(): ObjectNode = {
-        objectMapper
-            .readTree(sess)
-            .get("accessKeys")
-            .get("twitchToken")
-            .asInstanceOf[ObjectNode]
-    }
-
-    private def extractAccessToken(twitchToken: ObjectNode): String = {
-        twitchToken.get("access_token").asText()
-    }
-
-    private def extractRefreshToken(twitchToken: ObjectNode): String = {
-        twitchToken.get("refresh_token").asText()
-    }
+  /**
+   * Convert this Connection object into a DynamoDB interface so that we can persist it
+   * to DynamoDB
+   * @return
+   */
+  @JsonIgnore
+  def toItem: Item =
+    new Item()
+      .withPrimaryKey("channelId", channelId)
+      .withString("connectionStatus", connectionStatus)
+      .withNumber("expires", expires)
+      .withString("type", `type`)
+      .withString("sess", sess)
 }

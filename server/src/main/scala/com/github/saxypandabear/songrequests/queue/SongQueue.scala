@@ -5,5 +5,5 @@ package com.github.saxypandabear.songrequests.queue
  * expected to be a song (Spotify URI)
  */
 trait SongQueue {
-    def queue(channelId: String, spotifyUri: String): Unit
+  def queue(channelId: String, spotifyUri: String): Unit
 }
