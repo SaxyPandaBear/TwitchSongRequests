@@ -7,6 +7,12 @@ import org.eclipse.jetty.websocket.api.{Session, WebSocketAdapter}
 
 class TestResponseSocket extends WebSocketAdapter with StrictLogging {
 
+    private val PONG_MESSAGE = """
+                                 |{
+                                 |  "type": "PONG"
+                                 |}
+                                 |""".stripMargin
+
     override def onWebSocketConnect(sess: Session): Unit = {
         super.onWebSocketConnect(sess)
         logger.info("Received connect event")
@@ -47,6 +53,8 @@ class TestResponseSocket extends WebSocketAdapter with StrictLogging {
 
     private def handlePingMessage(jsonNode: JsonNode): Unit = {
         logger.info("Ping message received")
+        // we send a PONG back
+        getRemote.sendString(PONG_MESSAGE)
         WebSocketTestingUtil.pingMessages += jsonNode
     }
 
