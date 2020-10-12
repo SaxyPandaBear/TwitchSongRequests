@@ -96,7 +96,12 @@ class TwitchSocketIntegrationSpec
     WebSocketTestingUtil.onConnect.acquire()
 
     WebSocketTestingUtil.onConnect.availablePermits() should be(0)
-    testListener.connectEvents should contain theSameElementsAs Seq(channelId)
+    // wrap in an eventually block because of the locking mechanism on the
+    // test listener.
+    // This works locally without the eventually. Testing this in CI pipeline.
+    eventually(timeout(Span(100, Millis))) {
+      testListener.connectEvents should contain theSameElementsAs Seq(channelId)
+    }
 
     connectedChannelIds += channelId
   }
@@ -263,7 +268,7 @@ class TwitchSocketIntegrationSpec
     )
     WebSocketTestingUtil.startSending.acquire() // wait until the server starts sending messages
 
-    eventually(timeout(Span(100, Millis))) {
+    eventually(timeout(Span(150, Millis))) {
       testListener.messageEvents
         .getOrElse(channelId, fail(s"Channel ID $channelId does not exist"))
         .map(objectMapper.readTree)
