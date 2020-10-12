@@ -35,6 +35,8 @@ object WebSocketTestingUtil {
   var redeemEvents             = new Semaphore(1)
   var shouldSendReconnectEvent = new AtomicBoolean(false)
   var reconnectEvents          = new Semaphore(1)
+  val sendFrequencyMs          = 10
+  val spotifyUris              = new mutable.ArrayBuffer[String]()
 
   /**
    * Use this method to help with setting up the test server to send data
@@ -87,6 +89,8 @@ object WebSocketTestingUtil {
     redeemEvents = new Semaphore(1)
     shouldSendReconnectEvent = new AtomicBoolean(false)
     reconnectEvents = new Semaphore(1)
+
+    spotifyUris.clear()
   }
 
   def createRedeemEvent(): String =
@@ -139,14 +143,21 @@ object WebSocketTestingUtil {
        |}
        |""".stripMargin
 
+  // TODO: figure out which level has the RECONNECT type
+  //       (is it at the root?)
   def createReconnectEvent(): String =
     """
       |{
       |  "type": "MESSAGE",
-      |  "data": 
+      |  "data": {
+      |    "type": "RECONNECT"
+      |  }
       |}
       |""".stripMargin
 
-  private def generateSpotifyUri(): String =
-    s"spotify:track:${UUID.randomUUID().toString}"
+  private def generateSpotifyUri(): String = {
+    val uri = s"spotify:track:${UUID.randomUUID().toString}"
+    spotifyUris += uri
+    uri
+  }
 }

@@ -1,6 +1,6 @@
 package com.github.saxypandabear.songrequests.websocket
 
-import java.util.TimerTask
+import java.util.{Timer, TimerTask}
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
@@ -9,21 +9,32 @@ import org.eclipse.jetty.websocket.api.{Session, WebSocketAdapter}
 
 class TestResponseSocket extends WebSocketAdapter with StrictLogging {
 
+  private val timer = new Timer("test-server")
+
   private val PONG_MESSAGE = """
                                  |{
-                                 |  "type": "PONG"
+                                 |  "type": "MESSAGE",
+                                 |  "data": {
+                                 |    "type": "PONG"
+                                 |  }
                                  |}
                                  |""".stripMargin
 
   override def onWebSocketConnect(sess: Session): Unit = {
     super.onWebSocketConnect(sess)
     logger.info("Received connect event")
+    timer.schedule(
+        new RespondTimedTask(sess),
+        0,
+        WebSocketTestingUtil.sendFrequencyMs
+    )
     WebSocketTestingUtil.onConnect.release()
   }
 
   override def onWebSocketClose(statusCode: Int, reason: String): Unit = {
     super.onWebSocketClose(statusCode, reason)
     logger.info(s"Received close event: Status=$statusCode | Reason=$reason")
+    timer.cancel()
     WebSocketTestingUtil.onClose.release()
   }
 
