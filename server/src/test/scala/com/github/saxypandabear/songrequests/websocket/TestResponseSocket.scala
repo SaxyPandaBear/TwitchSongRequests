@@ -13,10 +13,7 @@ class TestResponseSocket extends WebSocketAdapter with StrictLogging {
 
   private val PONG_MESSAGE = """
                                  |{
-                                 |  "type": "MESSAGE",
-                                 |  "data": {
-                                 |    "type": "PONG"
-                                 |  }
+                                 |  "type": "PONG"
                                  |}
                                  |""".stripMargin
 
@@ -99,18 +96,28 @@ class RespondTimedTask(session: Session) extends TimerTask {
           .get() && WebSocketTestingUtil.redeemEvents.availablePermits() > 0
     ) {
       WebSocketTestingUtil.redeemEvents.acquire()
-      session.getRemote.sendStringByFuture(
-          WebSocketTestingUtil.createRedeemEvent()
-      )
+      session.getRemote
+        .sendStringByFuture(
+            WebSocketTestingUtil.createRedeemEvent()
+        )
+        .get()
+      if (WebSocketTestingUtil.startSending.availablePermits() == 0) {
+        WebSocketTestingUtil.startSending.release()
+      }
     }
     if (
         WebSocketTestingUtil.shouldSendReconnectEvent
           .get() && WebSocketTestingUtil.reconnectEvents.availablePermits() > 0
     ) {
       WebSocketTestingUtil.reconnectEvents.acquire()
-      session.getRemote.sendStringByFuture(
-          WebSocketTestingUtil.createReconnectEvent()
-      )
+      session.getRemote
+        .sendStringByFuture(
+            WebSocketTestingUtil.createReconnectEvent()
+        )
+        .get()
+      if (WebSocketTestingUtil.startSending.availablePermits() == 0) {
+        WebSocketTestingUtil.startSending.release()
+      }
     }
   }
 }

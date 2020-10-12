@@ -36,6 +36,7 @@ object WebSocketTestingUtil {
   var shouldSendReconnectEvent = new AtomicBoolean(false)
   var reconnectEvents          = new Semaphore(1)
   val sendFrequencyMs          = 10
+  var startSending             = new Semaphore(1)
   val spotifyUris              = new mutable.ArrayBuffer[String]()
 
   /**
@@ -89,57 +90,21 @@ object WebSocketTestingUtil {
     redeemEvents = new Semaphore(1)
     shouldSendReconnectEvent = new AtomicBoolean(false)
     reconnectEvents = new Semaphore(1)
+    startSending = new Semaphore(1)
 
     spotifyUris.clear()
   }
 
+  //noinspection ScalaStyle
+  // note: this is super long because the nested message is a string
+  // representation of a JSON message.
   def createRedeemEvent(): String =
-    s"""
-       |{
-       |  "type": "MESSAGE",
-       |  "data": {
-       |    "type": "reward-redeemed",
+    s"""{
+       |    "type": "MESSAGE",
        |    "data": {
-       |       "timestamp": "2019-11-12T01:29:34.98329743Z",
-       |       "redemption": {
-       |          "id": "9203c6f0-51b6-4d1d-a9ae-8eafdb0d6d47",
-       |          "user": {
-       |            "id": "30515034",
-       |            "login": "davethecust",
-       |            "display_name": "davethecust"
-       |          },
-       |        "channel_id": "30515034",
-       |        "redeemed_at": "2019-12-11T18:52:53.128421623Z",
-       |        "reward": {
-       |          "id": "6ef17bb2-e5ae-432e-8b3f-5ac4dd774668",
-       |          "channel_id": "30515034",
-       |          "title": "A Song Request",
-       |          "prompt": "Some request \n",
-       |          "cost": 10,
-       |          "is_user_input_required": true,
-       |          "is_sub_only": false,
-       |          "image": {
-       |            "url_1x": "https://static-cdn.jtvnw.net/custom-reward-images/30515034/6ef17bb2-e5ae-432e-8b3f-5ac4dd774668/7bcd9ca8-da17-42c9-800a-2f08832e5d4b/custom-1.png",
-       |            "url_2x": "https://static-cdn.jtvnw.net/custom-reward-images/30515034/6ef17bb2-e5ae-432e-8b3f-5ac4dd774668/7bcd9ca8-da17-42c9-800a-2f08832e5d4b/custom-2.png",
-       |            "url_4x": "https://static-cdn.jtvnw.net/custom-reward-images/30515034/6ef17bb2-e5ae-432e-8b3f-5ac4dd774668/7bcd9ca8-da17-42c9-800a-2f08832e5d4b/custom-4.png"
-       |          },
-       |          "default_image": {
-       |            "url_1x": "https://static-cdn.jtvnw.net/custom-reward-images/default-1.png",
-       |            "url_2x": "https://static-cdn.jtvnw.net/custom-reward-images/default-2.png",
-       |            "url_4x": "https://static-cdn.jtvnw.net/custom-reward-images/default-4.png"
-       |          },
-       |          "background_color": "#00C7AC",
-       |          "is_enabled": true,
-       |          "is_paused": false,
-       |          "is_in_stock": true,
-       |          "max_per_stream": { "is_enabled": false, "max_per_stream": 0 },
-       |          "should_redemptions_skip_request_queue": true
-       |        },
-       |        "user_input": "${generateSpotifyUri()}",
-       |        "status": "FULFILLED"
-       |      }
+       |        "topic": "channel-points-channel-v1.106060203",
+       |        "message": "{\\"type\\":\\"reward-redeemed\\",\\"data\\":{\\"timestamp\\":\\"2020-08-23T20:21:56.588735036Z\\",\\"redemption\\":{\\"id\\":\\"897dd20c-ec7f-42da-9e0a-610091785a4d\\",\\"user\\":{\\"id\\":\\"106060203\\",\\"login\\":\\"saxypandabear\\",\\"display_name\\":\\"SaxyPandaBear\\"},\\"channel_id\\":\\"106060203\\",\\"redeemed_at\\":\\"2020-08-23T20:21:56.588735036Z\\",\\"reward\\":{\\"id\\":\\"ca20aaa2-5fa8-4b29-a9a6-34275ee911f4\\",\\"channel_id\\":\\"106060203\\",\\"title\\":\\"Song Request\\",\\"prompt\\":\\"Only applies for music streams. Request a song you want me to attempt to learn by ear.\\",\\"cost\\":10000,\\"is_user_input_required\\":true,\\"is_sub_only\\":false,\\"image\\":null,\\"default_image\\":{\\"url_1x\\":\\"https://static-cdn.jtvnw.net/custom-reward-images/default-1.png\\",\\"url_2x\\":\\"https://static-cdn.jtvnw.net/custom-reward-images/default-2.png\\",\\"url_4x\\":\\"https://static-cdn.jtvnw.net/custom-reward-images/default-4.png\\"},\\"background_color\\":\\"#FA2929\\",\\"is_enabled\\":true,\\"is_paused\\":false,\\"is_in_stock\\":true,\\"max_per_stream\\":{\\"is_enabled\\":false,\\"max_per_stream\\":0},\\"should_redemptions_skip_request_queue\\":false,\\"template_id\\":null,\\"updated_for_indicator_at\\":\\"2020-01-01T15:11:26.647212555Z\\",\\"max_per_user_per_stream\\":{\\"is_enabled\\":false,\\"max_per_user_per_stream\\":0},\\"global_cooldown\\":{\\"is_enabled\\":false,\\"global_cooldown_seconds\\":0},\\"redemptions_redeemed_current_stream\\":0,\\"cooldown_expires_at\\":null},\\"user_input\\":\\"${generateSpotifyUri()}\\",\\"status\\":\\"UNFULFILLED\\"}}}"
        |    }
-       |  }
        |}
        |""".stripMargin
 
@@ -148,15 +113,12 @@ object WebSocketTestingUtil {
   def createReconnectEvent(): String =
     """
       |{
-      |  "type": "MESSAGE",
-      |  "data": {
-      |    "type": "RECONNECT"
-      |  }
+      |  "type": "RECONNECT"
       |}
       |""".stripMargin
 
   private def generateSpotifyUri(): String = {
-    val uri = s"spotify:track:${UUID.randomUUID().toString}"
+    val uri = s"spotify:track:${UUID.randomUUID().toString.replace("-", "")}"
     spotifyUris += uri
     uri
   }

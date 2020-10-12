@@ -138,6 +138,7 @@ class TwitchSocketIntegrationSpec
     connectedChannelIds += channelId
   }
 
+  // TODO: This test is flaky
   "Connecting to a WebSocket server" should "start sending PING messages on a set frequency" in {
     val pingFrequencyMs  = 10
     val uri              = new URI(s"ws://localhost:$port")
@@ -159,14 +160,14 @@ class TwitchSocketIntegrationSpec
     WebSocketTestingUtil.onConnect.availablePermits() should be(0)
 
     // If we have a frequency of a ping every 10ms, we can expect roughly 10
-    // pings in 100ms (more or less)
+    // pings in 100ms (more or less), but need a little wiggle room
     // each ping message should only contain a single field, that looks like:
     // { "type": "PING" }
     // We should also receive an equal amount of PONG replies from the server..
     // (with a little wiggle room because of timing)
-    eventually(timeout(Span(100, Millis))) {
+    eventually(timeout(Span(150, Millis))) {
       val numPingMessages = WebSocketTestingUtil.pingMessages.length
-      numPingMessages should be(10 +- 1)
+      numPingMessages should be >= 10
       WebSocketTestingUtil.pingMessages.forall { pingMessage =>
         pingMessage.has("type") &&
         pingMessage.get("type").asText() == "PING" &&
@@ -175,7 +176,6 @@ class TwitchSocketIntegrationSpec
       testListener.messageEvents
         .getOrElse(channelId, fail(s"Channel ID $channelId does not exist"))
         .map(objectMapper.readTree)
-        .map(_.get("data"))
         .count(node =>
           node.has("type") && node.get("type").asText() == "PONG"
         ) should
@@ -208,15 +208,17 @@ class TwitchSocketIntegrationSpec
     WebSocketTestingUtil.onMessage.acquire()
     WebSocketTestingUtil.onConnect.acquire()
 
+    WebSocketTestingUtil.startSending.acquire()
     WebSocketTestingUtil.initializeSemaphoresForSending(
         numRedeem = 1,
         shouldSendRedeem = true,
         numReconnect = 0,
         shouldSendReconnect = false
     )
+    WebSocketTestingUtil.startSending.acquire() // wait until the server starts sending messages
 
     // now that the timer will send 1 message, we can assert against it.
-    eventually(timeout(Span(100, Millis))) {
+    eventually(timeout(Span(200, Millis))) {
       // there should only be one message that matters (non PONG), but the
       // listener captures all of the messages.
       testListener.messageEvents

@@ -7,6 +7,7 @@ import com.github.saxypandabear.songrequests.oauth.OauthTokenManager
 import com.github.saxypandabear.songrequests.queue.SongQueue
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
 import com.github.saxypandabear.songrequests.websocket.listener.WebSocketListener
+import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.jetty.websocket.api.Session
 import org.eclipse.jetty.websocket.api.annotations._
 
@@ -25,7 +26,7 @@ class TwitchSocket(
     songQueue: SongQueue,
     listeners: Seq[WebSocketListener] = Seq.empty,
     pingFrequencyMs: Long = 60000
-) {
+) extends LazyLogging {
 
   private val spotifyUriPattern = "^(spotify:track:(\\w|\\d)+)$".r
   private val pingTask          = new Timer()
@@ -81,18 +82,21 @@ class TwitchSocket(
    * @param message String message from the server, expected to be a JSON string
    */
   @OnWebSocketMessage
-  def onMessage(message: String): Unit = {
-    val parsed       = objectMapper.readTree(message)
-    val rootDataNode = parsed.get("data")
+  def onMessage(message: String): Unit =
+    try {
+      val rootDataNode = objectMapper.readTree(message)
+      rootDataNode.get("type").asText() match {
+        case "RECONNECT" => handleReconnect(rootDataNode)
+        case "MESSAGE"   => handleTwitchMessage(rootDataNode)
+        case "PONG"      => handlePong(rootDataNode)
+        case _           =>
+      }
 
-    rootDataNode.get("type").asText() match {
-      case "RECONNECT" => handleReconnect(rootDataNode)
-      case "MESSAGE"   => handleTwitchMessage(rootDataNode)
-      case "PONG"      => handlePong(rootDataNode)
+      listeners.foreach(_.onMessageEvent(channelId, session, message))
+    } catch {
+      case e: Exception =>
+        logger.error("There was an error when parsing the message", e)
     }
-
-    listeners.foreach(_.onMessageEvent(channelId, session, message))
-  }
 
   /**
    * When the server sends a RECONNECT message, we are to reconnect to the server.
