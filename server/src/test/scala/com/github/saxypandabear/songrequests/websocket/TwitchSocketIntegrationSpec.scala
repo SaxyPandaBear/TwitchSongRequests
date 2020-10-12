@@ -218,7 +218,7 @@ class TwitchSocketIntegrationSpec
     WebSocketTestingUtil.startSending.acquire() // wait until the server starts sending messages
 
     // now that the timer will send 1 message, we can assert against it.
-    eventually(timeout(Span(200, Millis))) {
+    eventually(timeout(Span(100, Millis))) {
       // there should only be one message that matters (non PONG), but the
       // listener captures all of the messages.
       testListener.messageEvents
@@ -233,6 +233,50 @@ class TwitchSocketIntegrationSpec
       ) should contain theSameElementsAs WebSocketTestingUtil.spotifyUris
     }
   }
+
+  "Receiving multiple redemption events" should "queue them all separately" in {
+    val uri              = new URI(s"ws://localhost:$port")
+    val channelId        = UUID.randomUUID().toString
+    val clientId         = "abc123"
+    val testTokenManager = new TestTokenManager(clientId, "foo", "bar", "baz")
+    val numMessages      = 5
+
+    val socket = new TwitchSocket(
+        channelId,
+        testTokenManager,
+        testingSongQueue,
+        Seq(testListener, logListener)
+    )
+
+    WebSocketTestingUtil.onMessage.acquire()
+    WebSocketTestingUtil.onConnect.acquire()
+    webSocketClient.connect(socket, uri)
+    WebSocketTestingUtil.onMessage.acquire()
+    WebSocketTestingUtil.onConnect.acquire()
+
+    WebSocketTestingUtil.startSending.acquire()
+    WebSocketTestingUtil.initializeSemaphoresForSending(
+        numRedeem = numMessages,
+        shouldSendRedeem = true,
+        numReconnect = 0,
+        shouldSendReconnect = false
+    )
+    WebSocketTestingUtil.startSending.acquire() // wait until the server starts sending messages
+
+    eventually(timeout(Span(100, Millis))) {
+      testListener.messageEvents
+        .getOrElse(channelId, fail(s"Channel ID $channelId does not exist"))
+        .map(objectMapper.readTree)
+        .count(node =>
+          node.has("type") && node.get("type").asText() != "PONG"
+        ) should be(numMessages)
+      testingSongQueue.queued.getOrElse(
+          channelId,
+          fail(s"Channel ID $channelId does not exist")
+      ) should contain theSameElementsAs WebSocketTestingUtil.spotifyUris
+    }
+  }
+
   // =================== End onMessage Tests ===================
 
   private def validateListenEvent(
