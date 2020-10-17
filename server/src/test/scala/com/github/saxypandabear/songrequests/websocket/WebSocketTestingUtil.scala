@@ -37,6 +37,7 @@ object WebSocketTestingUtil {
   var reconnectEvents          = new Semaphore(1)
   val sendFrequencyMs          = 10
   var startSending             = new Semaphore(1)
+  val doneSending              = new AtomicBoolean(false)
   val spotifyUris              = new mutable.ArrayBuffer[String]()
 
   /**

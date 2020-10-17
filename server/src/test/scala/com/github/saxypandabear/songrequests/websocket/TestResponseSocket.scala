@@ -1,5 +1,6 @@
 package com.github.saxypandabear.songrequests.websocket
 
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.{Timer, TimerTask}
 
 import com.fasterxml.jackson.databind.JsonNode
@@ -82,6 +83,17 @@ class TestResponseSocket extends WebSocketAdapter with StrictLogging {
 }
 
 class RespondTimedTask(session: Session) extends TimerTask {
+  // use these flags to determine whether to send a redeem event or a
+  // reconnect. this is so there is at least some deterministic approach to
+  // sending responses from the server. these are specifically to cover
+  // the case where we should send both redeem and reconnect events. we
+  // don't want to send both at the same time, and want some determinism.
+  // This really is just a mechanism for an XOR.
+  // This gives precedence to the redeem events, since that defaults to true.
+  // In the case where we only do reconnect events, this task will not send
+  // a message in the first invocation, and that's okay.
+  private val doSendRedeem    = new AtomicBoolean(true)
+  private val doSendReconnect = new AtomicBoolean(false)
 
   /**
    * This needs to check the testing utility for whether we are allowed
@@ -91,33 +103,49 @@ class RespondTimedTask(session: Session) extends TimerTask {
    * This should check for redeem events first, then check for
    */
   override def run(): Unit = {
+    var sentSomething = false
     if (
         WebSocketTestingUtil.shouldSendRedeemEvent
           .get() && WebSocketTestingUtil.redeemEvents.availablePermits() > 0
     ) {
-      WebSocketTestingUtil.redeemEvents.acquire()
-      session.getRemote
-        .sendStringByFuture(
-            WebSocketTestingUtil.createRedeemEvent()
-        )
-        .get()
-      if (WebSocketTestingUtil.startSending.availablePermits() == 0) {
-        WebSocketTestingUtil.startSending.release()
+      if (doSendRedeem.get()) {
+        WebSocketTestingUtil.redeemEvents.acquire()
+        session.getRemote
+          .sendStringByFuture(
+              WebSocketTestingUtil.createRedeemEvent()
+          )
+          .get()
+        if (WebSocketTestingUtil.startSending.availablePermits() == 0) {
+          WebSocketTestingUtil.startSending.release()
+        }
+        doSendRedeem.getAndSet(false) // next iteration, don't send again
+        sentSomething = true
+      } else {
+        doSendRedeem.getAndSet(true) // if we didn't send this time, we do send next time
       }
     }
     if (
         WebSocketTestingUtil.shouldSendReconnectEvent
           .get() && WebSocketTestingUtil.reconnectEvents.availablePermits() > 0
     ) {
-      WebSocketTestingUtil.reconnectEvents.acquire()
-      session.getRemote
-        .sendStringByFuture(
-            WebSocketTestingUtil.createReconnectEvent()
-        )
-        .get()
-      if (WebSocketTestingUtil.startSending.availablePermits() == 0) {
-        WebSocketTestingUtil.startSending.release()
+      if (doSendReconnect.get()) {
+        WebSocketTestingUtil.reconnectEvents.acquire()
+        session.getRemote
+          .sendStringByFuture(
+              WebSocketTestingUtil.createReconnectEvent()
+          )
+          .get()
+        if (WebSocketTestingUtil.startSending.availablePermits() == 0) {
+          WebSocketTestingUtil.startSending.release()
+        }
+        doSendReconnect.getAndSet(false) // next iteration, don't send again
+        sentSomething = true
+      } else {
+        doSendReconnect.getAndSet(true) // if we didn't send this time, we do send next time
       }
     }
+
+    // if we did not send anything, then we can state that we're done sending
+    WebSocketTestingUtil.doneSending.getAndSet(true)
   }
 }

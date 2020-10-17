@@ -79,6 +79,7 @@ class TwitchSocketIntegrationSpec
 
   // =================== Start onConnect Tests ===================
   /* Testing separate parts of the TwitchSocket onConnect for granularity */
+  // TODO: This test can be flaky in CI, but always succeeds locally
   "Connecting to a WebSocket server" should "work" in {
     val uri              = new URI(s"ws://localhost:$port")
     val channelId        = UUID.randomUUID().toString
@@ -96,9 +97,8 @@ class TwitchSocketIntegrationSpec
     WebSocketTestingUtil.onConnect.acquire()
 
     WebSocketTestingUtil.onConnect.availablePermits() should be(0)
-    // wrap in an eventually block because of the locking mechanism on the
-    // test listener.
-    // This works locally without the eventually. Testing this in CI pipeline.
+    // wrap in an eventually block because the locking mechanism on the test
+    // listener can cause a timing issue when running the CI workflow
     eventually(timeout(Span(100, Millis))) {
       testListener.connectEvents should contain theSameElementsAs Seq(channelId)
     }
@@ -143,7 +143,6 @@ class TwitchSocketIntegrationSpec
     connectedChannelIds += channelId
   }
 
-  // TODO: This test is flaky
   "Connecting to a WebSocket server" should "start sending PING messages on a set frequency" in {
     val pingFrequencyMs  = 10
     val uri              = new URI(s"ws://localhost:$port")
@@ -269,6 +268,7 @@ class TwitchSocketIntegrationSpec
     WebSocketTestingUtil.startSending.acquire() // wait until the server starts sending messages
 
     eventually(timeout(Span(150, Millis))) {
+      WebSocketTestingUtil.doneSending.get() should be(true)
       testListener.messageEvents
         .getOrElse(channelId, fail(s"Channel ID $channelId does not exist"))
         .map(objectMapper.readTree)
@@ -279,6 +279,45 @@ class TwitchSocketIntegrationSpec
           channelId,
           fail(s"Channel ID $channelId does not exist")
       ) should contain theSameElementsAs WebSocketTestingUtil.spotifyUris
+    }
+  }
+
+  // TODO: may need to hold off on this testing until the load balancer is
+  //       implemented, since it requires performing a reconnect of the
+  //       web socket. Leaving this test ignored in the meantime
+  "Receiving a reconnect message" should "trigger a new LISTEN message" ignore {
+    val uri              = new URI(s"ws://localhost:$port")
+    val channelId        = UUID.randomUUID().toString
+    val clientId         = "abc123"
+    val testTokenManager = new TestTokenManager(clientId, "foo", "bar", "baz")
+
+    val socket = new TwitchSocket(
+        channelId,
+        testTokenManager,
+        testingSongQueue,
+        Seq(testListener, logListener)
+    )
+
+    WebSocketTestingUtil.onMessage.acquire()
+    WebSocketTestingUtil.onConnect.acquire()
+    webSocketClient.connect(socket, uri)
+    WebSocketTestingUtil.onMessage.acquire()
+    WebSocketTestingUtil.onConnect.acquire()
+
+    val numListenEvents = WebSocketTestingUtil.listenMessages.length
+    numListenEvents should be(1)
+
+    WebSocketTestingUtil.startSending.acquire()
+    WebSocketTestingUtil.initializeSemaphoresForSending(
+        numRedeem = 0,
+        shouldSendRedeem = false,
+        numReconnect = 1,
+        shouldSendReconnect = true
+    )
+    WebSocketTestingUtil.startSending.acquire() // wait until the server starts sending messages
+
+    eventually(timeout(Span(50, Millis))) {
+      WebSocketTestingUtil.doneSending.get() should be(true)
     }
   }
 

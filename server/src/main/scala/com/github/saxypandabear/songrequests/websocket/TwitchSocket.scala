@@ -89,7 +89,7 @@ class TwitchSocket(
         case "RECONNECT" => handleReconnect(rootDataNode)
         case "MESSAGE"   => handleTwitchMessage(rootDataNode)
         case "PONG"      => handlePong(rootDataNode)
-        case _           =>
+        case unknown     => logger.warn(s"Could not handle $unknown message type")
       }
 
       listeners.foreach(_.onMessageEvent(channelId, session, message))
@@ -104,7 +104,8 @@ class TwitchSocket(
    * @param message the JSON reconnect message
    */
   private[websocket] def handleReconnect(message: JsonNode): Unit = {
-    // TODO: figure out how to initiate a reconnect from here
+    // TODO: figure out how to initiate a reconnect from here. this will require
+    //       coordination with whatever is handling the WebSocket connection
   }
 
   /**
