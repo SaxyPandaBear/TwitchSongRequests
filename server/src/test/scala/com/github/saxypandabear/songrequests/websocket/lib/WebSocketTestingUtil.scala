@@ -1,4 +1,4 @@
-package com.github.saxypandabear.songrequests.websocket
+package com.github.saxypandabear.songrequests.websocket.lib
 
 import java.util.UUID
 import java.util.concurrent.Semaphore

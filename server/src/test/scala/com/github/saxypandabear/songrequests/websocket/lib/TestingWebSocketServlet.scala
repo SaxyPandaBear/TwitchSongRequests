@@ -1,4 +1,4 @@
-package com.github.saxypandabear.songrequests.websocket
+package com.github.saxypandabear.songrequests.websocket.lib
 
 import javax.servlet.annotation.WebServlet
 import org.eclipse.jetty.websocket.servlet.{

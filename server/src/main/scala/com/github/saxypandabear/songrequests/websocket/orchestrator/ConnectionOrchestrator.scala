@@ -1,5 +1,6 @@
 package com.github.saxypandabear.songrequests.websocket.orchestrator
 
+import com.github.saxypandabear.songrequests.websocket.TwitchSocket
 import org.eclipse.jetty.websocket.client.WebSocketClient
 
 /**
@@ -17,8 +18,10 @@ trait ConnectionOrchestrator {
   /**
    * Initiate a connection to Twitch with an internal WebSocket connection
    * @param channelId Twitch Channel ID to listen on
+   * @param socketFactory Function that takes a channel ID and returns a
+   *                      TwitchSocket
    */
-  def connect(channelId: String): Unit
+  def connect(channelId: String, socketFactory: String => TwitchSocket): Unit
 
   /**
    * Stop listening to a connection to Twitch
@@ -46,7 +49,7 @@ trait ConnectionOrchestrator {
    * @return a Map of WebSocket clients to the channel IDs that are connected
    *         to them
    */
-  def activeConnections: Map[WebSocketClient, Set[String]]
+  def connectionsToClients: Map[WebSocketClient, Set[String]]
 
   /**
    * Stop connections and perform any necessary clean-up

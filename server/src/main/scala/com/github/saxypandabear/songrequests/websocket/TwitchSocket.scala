@@ -46,24 +46,6 @@ class TwitchSocket(
     this.listeners.foreach(_.onConnectEvent(channelId, session))
   }
 
-  /**
-   * Send a LISTEN event to the Twitch server
-   */
-  private def sendListenEvent(): Unit = {
-    val listenMessage =
-      s"""
-               |{
-               |  "type": "LISTEN",
-               |  "nonce": "$channelId",
-               |  "data": {
-               |    "topics": ["channel-points-channel-v1.$channelId"],
-               |    "auth_token": "${oauthTokenManager.getAccessToken}"
-               |  }
-               |}
-               |""".stripMargin
-    session.getRemote.sendString(listenMessage)
-  }
-
   @OnWebSocketClose
   def onClose(statusCode: Int, reason: String): Unit = {
     stopPing()
@@ -99,11 +81,29 @@ class TwitchSocket(
     }
 
   /**
+   * Send a LISTEN event to the Twitch server
+   */
+  private def sendListenEvent(): Unit = {
+    val listenMessage =
+      s"""
+         |{
+         |  "type": "LISTEN",
+         |  "nonce": "$channelId",
+         |  "data": {
+         |    "topics": ["channel-points-channel-v1.$channelId"],
+         |    "auth_token": "${oauthTokenManager.getAccessToken}"
+         |  }
+         |}
+         |""".stripMargin
+    session.getRemote.sendString(listenMessage)
+  }
+
+  /**
    * When the server sends a RECONNECT message, we are to reconnect to the server.
    * https://dev.twitch.tv/docs/pubsub#connection-management
    * @param message the JSON reconnect message
    */
-  private[websocket] def handleReconnect(message: JsonNode): Unit = {
+  private def handleReconnect(message: JsonNode): Unit = {
     // TODO: figure out how to initiate a reconnect from here. this will require
     //       coordination with whatever is handling the WebSocket connection
   }

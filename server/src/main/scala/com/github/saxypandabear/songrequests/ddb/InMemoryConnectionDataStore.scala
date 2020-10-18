@@ -39,6 +39,14 @@ class InMemoryConnectionDataStore extends ConnectionDataStore {
     }
 
   /**
+   * Checks if a record with the given ID exists.
+   * @param channelId the Twitch channel ID
+   * @return true if the channel ID exists, false otherwise
+   */
+  override def hasConnectionDetails(channelId: String): Boolean =
+    idsToConnections.keys.exists(_ == channelId)
+
+  /**
    * Write a connection object to the data store. This is not a requirement for the main functionality,
    * and is only necessary for tests, which is why this method does not exist in the parent trait.
    * @param channelId  the Twitch channel ID

@@ -1,4 +1,4 @@
-package com.github.saxypandabear.songrequests.websocket
+package com.github.saxypandabear.songrequests.websocket.integration
 
 import java.net.URI
 import java.util.UUID
@@ -9,6 +9,8 @@ import com.github.saxypandabear.songrequests.lib.{RotatingTestPort, UnitSpec}
 import com.github.saxypandabear.songrequests.oauth.TestTokenManager
 import com.github.saxypandabear.songrequests.queue.InMemorySongQueue
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
+import com.github.saxypandabear.songrequests.websocket.TwitchSocket
+import com.github.saxypandabear.songrequests.websocket.lib.WebSocketTestingUtil
 import com.github.saxypandabear.songrequests.websocket.listener.{
   LoggingWebSocketListener,
   TestingWebSocketListener

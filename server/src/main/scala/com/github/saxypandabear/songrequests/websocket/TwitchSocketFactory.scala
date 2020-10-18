@@ -8,19 +8,18 @@ import com.github.saxypandabear.songrequests.websocket.listener.WebSocketListene
 /**
  * Factory for creating TwitchSocket objects
  */
-object TwitchSocketFactory {
+class TwitchSocketFactory(
+    clientId: String,
+    clientSecret: String,
+    refreshUri: String,
+    tokenManagerFactory: OauthTokenManagerFactory,
+    connectionDataStore: ConnectionDataStore,
+    songQueue: SongQueue,
+    listeners: Seq[WebSocketListener] = Seq.empty,
+    pingFrequencyMs: Long = 60000
+) {
 
-  def create(
-      channelId: String,
-      clientId: String,
-      clientSecret: String,
-      refreshUri: String,
-      tokenManagerFactory: OauthTokenManagerFactory,
-      connectionDataStore: ConnectionDataStore,
-      songQueue: SongQueue,
-      listeners: Seq[WebSocketListener] = Seq.empty,
-      pingFrequencyMs: Long = 60000
-  ): TwitchSocket = {
+  def create(channelId: String): TwitchSocket = {
     val tokenManager = tokenManagerFactory.create(
         clientId,
         clientSecret,

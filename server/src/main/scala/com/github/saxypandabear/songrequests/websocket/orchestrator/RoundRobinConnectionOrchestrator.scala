@@ -1,11 +1,9 @@
 package com.github.saxypandabear.songrequests.websocket.orchestrator
 
+import java.net.URI
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
-import com.github.saxypandabear.songrequests.oauth.OauthTokenManagerFactory
-import com.github.saxypandabear.songrequests.queue.SongQueue
-import com.github.saxypandabear.songrequests.websocket.listener.WebSocketListener
+import com.github.saxypandabear.songrequests.websocket.TwitchSocket
 import org.eclipse.jetty.websocket.client.WebSocketClient
 
 import scala.collection.concurrent.TrieMap
@@ -23,38 +21,16 @@ import scala.collection.mutable
  * hard limitation on how many clients we can have that connect from the same IP,
  * and how many connections are allowed per client, we should not have any
  * real scaling issues. We are dealing with, at most, hundreds of entities.
- * @param clientId            client id of the application
- * @param clientSecret        client secret of the application
- * @param refreshUri          URI for the OAuth token managers to re-authenticate
- *                            to Twitch
- * @param dataStore           data store that contains all of the connection
- *                            details
- * @param songQueue           queue that interfaces with Spotify
- * @param tokenManagerFactory implementation for how this orchestrator will
- *                            create token managers. this gets fed to the
- *                            TwitchSocketFactory, but we accept anything
- *                            that extends from the factory trait here, since
- *                            that gives us more leeway during tests.
- * @param maxNumSockets       maximum number of sockets that this orchestrator
- *                            can use. this is constrained by the limit that
- *                            Twitch puts on how many client connections we
- *                            can have to their servers from a single IP address.
- *                            This is assumed to be an integer > 0
- * @param webSocketListeners  list of web socket listeners to pass in when
- *                            constructing the socket implementation
- * @param pingFrequencyMs     configurable frequency for when the WebSocket
- *                            client will ping the server
+ * @param webSocketUri           URI that the WebSocket clients will connect to
+ * @param maxNumSockets          maximum number of sockets that this orchestrator
+ *                               can use. this is constrained by the limit that
+ *                               Twitch puts on how many client connections we
+ *                               can have to their servers from a single IP address.
+ *                               This is assumed to be an integer > 0
  */
 class RoundRobinConnectionOrchestrator(
-    clientId: String,
-    clientSecret: String,
-    refreshUri: String,
-    dataStore: ConnectionDataStore,
-    songQueue: SongQueue,
-    tokenManagerFactory: OauthTokenManagerFactory,
-    maxNumSockets: Int = 5,
-    webSocketListeners: Seq[WebSocketListener] = Seq.empty,
-    pingFrequencyMs: Long = 60000
+    webSocketUri: URI,
+    maxNumSockets: Int = 5
 ) extends ConnectionOrchestrator {
 
   private val MAX_ALLOWED_CONNECTIONS_PER_CLIENT = 40
@@ -76,10 +52,26 @@ class RoundRobinConnectionOrchestrator(
     )
 
   /**
-   * Initiate a connection to Twitch with an internal WebSocket connection
-   * @param channelId Twitch Channel ID to listen on
+   * Initiate a connection to Twitch with an internal WebSocket connection.
+   * Note: This only performs a connection when the orchestrator is not at
+   *       capacity.
+   * @param channelId     Twitch Channel ID to listen on
+   * @param socketFactory Function that takes a channel ID and returns a Socket
+   *                      implementation
    */
-  override def connect(channelId: String): Unit = {}
+  override def connect(
+      channelId: String,
+      socketFactory: String => TwitchSocket
+  ): Unit =
+    if (!atCapacity) {
+      val socket               = socketFactory(channelId)
+      // get a valid WebSocket and connect
+      val (client, channelIds) = indexedWebSocketConnections(getAndRotate())
+      channelIds.synchronized {
+        channelIds += channelId
+        client.connect(socket, webSocketUri).get() // connecting should be synchronous
+      }
+    }
 
   /**
    * Stop listening to a connection to Twitch
@@ -114,7 +106,7 @@ class RoundRobinConnectionOrchestrator(
    * @return a Map of WebSocket clients to the channel IDs that are connected
    *         to them
    */
-  override def activeConnections: Map[WebSocketClient, Set[String]] =
+  override def connectionsToClients: Map[WebSocketClient, Set[String]] =
     indexedWebSocketConnections
       .readOnlySnapshot()
       .values
@@ -136,19 +128,31 @@ class RoundRobinConnectionOrchestrator(
    *         is no longer capacity to handle more connections
    */
   private def getAndRotate(): Int =
-    position.synchronized {
-      val currentPosition = position.get()
-      var nextPosition    = currentPosition + 1
-      if (nextPosition == maxNumSockets) {
-        nextPosition = 0 // reset
-      }
-      // before we can proceed, we need to ensure that we have not overloaded
-      // an existing WebSocket client. Check how many clients are already
-      // connected to the nextPosition client. If it is above the allowed
-      // threshold, then we have to increment and check again
-
-      currentPosition
+    position.getAndUpdate { position =>
+      var count        = 0
+      var nextPosition = rotate(position)
+      do if (canClientAcceptNewConnection(nextPosition)) {
+        //noinspection ScalaStyle
+        return nextPosition
+      } else {
+        nextPosition = rotate(nextPosition)
+        count += 1
+      } while (count < maxNumSockets)
+      // if we do not find a valid client to connect to, then we are at
+      // capacity, and need to return -1
+      -1
     }
+
+  /**
+   * Increments the position and returns it. If position >= maxNumSockets,
+   * then this wraps back to zero.
+   * @param position current position
+   * @return next valid position
+   */
+  private def rotate(position: Int): Int = {
+    val result = position + 1
+    if (result >= maxNumSockets) 0 else result
+  }
 
   private[orchestrator] def canClientAcceptNewConnection(
       position: Int

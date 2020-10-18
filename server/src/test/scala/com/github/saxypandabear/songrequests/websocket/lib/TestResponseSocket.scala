@@ -1,4 +1,4 @@
-package com.github.saxypandabear.songrequests.websocket
+package com.github.saxypandabear.songrequests.websocket.lib
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.{Timer, TimerTask}

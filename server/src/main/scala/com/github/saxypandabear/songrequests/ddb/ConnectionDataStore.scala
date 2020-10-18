@@ -30,4 +30,11 @@ trait ConnectionDataStore {
       channelId: String,
       connection: Connection
   ): Unit
+
+  /**
+   * Checks if a record with the given ID exists.
+   * @param channelId the Twitch channel ID
+   * @return true if the channel ID exists, false otherwise
+   */
+  def hasConnectionDetails(channelId: String): Boolean
 }
