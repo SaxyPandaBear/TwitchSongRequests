@@ -27,7 +27,7 @@ trait ConnectionOrchestrator {
   /**
    * Reconnect/bounce the WebSocket client to force it to reconnect, because
    * a connector received a reconnect event from the server
-   * @param channelId
+   * @param channelId Twitch Channel ID that received a reconnect event
    */
   def reconnect(channelId: String): Unit
 
@@ -37,5 +37,10 @@ trait ConnectionOrchestrator {
    * @return true if the orchestrator is at capacity, false otherwise
    */
   def atCapacity: Boolean
+
+  /**
+   * Stop connections and perform any necessary clean-up
+   */
+  def stop(): Unit
   // TODO: determine what else is needed
 }

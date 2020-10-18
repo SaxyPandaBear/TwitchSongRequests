@@ -48,4 +48,6 @@ class InMemoryConnectionDataStore extends ConnectionDataStore {
     idsToConnections.synchronized {
       idsToConnections.put(channelId, connection)
     }
+
+  def clear(): Unit = idsToConnections.clear()
 }

@@ -11,7 +11,7 @@ import com.github.saxypandabear.songrequests.util.{HttpUtil, JsonUtil}
  * @param refreshUri   URI target for requesting a refresh token
  * @param dataStore    Interface to perform operations on the database
  */
-class OauthTokenManagerImpl(
+class HttpOauthTokenManager(
     clientId: String,
     clientSecret: String,
     channelId: String,
@@ -62,4 +62,42 @@ class OauthTokenManagerImpl(
         )
       }
     }
+}
+
+object HttpOauthTokenManagerFactory extends OauthTokenManagerFactory {
+
+  /**
+   * Create some implementation of an OAuth token manager.
+   * @param clientId            application client id
+   * @param clientSecret        application client secret
+   * @param channelId           Twitch channel ID
+   * @param refreshUri          URI for re-authentication
+   * @param connectionDataStore database wrapper that stores the bulk of
+   *                            connection information
+   * @return an implementation of an OAuth token manager
+   */
+  override def create(
+      clientId: String,
+      clientSecret: String,
+      channelId: String,
+      refreshUri: String,
+      connectionDataStore: ConnectionDataStore
+  ): OauthTokenManager = {
+    // just need to extract the refresh token from the database
+    // TODO: because of how this is written, there are 2 database reads.
+    //       look into refactoring this so we only need to read once on
+    //       initialization instead of twice to optimize.
+    val refreshToken = connectionDataStore
+      .getConnectionDetailsById(channelId)
+      .retrieveRefreshToken()
+
+    new HttpOauthTokenManager(
+        clientId,
+        clientSecret,
+        channelId,
+        refreshUri,
+        refreshToken,
+        connectionDataStore
+    )
+  }
 }

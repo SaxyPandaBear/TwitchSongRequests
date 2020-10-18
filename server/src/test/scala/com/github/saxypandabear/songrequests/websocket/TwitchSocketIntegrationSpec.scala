@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.github.saxypandabear.songrequests.lib.{RotatingTestPort, UnitSpec}
 import com.github.saxypandabear.songrequests.oauth.TestTokenManager
-import com.github.saxypandabear.songrequests.queue.TestingSongQueue
+import com.github.saxypandabear.songrequests.queue.InMemorySongQueue
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
 import com.github.saxypandabear.songrequests.websocket.listener.{
   LoggingWebSocketListener,
@@ -34,7 +34,7 @@ class TwitchSocketIntegrationSpec
 
   private val testListener     = new TestingWebSocketListener()
   private val logListener      = new LoggingWebSocketListener()
-  private val testingSongQueue = new TestingSongQueue()
+  private val testingSongQueue = new InMemorySongQueue()
 
   // use this to assert after the server is shut down to make sure we properly
   // handle the disconnect events

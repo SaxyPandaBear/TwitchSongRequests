@@ -1,5 +1,18 @@
 package com.github.saxypandabear.songrequests.oauth
 
+/**
+ * A class that handles the OAuth token for Twitch. Note that this does not
+ * need to be generic enough to also handle Spotify authentication, because
+ * none of that is handled here.
+ * @param clientId     application client id
+ * @param clientSecret application client secret
+ * @param refreshToken refresh token for this specific instance. this is why
+ *                     we cannot share a single OAuth token manager for the
+ *                     entire application. Each client that is listening to
+ *                     Twitch has been granted a different authorization from a
+ *                     different user.
+ * @param uri          URI that this should use to re-authenticate.
+ */
 abstract class OauthTokenManager(
     clientId: String,
     clientSecret: String,

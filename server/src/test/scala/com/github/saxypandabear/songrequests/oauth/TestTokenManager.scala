@@ -2,6 +2,8 @@ package com.github.saxypandabear.songrequests.oauth
 
 import java.util.UUID
 
+import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
+
 import scala.collection.mutable
 
 class TestTokenManager(
@@ -56,5 +58,34 @@ object TestTokenManager {
   def flush(): Unit = {
     refreshEvents.clear()
     clientIdsToTokens.clear()
+  }
+}
+
+object TestTokenManagerFactory extends OauthTokenManagerFactory {
+
+  /**
+   * Create some implementation of an OAuth token manager.
+   * @param clientId            application client id
+   * @param clientSecret        application client secret
+   * @param channelId           Twitch channel ID
+   * @param refreshUri          URI for re-authentication
+   * @param connectionDataStore database wrapper that stores the bulk of
+   *                            connection information
+   * @return an implementation of an OAuth token manager
+   */
+  override def create(
+      clientId: String,
+      clientSecret: String,
+      channelId: String,
+      refreshUri: String,
+      connectionDataStore: ConnectionDataStore
+  ): OauthTokenManager = {
+    val connection = connectionDataStore.getConnectionDetailsById(channelId)
+    new TestTokenManager(
+        clientId,
+        clientSecret,
+        connection.retrieveRefreshToken(),
+        refreshUri
+    )
   }
 }

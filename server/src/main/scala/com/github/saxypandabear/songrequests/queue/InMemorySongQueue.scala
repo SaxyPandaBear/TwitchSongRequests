@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 import scala.collection.mutable
 
-class TestingSongQueue extends SongQueue with StrictLogging {
+class InMemorySongQueue extends SongQueue with StrictLogging {
 
   private val lockObject = new Object()
   val queued             = new mutable.HashMap[String, mutable.ArrayBuffer[String]]()
