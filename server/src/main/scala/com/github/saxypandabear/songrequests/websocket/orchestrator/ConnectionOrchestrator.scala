@@ -1,5 +1,7 @@
 package com.github.saxypandabear.songrequests.websocket.orchestrator
 
+import org.eclipse.jetty.websocket.client.WebSocketClient
+
 /**
  * A ConnectionOrchestrator handles requests to connect to Twitch, and
  * requests to disconnect (unlisten), as well as load balancing between
@@ -37,6 +39,14 @@ trait ConnectionOrchestrator {
    * @return true if the orchestrator is at capacity, false otherwise
    */
   def atCapacity: Boolean
+
+  /**
+   * Retrieve a snapshot map of the WebSocket clients and the channel IDs that
+   * are connected to them.
+   * @return a Map of WebSocket clients to the channel IDs that are connected
+   *         to them
+   */
+  def activeConnections: Map[WebSocketClient, Set[String]]
 
   /**
    * Stop connections and perform any necessary clean-up

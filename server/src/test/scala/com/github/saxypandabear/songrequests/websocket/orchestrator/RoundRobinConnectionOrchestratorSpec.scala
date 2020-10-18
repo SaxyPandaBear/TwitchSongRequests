@@ -21,18 +21,40 @@ class RoundRobinConnectionOrchestratorSpec
   private val refreshUri                                     = "baz"
   private val songQueue                                      = new InMemorySongQueue()
 
-  override def beforeEach(): Unit =
+  override def afterEach(): Unit = {
+    orchestrator.stop()
+    dataStore.clear()
+    songQueue.clear()
+  }
+
+  it should "not accept a number of sockets that is less than 1" in {
+    val numSockets = 0
+    val exception  = intercept[IllegalArgumentException] {
+      initOrchestrator(numSockets)
+    }
+    exception should have message s"Orchestrator misconfigured - requires at least 1 client, but received $numSockets"
+  }
+
+  "An orchestrator with no active connections" should "return a map that is not empty, but contains empty values" in {
+    val numSockets  = 5
+    initOrchestrator(numSockets)
+    val connections = orchestrator.activeConnections
+
+    connections should have size numSockets
+    for (channelIds <- connections.values)
+      channelIds.isEmpty should be(true)
+  }
+
+  private def initOrchestrator(
+      numSockets: Int
+  ): Unit =
     orchestrator = new RoundRobinConnectionOrchestrator(
         clientId,
         clientSecret,
         refreshUri,
         dataStore,
         songQueue,
-        TestTokenManagerFactory
+        TestTokenManagerFactory,
+        numSockets
     )
-
-  override def afterEach(): Unit = {
-    orchestrator.stop()
-    dataStore.clear()
-  }
 }

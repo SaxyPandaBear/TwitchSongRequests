@@ -85,26 +85,43 @@ class RoundRobinConnectionOrchestrator(
    * Stop listening to a connection to Twitch
    * @param channelId Twitch Channel ID to stop listening on
    */
-  override def disconnect(channelId: String): Unit = ???
+  override def disconnect(channelId: String): Unit = {}
 
   /**
    * Reconnect/bounce the WebSocket client to force it to reconnect, because
    * a connector received a reconnect event from the server
    * @param channelId Twitch Channel ID that received a reconnect event
    */
-  override def reconnect(channelId: String): Unit = ???
+  override def reconnect(channelId: String): Unit = {}
 
   /**
    * When an orchestrator is at capacity, the system should know to start
    * an auto-scaling event
    * @return true if the orchestrator is at capacity, false otherwise
    */
-  override def atCapacity: Boolean = ???
+  override def atCapacity: Boolean = false
 
   /**
    * Stop connections and perform any necessary clean-up
    */
-  override def stop(): Unit = {}
+  override def stop(): Unit =
+    for ((_, (client, _)) <- indexedWebSocketConnections)
+      client.stop()
+
+  /**
+   * Retrieve a snapshot map of the WebSocket clients and the channel IDs that
+   * are connected to them.
+   * @return a Map of WebSocket clients to the channel IDs that are connected
+   *         to them
+   */
+  override def activeConnections: Map[WebSocketClient, Set[String]] =
+    indexedWebSocketConnections
+      .readOnlySnapshot()
+      .values
+      .map { case (client, channelIds) =>
+        client -> channelIds.toSet
+      }
+      .toMap
 
   /**
    * Synchronous, blocking method that performs a get and set operation
