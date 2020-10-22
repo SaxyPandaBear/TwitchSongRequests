@@ -8,6 +8,7 @@ import com.github.saxypandabear.songrequests.ddb.{
   InMemoryConnectionDataStore
 }
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.mutable
 
@@ -66,7 +67,9 @@ object TestTokenManager {
   }
 }
 
-object TestTokenManagerFactory extends OauthTokenManagerFactory {
+object TestTokenManagerFactory
+    extends OauthTokenManagerFactory
+    with LazyLogging {
 
   // use this to leverage Scala's case class functionality in order to simply
   // copy the base object and change just the channel ID

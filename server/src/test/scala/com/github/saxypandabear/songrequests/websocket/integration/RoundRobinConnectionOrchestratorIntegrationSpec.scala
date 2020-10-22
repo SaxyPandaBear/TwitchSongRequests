@@ -7,11 +7,13 @@ import com.github.saxypandabear.songrequests.lib.{RotatingTestPort, UnitSpec}
 import com.github.saxypandabear.songrequests.oauth.TestTokenManagerFactory
 import com.github.saxypandabear.songrequests.queue.InMemorySongQueue
 import com.github.saxypandabear.songrequests.websocket.TwitchSocketFactory
+import com.github.saxypandabear.songrequests.websocket.lib.WebSocketTestingUtil
 import com.github.saxypandabear.songrequests.websocket.listener.{
   LoggingWebSocketListener,
   TestingWebSocketListener
 }
 import com.github.saxypandabear.songrequests.websocket.orchestrator.RoundRobinConnectionOrchestrator
+import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Span}
@@ -37,8 +39,15 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
       songQueue,
       Seq(logListener, testListener)
   )
+  private var server: Server                                 = _
 
-  override def beforeEach(): Unit = {}
+  override def beforeEach(): Unit = {
+    server = WebSocketTestingUtil.build(port)
+    server.start()
+  }
+
+  override def afterEach(): Unit =
+    server.stop()
 
   "Stopping the orchestrator" should "stop all of the internal WebSocket clients" in {
     // in case calling stop() on a WebSocket client regresses and causes an
@@ -80,8 +89,6 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     // by having 3 channels to connect, we expect each channel ID to be
     // connected to a different client
     val channelIds = Seq("a", "b", "c")
-    // first, need to update our data store so that these channelIds can be
-    // looked up without error
 
     channelIds.foreach(orchestrator.connect(_, twitchSocketFactory.create))
     orchestrator.connectionsToClients.values.foreach(_ should have size 1)
@@ -95,8 +102,6 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     // having 2 clients but 5 channels, we should expect the orchestrator to
     // deterministically choose which client each channel should connect to
     val channelIds = Seq("a", "b", "c", "d", "e")
-    // first, need to update our data store so that these channelIds can be
-    // looked up without error
 
     channelIds.foreach(orchestrator.connect(_, twitchSocketFactory.create))
     orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs channelIds
