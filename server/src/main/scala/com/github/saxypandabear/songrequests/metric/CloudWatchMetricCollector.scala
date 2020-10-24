@@ -13,12 +13,12 @@ import scala.collection.JavaConverters._
  * @param client internal AWS SDK CloudWatch client
  */
 class CloudWatchMetricCollector(client: AmazonCloudWatch) extends LazyLogging {
-    def emitCountMetric(name: String, value: Long, tags: Map[String, String] = Map.empty): Unit = {
+    def emitCountMetric(name: String, value: Double, tags: Map[String, String] = Map.empty): Unit = {
         val datum = new MetricDatum()
             .withMetricName(name)
             .withTimestamp(new Date())
             .withUnit(StandardUnit.Count)
-            .withValue(value.toDouble)
+            .withValue(value)
 
         if (tags.nonEmpty) {
             datum.setDimensions(convertMapToDimensions(tags).asJava)
