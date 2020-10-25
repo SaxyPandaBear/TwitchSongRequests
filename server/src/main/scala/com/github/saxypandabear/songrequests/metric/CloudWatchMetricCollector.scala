@@ -19,6 +19,16 @@ import scala.collection.JavaConverters._
 class CloudWatchMetricCollector(client: AmazonCloudWatch, executorService: ExecutorService) extends LazyLogging {
 
     def emitCountMetric(name: String, value: Double, tags: Map[String, String] = Map.empty): Unit = {
+        executorService.submit(new EmitMetricTask(client, name, value, tags))
+    }
+
+    def emitCountMetric(name: String, value: Long, tags: Map[String, String] = Map.empty): Unit = {
+        emitCountMetric(name, value.toLong, tags)
+    }
+}
+
+class EmitMetricTask(client: AmazonCloudWatch, name: String, value: Double, tags: Map[String, String]) extends Runnable with LazyLogging {
+    override def run(): Unit = {
         val datum = new MetricDatum()
             .withMetricName(name)
             .withTimestamp(new Date())
@@ -36,10 +46,6 @@ class CloudWatchMetricCollector(client: AmazonCloudWatch, executorService: Execu
 
         val response = client.putMetricData(request)
         logger.info("Response from emitting metric[{}={}]: {}", name, value, response)
-    }
-
-    def emitCountMetric(name: String, value: Long, tags: Map[String, String] = Map.empty): Unit = {
-        emitCountMetric(name, value.toLong, tags)
     }
 
     private def convertMapToDimensions(tags: Map[String, String]): Seq[Dimension] = {
