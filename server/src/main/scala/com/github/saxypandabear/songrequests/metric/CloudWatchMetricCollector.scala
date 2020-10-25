@@ -14,7 +14,8 @@ import scala.collection.JavaConverters._
  * This should perform the operations asynchronously, because we expect
  * to share this object throughout the app, and can't let this metric
  * emitter be the bottleneck for processing data.
- * @param client internal AWS SDK CloudWatch client
+ * @param client          internal AWS SDK CloudWatch client
+ * @param executorService thread pool executor to submit EmitMetricTasks to
  */
 class CloudWatchMetricCollector(client: AmazonCloudWatch, executorService: ExecutorService) extends LazyLogging {
 
