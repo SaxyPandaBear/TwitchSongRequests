@@ -17,14 +17,10 @@ import scala.collection.JavaConverters._
  * @param client          internal AWS SDK CloudWatch client
  * @param executorService thread pool executor to submit EmitMetricTasks to
  */
-class CloudWatchMetricCollector(client: AmazonCloudWatch, executorService: ExecutorService) extends LazyLogging {
+class CloudWatchMetricCollector(client: AmazonCloudWatch, executorService: ExecutorService) {
 
     def emitCountMetric(name: String, value: Double, tags: Map[String, String] = Map.empty): Unit = {
         executorService.submit(new EmitMetricTask(client, name, value, tags))
-    }
-
-    def emitCountMetric(name: String, value: Long, tags: Map[String, String] = Map.empty): Unit = {
-        emitCountMetric(name, value.toLong, tags)
     }
 }
 
