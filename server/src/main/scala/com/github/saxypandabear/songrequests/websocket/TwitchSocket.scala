@@ -3,6 +3,7 @@ package com.github.saxypandabear.songrequests.websocket
 import java.util.{Timer, TimerTask}
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
 import com.github.saxypandabear.songrequests.oauth.OauthTokenManager
 import com.github.saxypandabear.songrequests.queue.SongQueue
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
@@ -17,6 +18,7 @@ import org.eclipse.jetty.websocket.api.annotations._
  * @param channelId         The Twitch channel ID that is associated with this connection
  * @param oauthTokenManager Manages the OAuth token necessary to authenticate against Twitch
  * @param songQueue         Queue that the socket submits parsed Spotify URIs to
+ * @param metrics           CloudWatch metric collector
  * @param listeners         List of listeners that act on each event from the WebSocket handler
  */
 @WebSocket
@@ -24,6 +26,7 @@ class TwitchSocket(
     channelId: String,
     oauthTokenManager: OauthTokenManager,
     songQueue: SongQueue,
+    metrics: CloudWatchMetricCollector,
     listeners: Seq[WebSocketListener] = Seq.empty,
     pingFrequencyMs: Long = 60000
 ) extends LazyLogging {

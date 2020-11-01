@@ -8,14 +8,12 @@ import com.github.saxypandabear.songrequests.oauth.TestTokenManagerFactory
 import com.github.saxypandabear.songrequests.queue.InMemorySongQueue
 import com.github.saxypandabear.songrequests.websocket.TwitchSocketFactory
 import com.github.saxypandabear.songrequests.websocket.lib.WebSocketTestingUtil
-import com.github.saxypandabear.songrequests.websocket.listener.{
-  LoggingWebSocketListener,
-  TestingWebSocketListener
-}
+import com.github.saxypandabear.songrequests.websocket.listener.{LoggingWebSocketListener, TestingWebSocketListener}
 import com.github.saxypandabear.songrequests.websocket.orchestrator.RoundRobinConnectionOrchestrator
 import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 
 // wow that's a long name
@@ -23,6 +21,7 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     extends UnitSpec
     with RotatingTestPort
     with BeforeAndAfterEach
+    with MockitoSugar
     with Eventually {
 
   private var orchestrator: RoundRobinConnectionOrchestrator = _
@@ -30,18 +29,24 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
   private val dataStore                                      = new InMemoryConnectionDataStore()
   private val logListener                                    = new LoggingWebSocketListener()
   private val testListener                                   = new TestingWebSocketListener()
-  private val twitchSocketFactory                            = new TwitchSocketFactory(
+  private var twitchSocketFactory                            = _
+  private var metricCollector = _
+  private var server: Server                                 = _
+
+  override def beforeEach(): Unit = {
+    metricCollector =
+
+    twitchSocketFactory = new TwitchSocketFactory(
       "foo",
       "bar",
       "baz",
       TestTokenManagerFactory,
       dataStore,
       songQueue,
+      metricCollector,
       Seq(logListener, testListener)
-  )
-  private var server: Server                                 = _
+    )
 
-  override def beforeEach(): Unit = {
     server = WebSocketTestingUtil.build(port)
     server.start()
   }

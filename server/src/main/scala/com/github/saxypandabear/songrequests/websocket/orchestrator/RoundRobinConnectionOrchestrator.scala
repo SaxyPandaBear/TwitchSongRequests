@@ -3,6 +3,7 @@ package com.github.saxypandabear.songrequests.websocket.orchestrator
 import java.net.URI
 import java.util.concurrent.atomic.AtomicInteger
 
+import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
 import com.github.saxypandabear.songrequests.websocket.TwitchSocket
 import org.eclipse.jetty.websocket.client.WebSocketClient
 
@@ -21,14 +22,17 @@ import scala.collection.mutable
  * hard limitation on how many clients we can have that connect from the same IP,
  * and how many connections are allowed per client, we should not have any
  * real scaling issues. We are dealing with, at most, hundreds of entities.
- * @param webSocketUri           URI that the WebSocket clients will connect to
- * @param maxNumSockets          maximum number of sockets that this orchestrator
- *                               can use. this is constrained by the limit that
- *                               Twitch puts on how many client connections we
- *                               can have to their servers from a single IP address.
- *                               This is assumed to be an integer > 0
+ * @param webSocketUri  URI that the WebSocket clients will connect to
+ * @param maxNumSockets maximum number of sockets that this orchestrator
+ *                      can use. this is constrained by the limit that
+ *                      Twitch puts on how many client connections we
+ *                      can have to their servers from a single IP address.
+ *                      This is assumed to be an integer > 0
+ * @param metrics       Class that handles collecting metrics to send to
+ *                      CloudWatch
  */
 class RoundRobinConnectionOrchestrator(
+    metrics: CloudWatchMetricCollector,
     webSocketUri: URI,
     maxNumSockets: Int = 5
 ) extends ConnectionOrchestrator {
