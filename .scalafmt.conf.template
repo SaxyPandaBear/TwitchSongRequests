@@ -1,0 +1,10 @@
+version = "2.7.4"
+align.preset = most
+align.multiline = true
+maxColumn = 80
+continuationIndent.callSite = 4
+comments.wrap = trailing
+comments.wrapStandaloneSlcAsSlc = true
+docstrings.style = Asterisk
+rewrite.rules = [RedundantBraces, RedundantParens, SortModifiers, SortImports]
+rewrite.redundantBraces.stringInterpolation = true
