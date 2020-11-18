@@ -8,6 +8,12 @@ import com.amazonaws.{AmazonWebServiceRequest, ResponseMetadata}
 
 import scala.collection.mutable
 
+/**
+ * Only used in tests because I hate mocking when I don't have to,
+ * and want more control over what I am doing. This class doesn't
+ * really need a lot. It just needs to be able to capture the methods
+ * that are called in the EmitMetricTask class.
+ */
 //noinspection ScalaStyle
 class DummyAmazonCloudWatch extends AmazonCloudWatch {
   val putMetricDataRequests = new mutable.ArrayBuffer[PutMetricDataRequest]()

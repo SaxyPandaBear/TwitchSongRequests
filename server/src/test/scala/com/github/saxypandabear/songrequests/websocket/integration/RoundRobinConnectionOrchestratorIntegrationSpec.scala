@@ -19,10 +19,10 @@ import com.github.saxypandabear.songrequests.websocket.listener.{
   TestingWebSocketListener
 }
 import com.github.saxypandabear.songrequests.websocket.orchestrator.RoundRobinConnectionOrchestrator
+import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 
 // wow that's a long name
@@ -30,7 +30,8 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     extends UnitSpec
     with RotatingTestPort
     with BeforeAndAfterEach
-    with Eventually {
+    with Eventually
+    with LazyLogging {
 
   private var orchestrator: RoundRobinConnectionOrchestrator = _
   private val songQueue                                      = new InMemorySongQueue()
@@ -44,6 +45,8 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
   private val executor                                       = Executors.newFixedThreadPool(1)
 
   override def beforeEach(): Unit = {
+    super.beforeEach()
+
     testCloudWatchClient = new DummyAmazonCloudWatch
     metricCollector = new CloudWatchMetricCollector(
         testCloudWatchClient,
@@ -62,6 +65,8 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
 
     server = WebSocketTestingUtil.build(port)
     server.start()
+
+    logger.info("Starting test with server hosted on port {}", port)
   }
 
   override def afterEach(): Unit =
