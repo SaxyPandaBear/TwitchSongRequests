@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
 import com.github.saxypandabear.songrequests.websocket.TwitchSocket
-import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.jetty.websocket.client.WebSocketClient
 
 import scala.collection.concurrent.TrieMap
@@ -34,11 +33,9 @@ import scala.collection.mutable
 class RoundRobinConnectionOrchestrator(
     metrics: CloudWatchMetricCollector,
     webSocketUri: URI,
-    maxNumSockets: Int = 5
-) extends ConnectionOrchestrator
-    with LazyLogging {
-
-  private val MAX_ALLOWED_CONNECTIONS_PER_CLIENT = 40
+    maxNumSockets: Int = 5,
+    maxAllowedConnectionsPerClient: Int = 40
+) extends ConnectionOrchestrator {
 
   // this handles the decision making of which WebSocket client to connect to
   private val position = new AtomicInteger(0)
@@ -50,7 +47,7 @@ class RoundRobinConnectionOrchestrator(
   // are tame. as such, it made more sense to make the key just the position,
   // an int, rather than making the key a composition of a position and the
   // WebSocket client, since the client wouldn't be helpful for the lookup.
-  private val indexedWebSocketConnections
+  private[websocket] val indexedWebSocketConnections
       : TrieMap[Int, (WebSocketClient, mutable.HashSet[String])] =
     initInternalMap(
         maxNumSockets
@@ -72,28 +69,24 @@ class RoundRobinConnectionOrchestrator(
       val socket          = socketFactory(channelId)
       // get a valid WebSocket and connect
       var index           = position.getAndUpdate(p => rotate(p))
-      logger.info("Starting check at position {}", index)
       var numTimesChecked = 0
       while (
           !(numTimesChecked < maxNumSockets) && !canClientAcceptNewConnection(
               index
           )
       ) {
-        logger.info("Attempt {}", numTimesChecked)
         numTimesChecked += 1
         index = position.getAndUpdate(p => rotate(p))
-        logger.info("Next position to check {}", index)
       }
       if (canClientAcceptNewConnection(index)) {
         val (client, channelIds) = indexedWebSocketConnections(index)
         channelIds.synchronized {
           channelIds += channelId
           client.connect(socket, webSocketUri).get() // connecting should be synchronous
-          logger.info("{} connected to client {}", channelIds, index)
         }
-      } else {
-        logger.warn("At capacity!")
-      }
+      } else {} /* TODO: this means that we have exhausted attempts and still
+       * cannot connect, which */
+      //       indicates that this orchestrator is at capacity
     }
 
   // TODO: implement me
@@ -149,7 +142,7 @@ class RoundRobinConnectionOrchestrator(
    */
   private[orchestrator] def rotate(position: Int): Int = {
     val newPosition = position + 1
-    val result      = if (position == maxNumSockets) 0 else newPosition
+    val result      = if (newPosition >= maxNumSockets) 0 else newPosition
     logger.info("Rotating from {} to {}", position, result)
     result
   }
@@ -161,7 +154,7 @@ class RoundRobinConnectionOrchestrator(
       .snapshot()
       .get(position)
       .exists { case (_, channelIds) =>
-        channelIds.size < MAX_ALLOWED_CONNECTIONS_PER_CLIENT
+        channelIds.size < maxAllowedConnectionsPerClient
       }
 
   private def initInternalMap(

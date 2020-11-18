@@ -129,16 +129,26 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
 
     channelIds.foreach(orchestrator.connect(_, twitchSocketFactory.create))
     orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs channelIds
-    orchestrator.connectionsToClients.values should contain theSameElementsAs Seq(
-        Seq("a", "c", "e"),
-        Seq("b", "d")
-    )
+    orchestrator
+      .indexedWebSocketConnections(0)
+      ._2 should contain theSameElementsAs Seq("a", "c", "e")
+    orchestrator
+      .indexedWebSocketConnections(1)
+      ._2 should contain theSameElementsAs Seq("b", "d")
   }
 
-  private def initOrchestrator(numSockets: Int): Unit =
+  "Connecting to many channels" should "eventually cause the orchestrator to reach its allowed capacity" in {
+    fail("Write me!")
+  }
+
+  private def initOrchestrator(
+      numSockets: Int,
+      numConnections: Int = 40
+  ): Unit =
     orchestrator = new RoundRobinConnectionOrchestrator(
         metricCollector,
         new URI(s"ws://localhost:$port"),
-        numSockets
+        numSockets,
+        numConnections
     )
 }
