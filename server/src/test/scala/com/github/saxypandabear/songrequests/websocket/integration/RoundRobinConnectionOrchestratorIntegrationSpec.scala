@@ -1,14 +1,23 @@
 package com.github.saxypandabear.songrequests.websocket.integration
 
 import java.net.URI
+import java.util.concurrent.Executors
 
 import com.github.saxypandabear.songrequests.ddb.InMemoryConnectionDataStore
-import com.github.saxypandabear.songrequests.lib.{RotatingTestPort, UnitSpec}
+import com.github.saxypandabear.songrequests.lib.{
+  DummyAmazonCloudWatch,
+  RotatingTestPort,
+  UnitSpec
+}
+import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
 import com.github.saxypandabear.songrequests.oauth.TestTokenManagerFactory
 import com.github.saxypandabear.songrequests.queue.InMemorySongQueue
 import com.github.saxypandabear.songrequests.websocket.TwitchSocketFactory
 import com.github.saxypandabear.songrequests.websocket.lib.WebSocketTestingUtil
-import com.github.saxypandabear.songrequests.websocket.listener.{LoggingWebSocketListener, TestingWebSocketListener}
+import com.github.saxypandabear.songrequests.websocket.listener.{
+  LoggingWebSocketListener,
+  TestingWebSocketListener
+}
 import com.github.saxypandabear.songrequests.websocket.orchestrator.RoundRobinConnectionOrchestrator
 import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterEach
@@ -21,7 +30,6 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     extends UnitSpec
     with RotatingTestPort
     with BeforeAndAfterEach
-    with MockitoSugar
     with Eventually {
 
   private var orchestrator: RoundRobinConnectionOrchestrator = _
@@ -29,22 +37,27 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
   private val dataStore                                      = new InMemoryConnectionDataStore()
   private val logListener                                    = new LoggingWebSocketListener()
   private val testListener                                   = new TestingWebSocketListener()
-  private var twitchSocketFactory                            = _
-  private var metricCollector = _
+  private var twitchSocketFactory: TwitchSocketFactory       = _
+  private var metricCollector: CloudWatchMetricCollector     = _
+  private var testCloudWatchClient: DummyAmazonCloudWatch    = _
   private var server: Server                                 = _
+  private val executor                                       = Executors.newFixedThreadPool(1)
 
   override def beforeEach(): Unit = {
-    metricCollector =
-
+    testCloudWatchClient = new DummyAmazonCloudWatch
+    metricCollector = new CloudWatchMetricCollector(
+        testCloudWatchClient,
+        executor
+    )
     twitchSocketFactory = new TwitchSocketFactory(
-      "foo",
-      "bar",
-      "baz",
-      TestTokenManagerFactory,
-      dataStore,
-      songQueue,
-      metricCollector,
-      Seq(logListener, testListener)
+        "foo",
+        "bar",
+        "baz",
+        TestTokenManagerFactory,
+        dataStore,
+        songQueue,
+        metricCollector,
+        Seq(logListener, testListener)
     )
 
     server = WebSocketTestingUtil.build(port)
@@ -55,10 +68,11 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     server.stop()
 
   "Stopping the orchestrator" should "stop all of the internal WebSocket clients" in {
+    val uri              = new URI(s"ws://localhost:$port")
     // in case calling stop() on a WebSocket client regresses and causes an
     // exception to be thrown, create a new orchestrator to test this
     val someOrchestrator =
-      new RoundRobinConnectionOrchestrator(new URI("something"))
+      new RoundRobinConnectionOrchestrator(metricCollector, uri)
     someOrchestrator.connectionsToClients.keys.forall(_.isRunning) should be(
         true
     )
@@ -118,6 +132,7 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
 
   private def initOrchestrator(numSockets: Int): Unit =
     orchestrator = new RoundRobinConnectionOrchestrator(
+        metricCollector,
         new URI(s"ws://localhost:$port"),
         numSockets
     )

@@ -2,10 +2,16 @@ package com.github.saxypandabear.songrequests.websocket.integration
 
 import java.net.URI
 import java.util.UUID
+import java.util.concurrent.Executors
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
-import com.github.saxypandabear.songrequests.lib.{RotatingTestPort, UnitSpec}
+import com.github.saxypandabear.songrequests.lib.{
+  DummyAmazonCloudWatch,
+  RotatingTestPort,
+  UnitSpec
+}
+import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
 import com.github.saxypandabear.songrequests.oauth.TestTokenManager
 import com.github.saxypandabear.songrequests.queue.InMemorySongQueue
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
@@ -34,9 +40,12 @@ class TwitchSocketIntegrationSpec
     with BeforeAndAfterEach
     with Eventually {
 
-  private val testListener     = new TestingWebSocketListener()
-  private val logListener      = new LoggingWebSocketListener()
-  private val testingSongQueue = new InMemorySongQueue()
+  private val testListener                                = new TestingWebSocketListener()
+  private val logListener                                 = new LoggingWebSocketListener()
+  private val testingSongQueue                            = new InMemorySongQueue()
+  private var testCloudWatchClient: DummyAmazonCloudWatch = _
+  private var metricCollector: CloudWatchMetricCollector  = _
+  private val executor                                    = Executors.newFixedThreadPool(1)
 
   // use this to assert after the server is shut down to make sure we properly
   // handle the disconnect events
@@ -47,6 +56,9 @@ class TwitchSocketIntegrationSpec
 
   override def beforeEach(): Unit = {
     super.beforeEach()
+    testCloudWatchClient = new DummyAmazonCloudWatch
+    metricCollector =
+      new CloudWatchMetricCollector(testCloudWatchClient, executor)
 
     connectedChannelIds.clear()
     testListener.clear()
@@ -91,6 +103,7 @@ class TwitchSocketIntegrationSpec
         channelId,
         testTokenManager,
         testingSongQueue,
+        metricCollector,
         Seq(testListener, logListener)
     )
 
@@ -118,6 +131,7 @@ class TwitchSocketIntegrationSpec
         channelId,
         testTokenManager,
         testingSongQueue,
+        metricCollector,
         Seq(testListener, logListener)
     )
 
@@ -155,6 +169,7 @@ class TwitchSocketIntegrationSpec
         channelId,
         testTokenManager,
         testingSongQueue,
+        metricCollector,
         Seq(testListener, logListener),
         pingFrequencyMs
     )
@@ -205,6 +220,7 @@ class TwitchSocketIntegrationSpec
         channelId,
         testTokenManager,
         testingSongQueue,
+        metricCollector,
         Seq(testListener, logListener)
     )
 
@@ -251,6 +267,7 @@ class TwitchSocketIntegrationSpec
         channelId,
         testTokenManager,
         testingSongQueue,
+        metricCollector,
         Seq(testListener, logListener)
     )
 
@@ -297,6 +314,7 @@ class TwitchSocketIntegrationSpec
         channelId,
         testTokenManager,
         testingSongQueue,
+        metricCollector,
         Seq(testListener, logListener)
     )
 

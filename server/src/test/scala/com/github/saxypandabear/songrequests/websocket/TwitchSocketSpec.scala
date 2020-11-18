@@ -2,9 +2,13 @@ package com.github.saxypandabear.songrequests.websocket
 
 import com.github.saxypandabear.songrequests.lib.UnitSpec
 
+/**
+ * Tests that don't require any of the integrations, like the
+ * song queue, OAuth, or metrics.
+ */
 class TwitchSocketSpec extends UnitSpec {
 
-  private val socket = new TwitchSocket("", null, null)
+  private val socket = new TwitchSocket("", null, null, null)
 
   "Checking a valid user input Spotify URI" should "return true" in {
     socket.inputMatchesSpotifyUri("spotify:track:abc123") should be(true)
