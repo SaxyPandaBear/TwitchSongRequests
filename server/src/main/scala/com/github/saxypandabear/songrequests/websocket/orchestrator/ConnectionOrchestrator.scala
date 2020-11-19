@@ -21,7 +21,7 @@ trait ConnectionOrchestrator {
    * @param socketFactory Function that takes a channel ID and returns a
    *                      TwitchSocket
    */
-  def connect(channelId: String, socketFactory: String => TwitchSocket): Unit
+  def connect(channelId: String, socketFactory: String => TwitchSocket): Boolean
 
   /**
    * Stop listening to a connection to Twitch

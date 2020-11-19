@@ -23,9 +23,10 @@ import com.github.saxypandabear.songrequests.websocket.listener.{
 }
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.websocket.client.WebSocketClient
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
+import org.scalatest.tagobjects.Retryable
 import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterEach, Outcome, Retries}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -38,7 +39,8 @@ class TwitchSocketIntegrationSpec
     extends UnitSpec
     with RotatingTestPort
     with BeforeAndAfterEach
-    with Eventually {
+    with Eventually
+    with Retries {
 
   private val testListener                                = new TestingWebSocketListener()
   private val logListener                                 = new LoggingWebSocketListener()
@@ -91,10 +93,17 @@ class TwitchSocketIntegrationSpec
     }
   }
 
+  override def withFixture(test: NoArgTest): Outcome =
+    if (isRetryable(test)) {
+      withRetryOnFailure(super.withFixture(test))
+    } else {
+      super.withFixture(test)
+    }
+
   // =================== Start onConnect Tests ===================
   /* Testing separate parts of the TwitchSocket onConnect for granularity */
   // TODO: This test can be flaky in CI, but always succeeds locally
-  "Connecting to a WebSocket server" should "work" in {
+  "Connecting to a WebSocket server" should "work" taggedAs Retryable in {
     val uri              = new URI(s"ws://localhost:$port")
     val channelId        = UUID.randomUUID().toString
     val testTokenManager = new TestTokenManager("abc123", "foo", "bar", "baz")

@@ -138,7 +138,27 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
   }
 
   "Connecting to many channels" should "eventually cause the orchestrator to reach its allowed capacity" in {
-    fail("Write me!")
+    val numSockets     = 2
+    val numConnections = 2
+    initOrchestrator(numSockets, numConnections)
+
+    // there are only 2 connections allowed for each socket, and 2 sockets,
+    // so having 5 channels to connect should cause the orchestrator to reach
+    // capacity.
+    val channelIdsWithIndexes = Seq("a", "b", "c", "d", "e").zipWithIndex
+    val indexAtCapacity       = channelIdsWithIndexes.size - 1
+
+    for ((id, index) <- channelIdsWithIndexes) {
+      // we should successfully connect for all except the last one
+      orchestrator.connect(id, twitchSocketFactory.create) should be(
+          index != indexAtCapacity
+      )
+      if (index == indexAtCapacity) {
+        orchestrator.atCapacity should be(true)
+      } else {
+        orchestrator.atCapacity should be(false)
+      }
+    }
   }
 
   private def initOrchestrator(

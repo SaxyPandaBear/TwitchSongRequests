@@ -1,7 +1,7 @@
 package com.github.saxypandabear.songrequests.websocket.orchestrator
 
 import java.net.URI
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
 import com.github.saxypandabear.songrequests.websocket.TwitchSocket
@@ -38,7 +38,8 @@ class RoundRobinConnectionOrchestrator(
 ) extends ConnectionOrchestrator {
 
   // this handles the decision making of which WebSocket client to connect to
-  private val position = new AtomicInteger(0)
+  private val position     = new AtomicInteger(0)
+  private val isAtCapacity = new AtomicBoolean(false)
 
   // associate a position to a tuple of a WebSocket client and the set of
   // channels connected to that WebSocket.
@@ -56,15 +57,17 @@ class RoundRobinConnectionOrchestrator(
   /**
    * Initiate a connection to Twitch with an internal WebSocket connection.
    * Note: This only performs a connection when the orchestrator is not at
-   *       capacity.
+   *       capacity, and has a side effect of updating the isAtCapacity
+   *       value
    * @param channelId     Twitch Channel ID to listen on
    * @param socketFactory Function that takes a channel ID and returns a Socket
    *                      implementation
+   * @return true if successfully connected, false if at capacity
    */
   override def connect(
       channelId: String,
       socketFactory: String => TwitchSocket
-  ): Unit =
+  ): Boolean =
     if (!atCapacity) {
       val socket          = socketFactory(channelId)
       // get a valid WebSocket and connect
@@ -84,9 +87,14 @@ class RoundRobinConnectionOrchestrator(
           channelIds += channelId
           client.connect(socket, webSocketUri).get() // connecting should be synchronous
         }
-      } else {} /* TODO: this means that we have exhausted attempts and still
-       * cannot connect, which */
-      //       indicates that this orchestrator is at capacity
+        true
+      } else {
+        // this means that we are at capacity and need to report as such.
+        isAtCapacity.getAndSet(true)
+        false
+      }
+    } else {
+      false
     }
 
   // TODO: implement me
@@ -110,7 +118,7 @@ class RoundRobinConnectionOrchestrator(
    * an auto-scaling event
    * @return true if the orchestrator is at capacity, false otherwise
    */
-  override def atCapacity: Boolean = false
+  override def atCapacity: Boolean = isAtCapacity.get()
 
   /**
    * Stop connections and perform any necessary clean-up
@@ -143,7 +151,6 @@ class RoundRobinConnectionOrchestrator(
   private[orchestrator] def rotate(position: Int): Int = {
     val newPosition = position + 1
     val result      = if (newPosition >= maxNumSockets) 0 else newPosition
-    logger.info("Rotating from {} to {}", position, result)
     result
   }
 
