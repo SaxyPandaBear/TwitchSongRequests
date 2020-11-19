@@ -1,8 +1,8 @@
 package com.github.saxypandabear.songrequests.server
 
 import com.github.saxypandabear.songrequests.server.model.Channel
-import javax.ws.rs.core.{MediaType, Response}
 import javax.ws.rs._
+import javax.ws.rs.core.{MediaType, Response}
 
 /**
  * Class that deals with accepting incoming requests that we expect from a Lambda.
@@ -13,28 +13,25 @@ import javax.ws.rs._
 @Path("/api")
 class ConnectionResource {
 
-    @GET
-    @Path("/ping")
-    @Produces(Array(MediaType.APPLICATION_JSON))
-    def ping(): String = {
-        "pong"
-    }
+  @GET
+  @Path("/ping")
+  @Produces(Array(MediaType.APPLICATION_JSON))
+  def ping(): String =
+    "pong"
 
-    @POST
-    @Path("/connect")
-    @Consumes(Array(MediaType.APPLICATION_JSON))
-    @Produces(Array(MediaType.TEXT_PLAIN))
-    def initiateConnection(request: Channel): Response = {
-        Response
-            .status(201)
-            .entity(s"Initiated connection to channel ${request.channelId}")
-            .build()
-    }
+  @POST
+  @Path("/connect")
+  @Consumes(Array(MediaType.APPLICATION_JSON))
+  @Produces(Array(MediaType.TEXT_PLAIN))
+  def initiateConnection(request: Channel): Response =
+    Response
+      .status(201)
+      .entity(s"Initiated connection to channel ${request.channelId}")
+      .build()
 
-    @PUT
-    @Path("/disconnect/{channel}")
-    @Consumes(Array(MediaType.APPLICATION_JSON))
-    def disconnect(@PathParam("channel") channel: String): Response = {
-        Response.noContent().build()
-    }
+  @PUT
+  @Path("/disconnect/{channel}")
+  @Consumes(Array(MediaType.APPLICATION_JSON))
+  def disconnect(@PathParam("channel") channel: String): Response =
+    Response.noContent().build()
 }

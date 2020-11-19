@@ -60,6 +60,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.11.2'
 
     // Testing
+    testImplementation 'org.scalatestplus:mockito-3-4_2.12:3.2.2.0'
     testImplementation 'io.rest-assured:rest-assured:4.3.1'
     testImplementation('io.rest-assured:scala-support:4.3.1') {
         exclude group: 'org.scala-lang', module: 'scala-library' // this pulls in scala 2.13 which clashes
@@ -68,6 +69,7 @@ dependencies {
         exclude group: 'org.hamcrest', module: 'hamcrest-core'
     }
     testImplementation 'org.scalatest:scalatest_2.12:3.0.5'
+    testImplementation 'org.mockito:mockito-scala_2.12:1.16.0'
 
     // Need scala-xml at test runtime
     testRuntimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.1.1'

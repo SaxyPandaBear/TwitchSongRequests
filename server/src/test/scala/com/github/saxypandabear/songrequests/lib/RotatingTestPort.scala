@@ -10,11 +10,10 @@ import scala.util.Random
  * unit testing with a dummy server)
  */
 trait RotatingTestPort extends UnitSpec with BeforeAndAfterEach {
-    protected var port: Int = _
+  protected var port: Int = _
 
-    override def beforeEach(): Unit = {
-        port = randomPort()
-    }
+  override def beforeEach(): Unit =
+    port = randomPort()
 
-    private def randomPort(): Int = Random.nextInt(1000) + 5000
+  private def randomPort(): Int = Random.nextInt(1000) + 5000
 }

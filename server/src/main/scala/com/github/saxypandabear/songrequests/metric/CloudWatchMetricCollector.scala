@@ -60,10 +60,11 @@ class EmitMetricTask(
 
     val response = client.putMetricData(request)
     logger.info(
-        "Response from emitting metric[{}={}]: {}",
+        "Submitted metric data point for {}={}. Responded with HTTP status code {} and request ID {}",
         name,
         value,
-        response
+        response.getSdkHttpMetadata.getHttpStatusCode,
+        response.getSdkResponseMetadata.getRequestId
     )
   }
 
