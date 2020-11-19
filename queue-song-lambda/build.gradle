@@ -1,6 +1,9 @@
 apply plugin: 'scalaStyle'
 apply plugin: 'scala'
 
+// Apply the java plugin to add support for Java
+apply plugin: 'java'
+
 buildscript {
     repositories {
         jcenter() // only work after gradle 1.7
@@ -11,8 +14,9 @@ buildscript {
     }
 }
 
+// In this section you declare where to find the dependencies of your project
 repositories {
-    // Use jcenter for resolving your dependencies.
+    // Use 'jcenter' for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
     mavenCentral()
@@ -21,6 +25,7 @@ repositories {
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
 
+// In this section you declare the dependencies for your production and test code
 dependencies {
     implementation 'org.scala-lang:scala-library:2.12.8'
 
@@ -39,37 +44,13 @@ dependencies {
     compile group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.870'
     // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-cloudwatch
     compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudwatch', version: '1.11.870'
+    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-lambda
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: '1.11.870'
 
-    // Dependencies for the HTTP server
-    implementation 'org.eclipse.jetty:jetty-server:9.4.0.M0'
-    implementation 'org.glassfish.jersey.containers:jersey-container-servlet:2.31'
-    implementation 'org.glassfish.jersey.containers:jersey-container-jetty-http:2.31'
-    implementation 'org.glassfish.jersey.containers:jersey-container-jetty-servlet:2.31'
-    implementation 'org.glassfish.jersey.inject:jersey-hk2:2.31'
-    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.31'
-    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:2.1.6' // anything past this version breaks
-
-    // WebSocket stuff
-    implementation 'org.eclipse.jetty.websocket:websocket-client:9.4.27.v20200227'
-    testImplementation 'org.eclipse.jetty.websocket:websocket-server:9.4.27.v20200227'
-    testImplementation 'org.eclipse.jetty.websocket:websocket-servlet:9.4.27.v20200227'
-
-    // Dependencies for dealing with JSON
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
-    implementation 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.11.2'
-
-    // Testing
-    testImplementation 'org.scalatestplus:mockito-3-4_2.12:3.2.2.0'
-    testImplementation 'io.rest-assured:rest-assured:4.3.1'
-    testImplementation('io.rest-assured:scala-support:4.3.1') {
-        exclude group: 'org.scala-lang', module: 'scala-library' // this pulls in scala 2.13 which clashes
-    }
     testImplementation('junit:junit:4.12') {
         exclude group: 'org.hamcrest', module: 'hamcrest-core'
     }
     testImplementation 'org.scalatest:scalatest_2.12:3.0.5'
-    testImplementation 'org.mockito:mockito-scala_2.12:1.16.0'
 
     // Need scala-xml at test runtime
     testRuntimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.1.1'
