@@ -41,6 +41,8 @@ class RoundRobinConnectionOrchestrator(
   private val position     = new AtomicInteger(0)
   private val isAtCapacity = new AtomicBoolean(false)
 
+  // TODO: refactor this to also store a reference to the actual TwitchSocket
+  //       object so that we can disconnect the socket at will.
   // associate a position to a tuple of a WebSocket client and the set of
   // channels connected to that WebSocket.
   // this was a deliberate design choice because I wanted to leverage the
@@ -97,12 +99,15 @@ class RoundRobinConnectionOrchestrator(
       false
     }
 
-  // TODO: implement me
   /**
    * Stop listening to a connection to Twitch
    * @param channelId Twitch Channel ID to stop listening on
    */
-  override def disconnect(channelId: String): Unit = {}
+  override def disconnect(channelId: String): Unit = {
+    // 1. Find the socket with the channel ID
+
+    // 2.
+  }
 
   // TODO: implement me
   /**

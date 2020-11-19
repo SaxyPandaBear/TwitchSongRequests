@@ -84,6 +84,16 @@ class TwitchSocket(
     }
 
   /**
+   * Perform a disconnect from the WebSocket client. This does not need to care
+   * about remaining songs in queue or anything and should just perform a hard
+   * disconnect.
+   */
+  def disconnect(): Unit = {
+    logger.info("Channel {} disconnecting from WebSocket", channelId)
+    session.disconnect()
+  }
+
+  /**
    * Send a LISTEN event to the Twitch server
    */
   private def sendListenEvent(): Unit = {
