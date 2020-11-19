@@ -112,7 +112,6 @@ class RoundRobinConnectionOrchestrator(
    */
   override def reconnect(channelId: String): Unit = {}
 
-  // TODO: implement me
   /**
    * When an orchestrator is at capacity, the system should know to start
    * an auto-scaling event
