@@ -100,13 +100,28 @@ class RoundRobinConnectionOrchestrator(
     }
 
   /**
-   * Stop listening to a connection to Twitch
+   * Stop listening to a connection to Twitch. Silently ignore channel IDs that
+   * do not exist in the orchestrator (drop them)
    * @param channelId Twitch Channel ID to stop listening on
    */
   override def disconnect(channelId: String): Unit = {
-    // 1. Find the socket with the channel ID
-
-    // 2.
+    // 1. Find the TwitchSocket with the channel ID
+    val found = indexedWebSocketConnections.values
+      .map(_._2)
+      .find(sockets => sockets.map(_.channelId).contains(channelId))
+    if (found.isDefined) {
+      val sockets = found.get
+      sockets.synchronized {
+        // disconnect from the WebSocketClient
+        val socketOpt = sockets.find(_.channelId == channelId)
+        if (socketOpt.isDefined) {
+          val socket = socketOpt.get
+          socket.disconnect()
+          // update internal state
+          sockets -= socket
+        }
+      }
+    }
   }
 
   // TODO: implement me

@@ -22,7 +22,8 @@ import com.github.saxypandabear.songrequests.websocket.orchestrator.RoundRobinCo
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.Eventually
+import org.scalatest.concurrent.PatienceConfiguration.Interval
+import org.scalatest.concurrent.{Eventually, PatienceConfiguration}
 import org.scalatest.time.{Millis, Span}
 
 // wow that's a long name
@@ -69,8 +70,10 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     logger.info("Starting test with server hosted on port {}", port)
   }
 
-  override def afterEach(): Unit =
+  override def afterEach(): Unit = {
     server.stop()
+    WebSocketTestingUtil.reset()
+  }
 
   "Stopping the orchestrator" should "stop all of the internal WebSocket clients" in {
     val uri              = new URI(s"ws://localhost:$port")
@@ -161,6 +164,89 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
         orchestrator.atCapacity should be(false)
       }
     }
+  }
+
+  "Disconnecting a channel from the orchestrator" should "remove the connection" in {
+    // going to use the PING metrics to validate that two of the clients
+    // disconnected. the ping frequency will help with this
+    val frequencyMs         = 10
+    val twitchSocketFactory = new TwitchSocketFactory(
+        clientId = "foo",
+        clientSecret = "bar",
+        refreshUri = "baz",
+        tokenManagerFactory = TestTokenManagerFactory,
+        connectionDataStore = dataStore,
+        songQueue = songQueue,
+        metricCollector = metricCollector,
+        listeners = Seq(logListener, testListener),
+        pingFrequencyMs = frequencyMs
+    )
+
+    initOrchestrator(2)
+
+    // splitting these up just to make assertions later simpler without
+    // performing any extra splicing
+    val remove = Seq("a", "b")
+    val remain = Seq("c", "d", "e")
+    remove.foreach(orchestrator.connect(_, twitchSocketFactory.create))
+    remain.foreach(orchestrator.connect(_, twitchSocketFactory.create))
+
+    // disconnecting "a" and "b" should leave us with (c, e) and (d), because
+    // the provisioning is deterministic (see above test on determinism)
+    remove.foreach(orchestrator.disconnect(_))
+
+    // capture the number of ping messages we have gotten so far. use this value
+    // in an assertion for how many we should get later. this will have to be a
+    // fuzzy value, and we can't truly be that exact with it.
+    val numPingsImmediatelyAfterDisconnect =
+      WebSocketTestingUtil.pingMessages.length
+
+    // asserting that the ping messages is what we expect is a little tricky.
+    // in order to be confident in this assertion, we have to do some math.
+    // We started with 5, and disconnect 2, so we should have 3 active
+    // connections left. There will be a different rate of ping messages than
+    // the case where we still have 5 active connections. For example, it
+    // should take around 17 iterations in order for 3 connections to ping
+    // more than 50 times. It would take 10 iterations fro 5 active connections.
+    // This has to be some fuzzy math, because we don't exactly know when the
+    // ping tasks have stopped.
+    // To make the math cleaner, we will check for 30 new pings. It should take
+    // roughly 10 iterations - it would be 5 iterations if all 5 connections
+    // were active. If we take more than 10 iterations to reach 30 pings, then
+    // something is wrong and this test should fail.
+    val expectedIterations = 10
+    val expectedPings      = remain.size * expectedIterations
+    var iterations         = 0
+    // give one extra iteration to spare, just for leeway for the timeout.
+    // we don't want to prematurely timeout just shy of the goal.
+    eventually(
+        timeout(Span(frequencyMs * (expectedIterations + 2), Millis)),
+        Interval(Span(frequencyMs, Millis))
+    ) {
+      iterations += 1
+      val numNewPings =
+        WebSocketTestingUtil.pingMessages.length - numPingsImmediatelyAfterDisconnect
+      numNewPings should be >= expectedPings
+    }
+    // after the assertion finally passes, we need to make sure that the
+    // number of iterations we incurred makes sense.
+    iterations should be > (expectedPings / (remove.length + remain.length))
+    iterations should be <= (expectedPings / remain.length)
+
+    // make sure that the internal state reflects the disconnected channels
+    orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs remain
+    orchestrator
+      .indexedWebSocketConnections(0)
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("c", "e")
+    orchestrator
+      .indexedWebSocketConnections(1)
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("d")
+  }
+
+  "Disconnecting a channel from an orchestrator that is at capacity" should "free up capacity on the orchestrator" in {
+    fail("Test me")
   }
 
   private def initOrchestrator(
