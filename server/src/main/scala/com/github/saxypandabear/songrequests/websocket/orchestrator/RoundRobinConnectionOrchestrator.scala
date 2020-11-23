@@ -51,7 +51,7 @@ class RoundRobinConnectionOrchestrator(
   // an int, rather than making the key a composition of a position and the
   // WebSocket client, since the client wouldn't be helpful for the lookup.
   private[websocket] val indexedWebSocketConnections
-      : TrieMap[Int, (WebSocketClient, mutable.HashSet[String])] =
+      : TrieMap[Int, (WebSocketClient, mutable.HashSet[TwitchSocket])] =
     initInternalMap(
         maxNumSockets
     )
@@ -84,9 +84,9 @@ class RoundRobinConnectionOrchestrator(
         index = position.getAndUpdate(p => rotate(p))
       }
       if (canClientAcceptNewConnection(index)) {
-        val (client, channelIds) = indexedWebSocketConnections(index)
-        channelIds.synchronized {
-          channelIds += channelId
+        val (client, twitchSockets) = indexedWebSocketConnections(index)
+        twitchSockets.synchronized {
+          twitchSockets += socket
           client.connect(socket, webSocketUri).get() // connecting should be synchronous
         }
         true
@@ -141,8 +141,8 @@ class RoundRobinConnectionOrchestrator(
     indexedWebSocketConnections
       .readOnlySnapshot()
       .values
-      .map { case (client, channelIds) =>
-        client -> channelIds.toSet
+      .map { case (client, twitchSockets) =>
+        client -> twitchSockets.map(_.channelId).toSet
       }
       .toMap
 
@@ -170,19 +170,20 @@ class RoundRobinConnectionOrchestrator(
 
   private def initInternalMap(
       numWebSocketClients: Int
-  ): TrieMap[Int, (WebSocketClient, mutable.HashSet[String])] = {
+  ): TrieMap[Int, (WebSocketClient, mutable.HashSet[TwitchSocket])] = {
     if (numWebSocketClients < 1) {
       throw new IllegalArgumentException(
           s"Orchestrator misconfigured - requires at least 1 client, but received $numWebSocketClients"
       )
     }
-    val map = new TrieMap[Int, (WebSocketClient, mutable.HashSet[String])]()
+    val map =
+      new TrieMap[Int, (WebSocketClient, mutable.HashSet[TwitchSocket])]()
     for (i <- 0 until numWebSocketClients) {
       // need to instantiate a WebSocket client object, and a new HashSet
-      val channelIds = new mutable.HashSet[String]()
-      val client     = new WebSocketClient()
+      val twitchSockets = new mutable.HashSet[TwitchSocket]()
+      val client        = new WebSocketClient()
       client.start()
-      map.put(i, (client, channelIds))
+      map.put(i, (client, twitchSockets))
     }
     map
   }

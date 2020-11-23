@@ -23,7 +23,7 @@ import org.eclipse.jetty.websocket.api.annotations._
  */
 @WebSocket
 class TwitchSocket(
-    channelId: String,
+    val channelId: String,
     oauthTokenManager: OauthTokenManager,
     songQueue: SongQueue,
     metrics: CloudWatchMetricCollector,
@@ -167,6 +167,15 @@ class TwitchSocket(
    */
   private[websocket] def isSongRequest(rewardTitle: String): Boolean =
     rewardTitle != null && rewardTitle.toLowerCase().contains("song request")
+
+  override def hashCode(): Int = channelId.hashCode
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case o: TwitchSocket =>
+        o.channelId == this.channelId
+      case _               => false
+    }
 }
 
 class PingTimedTask(session: Session) extends TimerTask {

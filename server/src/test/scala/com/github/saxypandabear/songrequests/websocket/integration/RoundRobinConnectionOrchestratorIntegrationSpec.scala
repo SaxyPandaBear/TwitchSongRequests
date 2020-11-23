@@ -131,10 +131,12 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs channelIds
     orchestrator
       .indexedWebSocketConnections(0)
-      ._2 should contain theSameElementsAs Seq("a", "c", "e")
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("a", "c", "e")
     orchestrator
       .indexedWebSocketConnections(1)
-      ._2 should contain theSameElementsAs Seq("b", "d")
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("b", "d")
   }
 
   "Connecting to many channels" should "eventually cause the orchestrator to reach its allowed capacity" in {
