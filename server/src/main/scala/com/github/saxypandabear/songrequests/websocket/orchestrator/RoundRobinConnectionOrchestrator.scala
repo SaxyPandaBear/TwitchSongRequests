@@ -119,6 +119,7 @@ class RoundRobinConnectionOrchestrator(
           socket.disconnect()
           // update internal state
           sockets -= socket
+          isAtCapacity.getAndSet(canOrchestratorAcceptNewConnection)
         }
       }
     }
@@ -179,9 +180,15 @@ class RoundRobinConnectionOrchestrator(
     position < maxNumSockets && indexedWebSocketConnections
       .snapshot()
       .get(position)
-      .exists { case (_, channelIds) =>
-        channelIds.size < maxAllowedConnectionsPerClient
+      .exists { case (_, twitchSockets) =>
+        twitchSockets.size < maxAllowedConnectionsPerClient
       }
+
+  private def canOrchestratorAcceptNewConnection: Boolean =
+    indexedWebSocketConnections.values.foldLeft(true) {
+      case (canAccept, (_, sockets)) =>
+        canAccept && sockets.size < maxAllowedConnectionsPerClient
+    }
 
   private def initInternalMap(
       numWebSocketClients: Int
