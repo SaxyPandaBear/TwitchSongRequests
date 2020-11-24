@@ -41,8 +41,6 @@ class RoundRobinConnectionOrchestrator(
   private[websocket] val position = new AtomicInteger(0)
   private val isAtCapacity        = new AtomicBoolean(false)
 
-  // TODO: refactor this to also store a reference to the actual TwitchSocket
-  //       object so that we can disconnect the socket at will.
   // associate a position to a tuple of a WebSocket client and the set of
   // channels connected to that WebSocket.
   // this was a deliberate design choice because I wanted to leverage the
