@@ -22,8 +22,7 @@ import com.github.saxypandabear.songrequests.websocket.orchestrator.RoundRobinCo
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.jetty.server.Server
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.PatienceConfiguration.Interval
-import org.scalatest.concurrent.{Eventually, PatienceConfiguration}
+import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Millis, Span}
 
 // wow that's a long name
@@ -169,7 +168,7 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
   "Disconnecting a channel from the orchestrator" should "remove the connection" in {
     // going to use the PING metrics to validate that two of the clients
     // disconnected. the ping frequency will help with this
-    val frequencyMs         = 10
+    val frequencyMs         = 50
     val twitchSocketFactory = new TwitchSocketFactory(
         clientId = "foo",
         clientSecret = "bar",
@@ -188,12 +187,12 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     // performing any extra splicing
     val remove = Seq("a", "b")
     val remain = Seq("c", "d", "e")
-    remove.foreach(orchestrator.connect(_, twitchSocketFactory.create))
-    remain.foreach(orchestrator.connect(_, twitchSocketFactory.create))
+    remove.par.foreach(orchestrator.connect(_, twitchSocketFactory.create))
+    remain.par.foreach(orchestrator.connect(_, twitchSocketFactory.create))
 
     // disconnecting "a" and "b" should leave us with (c, e) and (d), because
     // the provisioning is deterministic (see above test on determinism)
-    remove.foreach(orchestrator.disconnect(_))
+    remove.par.foreach(orchestrator.disconnect(_))
 
     // capture the number of ping messages we have gotten so far. use this value
     // in an assertion for how many we should get later. this will have to be a
@@ -217,21 +216,8 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     val expectedIterations = 10
     val expectedPings      = remain.size * expectedIterations
     var iterations         = 0
-    // give one extra iteration to spare, just for leeway for the timeout.
-    // we don't want to prematurely timeout just shy of the goal.
-    eventually(
-        timeout(Span(frequencyMs * (expectedIterations + 2), Millis)),
-        Interval(Span(frequencyMs, Millis))
-    ) {
-      iterations += 1
-      val numNewPings =
-        WebSocketTestingUtil.pingMessages.length - numPingsImmediatelyAfterDisconnect
-      numNewPings should be >= expectedPings
-    }
-    // after the assertion finally passes, we need to make sure that the
-    // number of iterations we incurred makes sense.
-    iterations should be > (expectedPings / (remove.length + remain.length))
-    iterations should be <= (expectedPings / remain.length)
+
+    fail(new RuntimeException("Implement me")) // TODO: fix this test
 
     // make sure that the internal state reflects the disconnected channels
     orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs remain
@@ -246,7 +232,44 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
   }
 
   "Disconnecting a channel from an orchestrator that is at capacity" should "free up capacity on the orchestrator" in {
-    fail("Test me")
+    val numSockets     = 2
+    val numConnections = 2
+    initOrchestrator(numSockets, numConnections)
+
+    // when the orchestrator attempts to connect to "e", it will fail because
+    // we are at capacity. (there is already a test for this)
+    // what we want to do is then disconnect one of the
+    val toDisconnect   = "a"
+    val toConnectAfter = "e"
+    val others         = Seq("b", "c", "d")
+
+    orchestrator.connect(toDisconnect, twitchSocketFactory.create) should be(
+        true
+    )
+    others.foreach(
+        orchestrator.connect(_, twitchSocketFactory.create) should be(true)
+    )
+    orchestrator.connect(toConnectAfter, twitchSocketFactory.create) should be(
+        false
+    )
+    orchestrator.atCapacity should be(true)
+
+    // now, we disconnect one. this should free up a spot for "e"
+    orchestrator.disconnect(toDisconnect)
+    orchestrator.atCapacity should be(false)
+
+    orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs others
+    orchestrator
+      .indexedWebSocketConnections(0)
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("c")
+    orchestrator
+      .indexedWebSocketConnections(1)
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("b", "d")
+    orchestrator.connect(toConnectAfter, twitchSocketFactory.create) should be(
+        true
+    )
   }
 
   private def initOrchestrator(

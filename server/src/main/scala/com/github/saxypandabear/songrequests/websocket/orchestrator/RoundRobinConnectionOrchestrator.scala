@@ -38,8 +38,8 @@ class RoundRobinConnectionOrchestrator(
 ) extends ConnectionOrchestrator {
 
   // this handles the decision making of which WebSocket client to connect to
-  private val position     = new AtomicInteger(0)
-  private val isAtCapacity = new AtomicBoolean(false)
+  private[websocket] val position = new AtomicInteger(0)
+  private val isAtCapacity        = new AtomicBoolean(false)
 
   // TODO: refactor this to also store a reference to the actual TwitchSocket
   //       object so that we can disconnect the socket at will.
@@ -76,7 +76,7 @@ class RoundRobinConnectionOrchestrator(
       var index           = position.getAndUpdate(p => rotate(p))
       var numTimesChecked = 0
       while (
-          !(numTimesChecked < maxNumSockets) && !canClientAcceptNewConnection(
+          (numTimesChecked < maxNumSockets) && !canClientAcceptNewConnection(
               index
           )
       ) {
@@ -105,7 +105,6 @@ class RoundRobinConnectionOrchestrator(
    * @param channelId Twitch Channel ID to stop listening on
    */
   override def disconnect(channelId: String): Unit = {
-    // 1. Find the TwitchSocket with the channel ID
     val found = indexedWebSocketConnections.values
       .map(_._2)
       .find(sockets => sockets.map(_.channelId).contains(channelId))
@@ -178,7 +177,6 @@ class RoundRobinConnectionOrchestrator(
       position: Int
   ): Boolean =
     position < maxNumSockets && indexedWebSocketConnections
-      .snapshot()
       .get(position)
       .exists { case (_, twitchSockets) =>
         twitchSockets.size < maxAllowedConnectionsPerClient
