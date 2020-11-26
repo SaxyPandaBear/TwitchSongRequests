@@ -23,7 +23,7 @@ import org.eclipse.jetty.websocket.api.annotations._
  */
 @WebSocket
 class TwitchSocket(
-    channelId: String,
+    val channelId: String,
     oauthTokenManager: OauthTokenManager,
     songQueue: SongQueue,
     metrics: CloudWatchMetricCollector,
@@ -82,6 +82,17 @@ class TwitchSocket(
       case e: Exception =>
         logger.error("There was an error when parsing the message", e)
     }
+
+  /**
+   * Perform a disconnect from the WebSocket client. This does not need to care
+   * about remaining songs in queue or anything and should just perform a hard
+   * disconnect.
+   */
+  def disconnect(): Unit = {
+    logger.info("Channel {} disconnecting from WebSocket", channelId)
+    // https://tools.ietf.org/html/rfc6455#section-7.4 send a 1000 status code
+    session.close(1000, "Received disconnect event")
+  }
 
   /**
    * Send a LISTEN event to the Twitch server
@@ -157,6 +168,15 @@ class TwitchSocket(
    */
   private[websocket] def isSongRequest(rewardTitle: String): Boolean =
     rewardTitle != null && rewardTitle.toLowerCase().contains("song request")
+
+  override def hashCode(): Int = channelId.hashCode
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case o: TwitchSocket =>
+        o.channelId == this.channelId
+      case _               => false
+    }
 }
 
 class PingTimedTask(session: Session) extends TimerTask {

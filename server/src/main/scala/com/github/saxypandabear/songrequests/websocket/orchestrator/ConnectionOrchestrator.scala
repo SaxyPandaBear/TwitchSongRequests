@@ -55,5 +55,4 @@ trait ConnectionOrchestrator {
    * Stop connections and perform any necessary clean-up
    */
   def stop(): Unit
-  // TODO: determine what else is needed
 }
