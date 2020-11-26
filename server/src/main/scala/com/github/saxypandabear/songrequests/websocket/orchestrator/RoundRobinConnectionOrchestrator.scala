@@ -102,25 +102,23 @@ class RoundRobinConnectionOrchestrator(
    * do not exist in the orchestrator (drop them)
    * @param channelId Twitch Channel ID to stop listening on
    */
-  override def disconnect(channelId: String): Unit = {
-    val found = indexedWebSocketConnections.values
+  override def disconnect(channelId: String): Unit =
+    indexedWebSocketConnections.values
       .map(_._2)
       .find(sockets => sockets.map(_.channelId).contains(channelId))
-    if (found.isDefined) {
-      val sockets = found.get
-      sockets.synchronized {
-        // disconnect from the WebSocketClient
-        val socketOpt = sockets.find(_.channelId == channelId)
-        if (socketOpt.isDefined) {
-          val socket = socketOpt.get
-          socket.disconnect()
-          // update internal state
-          sockets -= socket
-          isAtCapacity.getAndSet(canOrchestratorAcceptNewConnection)
+      .map { sockets =>
+        sockets.synchronized {
+          // disconnect from the WebSocketClient
+          sockets
+            .find(_.channelId == channelId)
+            .map { socket =>
+              socket.disconnect()
+              // update internal state
+              sockets -= socket
+              isAtCapacity.getAndSet(canOrchestratorAcceptNewConnection)
+            }
         }
       }
-    }
-  }
 
   // TODO: implement me
   /**
