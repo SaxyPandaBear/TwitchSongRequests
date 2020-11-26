@@ -38,8 +38,8 @@ class RoundRobinConnectionOrchestrator(
 ) extends ConnectionOrchestrator {
 
   // this handles the decision making of which WebSocket client to connect to
-  private[websocket] val position = new AtomicInteger(0)
-  private val isAtCapacity        = new AtomicBoolean(false)
+  private val position     = new AtomicInteger(0)
+  private val isAtCapacity = new AtomicBoolean(false)
 
   // associate a position to a tuple of a WebSocket client and the set of
   // channels connected to that WebSocket.

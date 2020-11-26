@@ -202,7 +202,6 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     val startCounts =
       Map(testListener.messageEvents.mapValues(_.length).toSeq: _*)
     startCounts should have size 5
-    logger.info("Starting counts are: {}", startCounts.mkString(","))
 
     // after N pongs from the server, we should see clear divergence between
     // the counts for the remaining connections and the removed ones.
@@ -215,10 +214,6 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
         testListener.messageEvents.mapValues(_.length).partition {
           case (channelId, _) => remain.contains(channelId)
         }
-
-      logger.info("Starting: {}", startCounts.mkString(","))
-      logger.info("Remaining: {}", remainCounts.mkString(","))
-      logger.info("Removed: {}", removeCounts.mkString(","))
 
       for ((channelId, count) <- remainCounts)
         count - startCounts(channelId) should be(numPongs +- 1)
