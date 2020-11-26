@@ -69,8 +69,10 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     logger.info("Starting test with server hosted on port {}", port)
   }
 
-  override def afterEach(): Unit =
+  override def afterEach(): Unit = {
     server.stop()
+    WebSocketTestingUtil.reset()
+  }
 
   "Stopping the orchestrator" should "stop all of the internal WebSocket clients" in {
     val uri              = new URI(s"ws://localhost:$port")
@@ -131,10 +133,12 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs channelIds
     orchestrator
       .indexedWebSocketConnections(0)
-      ._2 should contain theSameElementsAs Seq("a", "c", "e")
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("a", "c", "e")
     orchestrator
       .indexedWebSocketConnections(1)
-      ._2 should contain theSameElementsAs Seq("b", "d")
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("b", "d")
   }
 
   "Connecting to many channels" should "eventually cause the orchestrator to reach its allowed capacity" in {
@@ -159,6 +163,115 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
         orchestrator.atCapacity should be(false)
       }
     }
+  }
+
+  "Disconnecting a channel from the orchestrator" should "remove the connection" in {
+    // going to use the PING metrics to validate that two of the clients
+    // disconnected. the ping frequency will help with this
+    val frequencyMs         = 25
+    val twitchSocketFactory = new TwitchSocketFactory(
+        clientId = "foo",
+        clientSecret = "bar",
+        refreshUri = "baz",
+        tokenManagerFactory = TestTokenManagerFactory,
+        connectionDataStore = dataStore,
+        songQueue = songQueue,
+        metricCollector = metricCollector,
+        listeners = Seq(logListener, testListener),
+        pingFrequencyMs = frequencyMs
+    )
+
+    initOrchestrator(2)
+
+    // splitting these up just to make assertions later simpler without
+    // performing any extra splicing
+    val remove = Seq("a", "b")
+    val remain = Seq("c", "d", "e")
+    remove.foreach(orchestrator.connect(_, twitchSocketFactory.create))
+    remain.foreach(orchestrator.connect(_, twitchSocketFactory.create))
+
+    // disconnecting "a" and "b" should leave us with (c, e) and (d), because
+    // the provisioning is deterministic (see above test on determinism)
+    remove.par.foreach(orchestrator.disconnect(_))
+
+    // Our test listener captures all of the PONG events from the server,
+    // per client. We aren't removing the client sockets from the listener
+    // when we disconnect, so there should still be 5 things in the map.
+    // take a snapshot of the map right now, so that we can assert against
+    // it later.
+    val startCounts =
+      Map(testListener.messageEvents.mapValues(_.length).toSeq: _*)
+    startCounts should have size 5
+
+    // after N pongs from the server, we should see clear divergence between
+    // the counts for the remaining connections and the removed ones.
+    val numPongs     = 10
+    // the max we're going to allow for the number of pongs that we receive
+    // for the removed connections
+    val ceilingPongs = numPongs / 2
+    eventually(timeout(Span(frequencyMs * (numPongs + 1), Millis))) {
+      val (remainCounts, removeCounts) =
+        testListener.messageEvents.mapValues(_.length).partition {
+          case (channelId, _) => remain.contains(channelId)
+        }
+
+      for ((channelId, count) <- remainCounts)
+        count - startCounts(channelId) should be(numPongs +- 1)
+      for ((channelId, count) <- removeCounts)
+        count - startCounts(channelId) should be <= ceilingPongs
+    }
+
+    // make sure that the internal state reflects the disconnected channels
+    orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs remain
+    orchestrator
+      .indexedWebSocketConnections(0)
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("c", "e")
+    orchestrator
+      .indexedWebSocketConnections(1)
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("d")
+  }
+
+  "Disconnecting a channel from an orchestrator that is at capacity" should "free up capacity on the orchestrator" in {
+    val numSockets     = 2
+    val numConnections = 2
+    initOrchestrator(numSockets, numConnections)
+
+    // when the orchestrator attempts to connect to "e", it will fail because
+    // we are at capacity. (there is already a test for this)
+    // what we want to do is then disconnect one of the
+    val toDisconnect   = "a"
+    val toConnectAfter = "e"
+    val others         = Seq("b", "c", "d")
+
+    orchestrator.connect(toDisconnect, twitchSocketFactory.create) should be(
+        true
+    )
+    others.foreach(
+        orchestrator.connect(_, twitchSocketFactory.create) should be(true)
+    )
+    orchestrator.connect(toConnectAfter, twitchSocketFactory.create) should be(
+        false
+    )
+    orchestrator.atCapacity should be(true)
+
+    // now, we disconnect one. this should free up a spot for "e"
+    orchestrator.disconnect(toDisconnect)
+    orchestrator.atCapacity should be(false)
+
+    orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs others
+    orchestrator
+      .indexedWebSocketConnections(0)
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("c")
+    orchestrator
+      .indexedWebSocketConnections(1)
+      ._2
+      .map(_.channelId) should contain theSameElementsAs Seq("b", "d")
+    orchestrator.connect(toConnectAfter, twitchSocketFactory.create) should be(
+        true
+    )
   }
 
   private def initOrchestrator(
