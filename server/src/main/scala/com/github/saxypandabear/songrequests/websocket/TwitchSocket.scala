@@ -90,7 +90,8 @@ class TwitchSocket(
    */
   def disconnect(): Unit = {
     logger.info("Channel {} disconnecting from WebSocket", channelId)
-    session.disconnect()
+    // https://tools.ietf.org/html/rfc6455#section-7.4 send a 1000 status code
+    session.close(1000, "Received disconnect event")
   }
 
   /**

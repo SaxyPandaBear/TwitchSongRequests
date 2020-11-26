@@ -168,7 +168,7 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
   "Disconnecting a channel from the orchestrator" should "remove the connection" in {
     // going to use the PING metrics to validate that two of the clients
     // disconnected. the ping frequency will help with this
-    val frequencyMs         = 50
+    val frequencyMs         = 25
     val twitchSocketFactory = new TwitchSocketFactory(
         clientId = "foo",
         clientSecret = "bar",
@@ -187,37 +187,44 @@ class RoundRobinConnectionOrchestratorIntegrationSpec
     // performing any extra splicing
     val remove = Seq("a", "b")
     val remain = Seq("c", "d", "e")
-    remove.par.foreach(orchestrator.connect(_, twitchSocketFactory.create))
-    remain.par.foreach(orchestrator.connect(_, twitchSocketFactory.create))
+    remove.foreach(orchestrator.connect(_, twitchSocketFactory.create))
+    remain.foreach(orchestrator.connect(_, twitchSocketFactory.create))
 
     // disconnecting "a" and "b" should leave us with (c, e) and (d), because
     // the provisioning is deterministic (see above test on determinism)
     remove.par.foreach(orchestrator.disconnect(_))
 
-    // capture the number of ping messages we have gotten so far. use this value
-    // in an assertion for how many we should get later. this will have to be a
-    // fuzzy value, and we can't truly be that exact with it.
-    val numPingsImmediatelyAfterDisconnect =
-      WebSocketTestingUtil.pingMessages.length
+    // Our test listener captures all of the PONG events from the server,
+    // per client. We aren't removing the client sockets from the listener
+    // when we disconnect, so there should still be 5 things in the map.
+    // take a snapshot of the map right now, so that we can assert against
+    // it later.
+    val startCounts =
+      Map(testListener.messageEvents.mapValues(_.length).toSeq: _*)
+    startCounts should have size 5
+    logger.info("Starting counts are: {}", startCounts.mkString(","))
 
-    // asserting that the ping messages is what we expect is a little tricky.
-    // in order to be confident in this assertion, we have to do some math.
-    // We started with 5, and disconnect 2, so we should have 3 active
-    // connections left. There will be a different rate of ping messages than
-    // the case where we still have 5 active connections. For example, it
-    // should take around 17 iterations in order for 3 connections to ping
-    // more than 50 times. It would take 10 iterations fro 5 active connections.
-    // This has to be some fuzzy math, because we don't exactly know when the
-    // ping tasks have stopped.
-    // To make the math cleaner, we will check for 30 new pings. It should take
-    // roughly 10 iterations - it would be 5 iterations if all 5 connections
-    // were active. If we take more than 10 iterations to reach 30 pings, then
-    // something is wrong and this test should fail.
-    val expectedIterations = 10
-    val expectedPings      = remain.size * expectedIterations
-    var iterations         = 0
+    // after N pongs from the server, we should see clear divergence between
+    // the counts for the remaining connections and the removed ones.
+    val numPongs     = 10
+    // the max we're going to allow for the number of pongs that we receive
+    // for the removed connections
+    val ceilingPongs = numPongs / 2
+    eventually(timeout(Span(frequencyMs * (numPongs + 1), Millis))) {
+      val (remainCounts, removeCounts) =
+        testListener.messageEvents.mapValues(_.length).partition {
+          case (channelId, _) => remain.contains(channelId)
+        }
 
-    fail(new RuntimeException("Implement me")) // TODO: fix this test
+      logger.info("Starting: {}", startCounts.mkString(","))
+      logger.info("Remaining: {}", remainCounts.mkString(","))
+      logger.info("Removed: {}", removeCounts.mkString(","))
+
+      for ((channelId, count) <- remainCounts)
+        count - startCounts(channelId) should be(numPongs +- 1)
+      for ((channelId, count) <- removeCounts)
+        count - startCounts(channelId) should be <= ceilingPongs
+    }
 
     // make sure that the internal state reflects the disconnected channels
     orchestrator.connectionsToClients.values.flatten should contain theSameElementsAs remain
