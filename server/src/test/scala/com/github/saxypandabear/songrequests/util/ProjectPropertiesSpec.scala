@@ -72,6 +72,17 @@ class ProjectPropertiesSpec extends UnitSpec {
     bar should be(defined)
     bar.get should be(false)
 
-    a[IllegalArgumentException] should be thrownBy properties.getBoolean("baz")
+    properties.getBoolean("pickle") should not be defined
+  }
+
+  it should "throw an exception if the value cannot be parsed as as a boolean value" in {
+    val properties = new ProjectProperties()
+    properties.setValue("foo", "something")
+    a[IllegalArgumentException] should be thrownBy properties.getBoolean("foo")
+  }
+
+  it should "return an empty Optional if the key does not exist in the properties map" in {
+    val properties = new ProjectProperties()
+    properties.getBoolean("foo") should not be defined
   }
 }

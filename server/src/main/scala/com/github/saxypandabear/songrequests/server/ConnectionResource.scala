@@ -1,6 +1,8 @@
 package com.github.saxypandabear.songrequests.server
 
 import com.github.saxypandabear.songrequests.server.model.Channel
+import com.github.saxypandabear.songrequests.websocket.orchestrator.ConnectionOrchestrator
+import javax.inject.Inject
 import javax.ws.rs._
 import javax.ws.rs.core.{MediaType, Response}
 
@@ -12,6 +14,9 @@ import javax.ws.rs.core.{MediaType, Response}
  */
 @Path("/api")
 class ConnectionResource {
+
+  @Inject
+  var orchestrator: ConnectionOrchestrator = _
 
   @GET
   @Path("/ping")

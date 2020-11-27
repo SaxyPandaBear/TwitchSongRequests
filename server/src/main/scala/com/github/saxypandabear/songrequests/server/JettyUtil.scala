@@ -7,7 +7,7 @@ import org.glassfish.jersey.servlet.ServletContainer
 
 object JettyUtil {
 
-  def build(port: Int): Server = {
+  def build(port: Int, injectedObjects: AnyRef*): Server = {
     val server = new Server(port)
     server.setStopAtShutdown(true)
     server.setStopTimeout(0)
@@ -15,7 +15,10 @@ object JettyUtil {
     val ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS)
     ctx.setContextPath("/")
 
-    val resourceConfig   = new ResourceConfig()
+    val resourceConfig = new ResourceConfig()
+    for (toInject <- injectedObjects)
+      resourceConfig.register(toInject)
+
     resourceConfig.packages("com.github.saxypandabear.songrequests.server")
     val servletContainer = new ServletContainer(resourceConfig)
     val servletHolder    = new ServletHolder(servletContainer)

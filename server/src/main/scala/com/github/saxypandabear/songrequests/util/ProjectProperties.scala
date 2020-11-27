@@ -9,7 +9,7 @@ import scala.collection.mutable
  * Stores configuration and properties, and provides does the necessary
  * casting in order to fetch strongly typed primitive configuration values.
  */
-class ProjectProperties {
+class ProjectProperties extends Iterable[(String, String)] {
   private val internalMap = mutable.HashMap[String, String]()
 
   /**
@@ -30,7 +30,7 @@ class ProjectProperties {
    *
    * @return the size of the internal map
    */
-  def size: Int = internalMap.size
+  override def size: Int = internalMap.size
 
   /**
    * Exposes the set of keys that are defined in the properties object.
@@ -124,8 +124,23 @@ class ProjectProperties {
    * @param key key to use in order to fetch data from the map
    * @return Some(value) if the key exists in the map, and the raw value
    *         can be interpreted as a boolean, else None
-   * @throws IllegalArgumentException when the input is not able to be parsed as a boolean
+   * @throws IllegalArgumentException when the input can not parse into a boolean
    */
   def getBoolean(key: String): Option[Boolean] =
-    internalMap.get(key).map(v => v.toBoolean)
+    internalMap.get(key).map(_.toBoolean)
+
+  /**
+   * Get an integer value from the map, given the input key. This should throw
+   * an exception when the value this tries to parse is not able to be parsed
+   * into an integer value.
+   *
+   * @param key key to use in order to fetch data from the map
+   * @return Some(value) if the key exists in the map, and the raw value can be
+   *         interpreted as an integer, else None
+   * @throws IllegalArgumentException when the input can not parse into an integer
+   */
+  def getInteger(key: String): Option[Int] = internalMap.get(key).map(_.toInt)
+
+  override def iterator: Iterator[(String, String)] =
+    internalMap.iterator
 }
