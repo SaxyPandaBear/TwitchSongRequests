@@ -74,4 +74,25 @@ class ProjectPropertiesSpec extends UnitSpec {
 
     a[IllegalArgumentException] should be thrownBy properties.getBoolean("baz")
   }
+
+  "Checking for a key that exists" should "return true" in {
+    val properties = new ProjectProperties()
+    properties.setValue("foo", "bar")
+
+    properties.has("foo") should be(true)
+  }
+
+  "Checking for a key that does not exist" should "return false" in {
+    val properties = new ProjectProperties()
+
+    properties.has("foo") should be(false)
+  }
+
+  "Checking for a null or empty key" should "return false" in {
+    val properties = new ProjectProperties()
+    properties.setValue("foo", "bar")
+
+    properties.has("") should be(false)
+    properties.has(null) should be(false)
+  }
 }
