@@ -93,7 +93,7 @@ class SQSSongQueue(sqs: AmazonSQS, metricsCollector: CloudWatchMetricCollector)
         try sqs.createQueue(QUEUE_NAME).getQueueUrl
         catch {
           case e: Exception =>
-            logger.warn("Error occurred when trying to create a new queue")
+            logger.warn("Error occurred when trying to create a new queue", e)
             ""
         }
       logger.info("Created new SQS queue: {}", queueUrl)

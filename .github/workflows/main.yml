@@ -63,6 +63,10 @@ jobs:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
+      - name: Set placeholder AWS Credentials in environment
+        run: |
+          echo "AWS_ACCESS_KEY_ID=abc123" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=foobar" >> $GITHUB_ENV
       - name: Test server
         run: gradle test
         shell: bash
