@@ -76,15 +76,26 @@ class SQSSongQueue(sqs: AmazonSQS, metricsCollector: CloudWatchMetricCollector)
   // needed.
   private def init(): Unit = {
     logger.info("Initializing song queue")
-    val queues = sqs.listQueues(QUEUE_NAME).getQueueUrls.asScala
-    logger.info("Queue list: {}", queues.mkString(", "))
+    val queues =
+      try sqs.listQueues(QUEUE_NAME).getQueueUrls.asScala
+      catch {
+        case e: Exception =>
+          logger.warn("Error occurred when trying to list queues.", e)
+          Seq.empty
+      }
     if (queues.nonEmpty) {
       // already have an existing queue to refer to. pick the first and move on
       queueUrl = queues.head
       logger.info("Found existing queue URL: {}", queueUrl)
     } else {
       // need to create a queue
-      queueUrl = sqs.createQueue(QUEUE_NAME).getQueueUrl
+      queueUrl =
+        try sqs.createQueue(QUEUE_NAME).getQueueUrl
+        catch {
+          case e: Exception =>
+            logger.warn("Error occurred when trying to create a new queue")
+            ""
+        }
       logger.info("Created new SQS queue: {}", queueUrl)
     }
   }
