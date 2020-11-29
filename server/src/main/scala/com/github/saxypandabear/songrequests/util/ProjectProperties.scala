@@ -128,4 +128,13 @@ class ProjectProperties {
    */
   def getBoolean(key: String): Option[Boolean] =
     internalMap.get(key).map(v => v.toBoolean)
+
+  /**
+   * Convenience method that checks whether the internal map contains the input
+   * key.
+   * @param key key to check in the internal map
+   * @return true if the map contains the key, false otherwise
+   */
+  def has(key: String): Boolean =
+    key != null && key.trim.nonEmpty && internalMap.contains(key)
 }
