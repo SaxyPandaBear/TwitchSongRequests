@@ -24,4 +24,10 @@ class InMemorySongQueue extends SongQueue with StrictLogging {
     logger.info("Clearing")
     queued.clear()
   }
+
+  // no-op. nothing needs to be done for this
+  override def stop(): Unit = {}
+
+  // the in-memory variant has no real URL to point to
+  override def getQueueUrl: String = ""
 }

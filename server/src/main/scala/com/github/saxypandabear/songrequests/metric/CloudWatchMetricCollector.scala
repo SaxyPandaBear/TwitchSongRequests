@@ -75,10 +75,3 @@ class EmitMetricTask(
       new Dimension().withName(k).withValue(v)
     }.toSeq
 }
-
-object MetricsConstants {
-  val SONG_REQUEST_RECEIVED = "received-song-request-count"
-  val SENT_TO_SQS_TOTAL     = "total-send-sqs-count"
-  val SENT_TO_SQS_FAILED    = "failed-send-sqs-count"
-  val OAUTH_TOKEN_REFRESHED = "token-refresh-count"
-}

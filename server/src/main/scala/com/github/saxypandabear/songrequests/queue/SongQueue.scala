@@ -6,4 +6,6 @@ package com.github.saxypandabear.songrequests.queue
  */
 trait SongQueue {
   def queue(channelId: String, spotifyUri: String): Unit
+  def stop(): Unit
+  def getQueueUrl: String
 }
