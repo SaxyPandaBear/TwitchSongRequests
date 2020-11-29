@@ -10,6 +10,7 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector;
 import org.junit.After;
@@ -18,8 +19,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +37,6 @@ import static org.junit.Assert.*;
 @RunWith(LocalstackTestRunner.class)
 @LocalstackDockerProperties(services = {"sqs", "cloudwatch"})
 public class SQSSongQueueIntegrationTest {
-    private static final Logger logger = LoggerFactory.getLogger(SQSSongQueueIntegrationTest.class);
 
     // note: can't make the global timeout too small because the first test
     //       has to create the SQS queue, which adds a considerable amount
@@ -96,7 +94,11 @@ public class SQSSongQueueIntegrationTest {
         // the SQS queue
         Message foundMessage = null;
         while (foundMessage == null) {
-            ReceiveMessageResult response = sqs.receiveMessage(songQueue.getQueueUrl());
+            // need to specify message attribute names in order to return them.
+            ReceiveMessageRequest request = new ReceiveMessageRequest()
+                    .withQueueUrl(songQueue.getQueueUrl())
+                    .withMessageAttributeNames("All");
+            ReceiveMessageResult response = sqs.receiveMessage(request);
             if (!response.getMessages().isEmpty()) {
                 // because the default configuration is to only fetch one
                 // message at a time, we are okay just grabbing the first
@@ -107,7 +109,6 @@ public class SQSSongQueueIntegrationTest {
 
         assertNotNull("A message should have been read from the queue before timing out", foundMessage);
         assertEquals(song, foundMessage.getBody());
-        foundMessage.getMessageAttributes().forEach((k, v) -> logger.info("{}=[{}:{}]", k, v.getDataType(), v.getStringValue()));
         assertTrue("Message attributes should have the 'channelId' attribute", foundMessage.getMessageAttributes().containsKey("channelId"));
         assertEquals(CHANNEL_ID, foundMessage.getMessageAttributes().get("channelId").getStringValue());
     }
@@ -125,9 +126,12 @@ public class SQSSongQueueIntegrationTest {
         // before this is done checking all the messages, either SQS is slow,
         // or we didn't receive all the messages (assume the latter).
         while (!songs.isEmpty()) {
-            ReceiveMessageResult response = sqs.receiveMessage(songQueue.getQueueUrl());
+            // need to specify message attribute names in order to return them.
+            ReceiveMessageRequest request = new ReceiveMessageRequest()
+                    .withQueueUrl(songQueue.getQueueUrl())
+                    .withMessageAttributeNames("All");
+            ReceiveMessageResult response = sqs.receiveMessage(request);
             for (Message message : response.getMessages()) {
-                message.getMessageAttributes().forEach((k, v) -> logger.info("{}=[{}:{}]", k, v.getDataType(), v.getStringValue()));
                 assertTrue("Message attributes should have the 'channelId' attribute", message.getMessageAttributes().containsKey("channelId"));
                 assertEquals(CHANNEL_ID, message.getMessageAttributes().get("channelId").getStringValue());
 
