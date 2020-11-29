@@ -18,6 +18,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +38,7 @@ import static org.junit.Assert.*;
 @RunWith(LocalstackTestRunner.class)
 @LocalstackDockerProperties(services = {"sqs", "cloudwatch"})
 public class SQSSongQueueIntegrationTest {
+    private static final Logger logger = LoggerFactory.getLogger(SQSSongQueueIntegrationTest.class);
 
     // note: can't make the global timeout too small because the first test
     //       has to create the SQS queue, which adds a considerable amount
@@ -53,7 +56,6 @@ public class SQSSongQueueIntegrationTest {
 
     @Before
     public void setUp() {
-//        String cloudWatchEndpoint = LocalstackIntegrationUtil.resolveCorrectUrl(Localstack.INSTANCE.getEndpointCloudWatch());
         cloudWatch = AmazonCloudWatchClientBuilder
                 .standard()
                 .withEndpointConfiguration(
@@ -63,7 +65,6 @@ public class SQSSongQueueIntegrationTest {
                         ))
                 .build();
 
-//        String sqsEndpoint = LocalstackIntegrationUtil.resolveCorrectUrl(Localstack.INSTANCE.getEndpointSQS());
         sqs = AmazonSQSClientBuilder
                 .standard()
                 .withEndpointConfiguration(
@@ -106,6 +107,7 @@ public class SQSSongQueueIntegrationTest {
 
         assertNotNull("A message should have been read from the queue before timing out", foundMessage);
         assertEquals(song, foundMessage.getBody());
+        foundMessage.getMessageAttributes().forEach((k, v) -> logger.info("{}=[{}:{}]", k, v.getDataType(), v.getStringValue()));
         assertTrue("Message attributes should have the 'channelId' attribute", foundMessage.getMessageAttributes().containsKey("channelId"));
         assertEquals(CHANNEL_ID, foundMessage.getMessageAttributes().get("channelId").getStringValue());
     }
@@ -125,6 +127,7 @@ public class SQSSongQueueIntegrationTest {
         while (!songs.isEmpty()) {
             ReceiveMessageResult response = sqs.receiveMessage(songQueue.getQueueUrl());
             for (Message message : response.getMessages()) {
+                message.getMessageAttributes().forEach((k, v) -> logger.info("{}=[{}:{}]", k, v.getDataType(), v.getStringValue()));
                 assertTrue("Message attributes should have the 'channelId' attribute", message.getMessageAttributes().containsKey("channelId"));
                 assertEquals(CHANNEL_ID, message.getMessageAttributes().get("channelId").getStringValue());
 
