@@ -183,12 +183,13 @@ class ProjectProperties extends Iterable[(String, String)] {
     internalMap.iterator
 
   /**
-   * Write the
-   * @param fileName
-   * @return
+   * Write the contents of the properties into a properties file.
+   * @param fileNamePrefix prefix for the file that will be written out to disk
+   * @return the Path to the temporary file
    */
-  def toTemporaryFile(fileName: String): Path = {
-    val path = Files.createTempFile(fileName, "properties").toAbsolutePath
+  def toTemporaryFile(fileNamePrefix: String): Path = {
+    val path =
+      Files.createTempFile(fileNamePrefix, ".properties").toAbsolutePath
     internalMap.synchronized {
       val lines = internalMap.map { case (k, v) => s"$k = $v" }
       Files.write(path, lines.asJava, StandardCharsets.UTF_8)

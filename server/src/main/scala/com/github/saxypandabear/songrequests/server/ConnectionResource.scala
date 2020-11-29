@@ -29,10 +29,7 @@ class ConnectionResource {
   @Consumes(Array(MediaType.APPLICATION_JSON))
   @Produces(Array(MediaType.TEXT_PLAIN))
   def initiateConnection(request: Channel): Response =
-    Response
-      .status(201)
-      .entity(s"Initiated connection to channel ${request.channelId}")
-      .build()
+    orchestrator.connect()
 
   @PUT
   @Path("/disconnect/{channel}")
