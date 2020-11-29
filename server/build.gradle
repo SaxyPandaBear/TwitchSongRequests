@@ -4,6 +4,7 @@ apply plugin: 'scala'
 buildscript {
     repositories {
         jcenter() // only work after gradle 1.7
+        mavenCentral()
     }
 
     dependencies {
