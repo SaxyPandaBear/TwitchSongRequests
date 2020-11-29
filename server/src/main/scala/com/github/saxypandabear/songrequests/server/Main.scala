@@ -1,7 +1,7 @@
 package com.github.saxypandabear.songrequests.server
 
 import java.net.URI
-import java.nio.file.{Files, Paths}
+import java.nio.file.Paths
 import java.util.concurrent.Executors
 
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
@@ -14,6 +14,7 @@ import com.github.saxypandabear.songrequests.util.{
   ApplicationBinder,
   ProjectProperties
 }
+import com.github.saxypandabear.songrequests.websocket.TwitchSocketFactory
 import com.github.saxypandabear.songrequests.websocket.orchestrator.{
   ConnectionOrchestrator,
   RoundRobinConnectionOrchestrator
@@ -26,8 +27,8 @@ import org.eclipse.jetty.server.Server
  * and all of the other infrastructure needed to run.
  */
 object Main extends StrictLogging {
-  private var server: Server                       = _
-  private var orchestrator: ConnectionOrchestrator = _
+  private var server: Server                               = _
+  private[server] var orchestrator: ConnectionOrchestrator = _
 
   def main(args: Array[String] = Array.empty): Unit = {
     logger.info("Reading system and default application properties")
@@ -43,9 +44,8 @@ object Main extends StrictLogging {
     for ((k, v) <- properties)
       logger.info("{} = {}", k, v)
 
-    val port = properties.getInteger("port").getOrElse(8080)
-    initOrchestrator(properties, port)
-    start(port)
+    initOrchestrator(properties)
+    start(properties.getInteger("port").getOrElse(8080))
   }
 
   def start(port: Int): Unit = {
@@ -62,7 +62,7 @@ object Main extends StrictLogging {
     orchestrator.stop()
   }
 
-  private def getCloudWatchClient(
+  private def createCloudWatchClient(
       projectProperties: ProjectProperties
   ): AmazonCloudWatch = {
     val cloudWatchBuilder = AmazonCloudWatchClientBuilder.standard()
@@ -77,11 +77,8 @@ object Main extends StrictLogging {
     cloudWatchBuilder.build()
   }
 
-  private def initOrchestrator(
-      projectProperties: ProjectProperties,
-      port: Int
-  ): Unit = {
-    val cloudWatch       = getCloudWatchClient(projectProperties)
+  private def initOrchestrator(projectProperties: ProjectProperties): Unit = {
+    val cloudWatch       = createCloudWatchClient(projectProperties)
     val metricsCollector = new CloudWatchMetricCollector(
         cloudWatch,
         Executors.newFixedThreadPool(
@@ -89,12 +86,30 @@ object Main extends StrictLogging {
         )
     )
 
-    val twitchUri = new URI(
-        projectProperties
-          .getString("twitch.url")
-          .getOrElse(s"http://localhost:$port")
-    )
+    // if the properties defines a `twitch.url`, then we use that. if the
+    // properties defines a `twitch.port`, then we know that this is used in a
+    // local test and should be listening to localhost.
+    // should fail fast if we don't have either.
+    val twitchUri = if (projectProperties.has("twitch.url")) {
+      new URI(projectProperties.get("twitch.url"))
+    } else if (projectProperties.has("twitch.port")) {
+      new URI(s"http://localhost:${projectProperties.get("twitch.port")}")
+    } else {
+      throw new RuntimeException(
+          "Cannot start server because no Twitch server configuration set."
+      )
+    }
+
     orchestrator =
       new RoundRobinConnectionOrchestrator(metricsCollector, twitchUri)
+  }
+
+  private def createTwitchSocketFactory(
+      projectProperties: ProjectProperties
+  ): TwitchSocketFactory = {
+    val clientId         = projectProperties.get("client.id")
+    val clientSecret     = projectProperties.get("client.secret")
+    val twitchRefreshUri = projectProperties.get("twitch.refresh.uri")
+
   }
 }
