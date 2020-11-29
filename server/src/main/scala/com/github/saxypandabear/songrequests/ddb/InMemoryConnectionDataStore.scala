@@ -23,20 +23,26 @@ class InMemoryConnectionDataStore extends ConnectionDataStore {
     }
 
   /**
-   * Update a record in the data store with the given hash key, and the given
-   * object.
-   * @param channelId  the Twitch channel ID
-   * @param connection connection object
-   * @throws RuntimeException when the channelId does not exist in the data store,
-   *                          or the connection object is malformed
+   * Update the `connectionStatus` attribute of the DynamoDB record with the
+   * given input value.
+   * @param channelId hash key of record to update
+   * @param newStatus status value to persist
    */
-  override def updateConnectionDetailsById(
+  override def updateConnectionStatus(
       channelId: String,
-      connection: Connection
-  ): Unit =
-    idsToConnections.synchronized {
-      idsToConnections.put(channelId, connection)
-    }
+      newStatus: String
+  ): Unit = ???
+
+  /**
+   * Insert the input access token in the session object for the Twitch access
+   * token and persist the object.
+   * @param channelId   hash key of record to update
+   * @param accessToken refreshed access key from Twitch
+   */
+  override def updateTwitchOAuthToken(
+      channelId: String,
+      accessToken: String
+  ): Unit = ???
 
   /**
    * Checks if a record with the given ID exists.

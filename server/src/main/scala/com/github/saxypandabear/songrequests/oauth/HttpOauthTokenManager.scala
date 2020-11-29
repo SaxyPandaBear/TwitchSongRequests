@@ -34,7 +34,7 @@ class HttpOauthTokenManager(
   override def refresh(): OauthResponse = {
     val response =
       requestNewToken(clientId, clientSecret, refreshToken, refreshUri)
-    dataStore.updateConnectionDetailsById(channelId, connection)
+    // TODO: fix me
     response
   }
 

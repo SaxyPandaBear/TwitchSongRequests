@@ -56,13 +56,13 @@ class ConnectionSpec extends UnitSpec with BeforeAndAfterEach {
     }
 
   "Calling toItem" should "map values to the proper keys in the DynamoDB item" in {
-    val item = connection.toItem
-    item.getString("channelId") should be("1234567890")
-    item.getNumber("expires").longValue() should be(9876543210L)
-    item.getString("connectionStatus") should be("active")
+    val valueMap = connection.toValueMap
+    valueMap("channelId").getS should be("1234567890")
+    valueMap("expires").getN.toLong should be(9876543210L)
+    valueMap("connectionStatus").getS should be("active")
 
     // same sanity check as above
-    val sessionObject = objectMapper.readTree(item.getString("sess"))
+    val sessionObject = objectMapper.readTree(valueMap("sess").getS)
     val twitchToken   = sessionObject.get("accessKeys").get("twitchToken")
     twitchToken.get("access_token").asText() should be("abc123")
     twitchToken.get("refresh_token").asText() should be("foo")

@@ -1,6 +1,6 @@
 package com.github.saxypandabear.songrequests.ddb.model
 
-import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -141,16 +141,35 @@ case class Connection(
   }
 
   /**
-   * Convert this Connection object into a DynamoDB interface so that we can persist it
-   * to DynamoDB
+   * Convert this Connection object into a DynamoDB interface so that we can
+   * persist it to DynamoDB. This should not cache the map of values, because
+   * the session string can update at any time.
    * @return
    */
   @JsonIgnore
-  def toItem: Item =
-    new Item()
-      .withPrimaryKey("channelId", channelId)
-      .withString("connectionStatus", connectionStatus)
-      .withNumber("expires", expires)
-      .withString("type", `type`)
-      .withString("sess", sess)
+  def toValueMap: Map[String, AttributeValue] =
+    Map(
+        "channelId"        -> new AttributeValue().withS(channelId),
+        "connectionStatus" -> new AttributeValue().withS(connectionStatus),
+        "expires"          -> new AttributeValue().withN(expires.toString),
+        "type"             -> new AttributeValue().withS(`type`),
+        "sess"             -> new AttributeValue().withS(sess)
+    )
+}
+
+object Connection {
+
+  /**
+   * Translate a DynamoDB Item model class into a Connection
+   * @param valueMap DynamoDB item fetched
+   * @return a Connection object that represents the DynamoDB record
+   */
+  def apply(valueMap: Map[String, AttributeValue]): Connection = {
+    val channelId = valueMap("channelId").getS
+    val status    = valueMap("connectionStatus").getS
+    val expires   = valueMap("expires").getN.toLong // TODO: not sure if this works
+    val theType   = valueMap("type").getS
+    val session   = valueMap("sess").getS
+    Connection(channelId, status, expires, theType, session)
+  }
 }

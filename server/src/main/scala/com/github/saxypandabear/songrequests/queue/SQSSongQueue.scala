@@ -80,8 +80,8 @@ class SQSSongQueue(sqs: AmazonSQS, metricsCollector: CloudWatchMetricCollector)
       try sqs.listQueues(QUEUE_NAME).getQueueUrls.asScala
       catch {
         case e: Exception =>
-          logger.warn("Error occurred when trying to list queues.", e)
-          Seq.empty
+          logger.warn("Error occurred when trying to list queues", e)
+          throw e
       }
     if (queues.nonEmpty) {
       // already have an existing queue to refer to. pick the first and move on
@@ -94,7 +94,7 @@ class SQSSongQueue(sqs: AmazonSQS, metricsCollector: CloudWatchMetricCollector)
         catch {
           case e: Exception =>
             logger.warn("Error occurred when trying to create a new queue", e)
-            ""
+            throw e
         }
       logger.info("Created new SQS queue: {}", queueUrl)
     }
