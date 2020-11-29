@@ -15,6 +15,7 @@ import com.github.saxypandabear.songrequests.util.{
   ProjectProperties
 }
 import com.github.saxypandabear.songrequests.websocket.TwitchSocketFactory
+import com.github.saxypandabear.songrequests.websocket.listener.LoggingWebSocketListener
 import com.github.saxypandabear.songrequests.websocket.orchestrator.{
   ConnectionOrchestrator,
   RoundRobinConnectionOrchestrator
@@ -110,6 +111,6 @@ object Main extends StrictLogging {
     val clientId         = projectProperties.get("client.id")
     val clientSecret     = projectProperties.get("client.secret")
     val twitchRefreshUri = projectProperties.get("twitch.refresh.uri")
-
+    val logListener      = new LoggingWebSocketListener()
   }
 }
