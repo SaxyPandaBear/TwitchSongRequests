@@ -77,6 +77,7 @@ class SQSSongQueue(sqs: AmazonSQS, metricsCollector: CloudWatchMetricCollector)
   private def init(): Unit = {
     logger.info("Initializing song queue")
     val queues = sqs.listQueues(QUEUE_NAME).getQueueUrls.asScala
+    logger.info("Queue list: {}", queues.mkString(", "))
     if (queues.nonEmpty) {
       // already have an existing queue to refer to. pick the first and move on
       queueUrl = queues.head
