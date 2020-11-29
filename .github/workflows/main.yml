@@ -40,10 +40,6 @@ jobs:
         image: localstack/localstack:latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Localstack AWS configs
-        run: |
-          mkdir -p ~/.aws
-          cp ./.aws/* ~/.aws/
       - name: Use Node.js 12.8
         uses: actions/setup-node@v1
         with:
