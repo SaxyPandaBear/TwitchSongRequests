@@ -35,6 +35,9 @@ jobs:
         working-directory: ./queue-song-lambda
   test:
     runs-on: ubuntu-latest
+    services:
+      localstack:
+        image: localstack/localstack:latest
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 12.8
