@@ -12,7 +12,6 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector;
-import com.github.saxypandabear.songrequests.util.LocalstackIntegrationUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,22 +53,22 @@ public class SQSSongQueueIntegrationTest {
 
     @Before
     public void setUp() {
-        String cloudWatchEndpoint = LocalstackIntegrationUtil.resolveCorrectUrl(Localstack.INSTANCE.getEndpointCloudWatch());
+//        String cloudWatchEndpoint = LocalstackIntegrationUtil.resolveCorrectUrl(Localstack.INSTANCE.getEndpointCloudWatch());
         cloudWatch = AmazonCloudWatchClientBuilder
                 .standard()
                 .withEndpointConfiguration(
                         new AwsClientBuilder.EndpointConfiguration(
-                                cloudWatchEndpoint,
+                                Localstack.INSTANCE.getEndpointCloudWatch(),
                                 Localstack.getDefaultRegion()
                         ))
                 .build();
 
-        String sqsEndpoint = LocalstackIntegrationUtil.resolveCorrectUrl(Localstack.INSTANCE.getEndpointSQS());
+//        String sqsEndpoint = LocalstackIntegrationUtil.resolveCorrectUrl(Localstack.INSTANCE.getEndpointSQS());
         sqs = AmazonSQSClientBuilder
                 .standard()
                 .withEndpointConfiguration(
                         new AwsClientBuilder.EndpointConfiguration(
-                                sqsEndpoint,
+                                Localstack.INSTANCE.getEndpointSQS(),
                                 Localstack.getDefaultRegion()
                         ))
                 .build();
