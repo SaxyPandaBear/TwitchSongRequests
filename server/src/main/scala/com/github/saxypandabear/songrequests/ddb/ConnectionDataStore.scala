@@ -1,5 +1,6 @@
 package com.github.saxypandabear.songrequests.ddb
 
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
 import com.github.saxypandabear.songrequests.ddb.model.Connection
 
 /**
@@ -14,13 +15,14 @@ trait ConnectionDataStore {
    * This should always get the most up-to-date value of the data (a consistent read)
    * @param channelId the Twitch channel ID
    * @return a POJO that represents the connection document
-   * @throws RuntimeException when the channelId does not exist in the data store
+   * @throws ResourceNotFoundException when the channelId does not exist in the data store
    */
   def getConnectionDetailsById(channelId: String): Connection
 
   /**
    * Update the `connectionStatus` attribute of the DynamoDB record with the
-   * given input value.
+   * given input value. This should not throw an exception if the channelId
+   * does not exist.
    * @param channelId hash key of record to update
    * @param newStatus status value to persist
    */
@@ -31,6 +33,7 @@ trait ConnectionDataStore {
    * token and persist the object.
    * @param channelId   hash key of record to update
    * @param accessToken refreshed access key from Twitch
+   * @throws ResourceNotFoundException when the channelId does not exist in the data store
    */
   def updateTwitchOAuthToken(channelId: String, accessToken: String): Unit
 
@@ -40,4 +43,6 @@ trait ConnectionDataStore {
    * @return true if the channel ID exists, false otherwise
    */
   def hasConnectionDetails(channelId: String): Boolean
+
+  def stop(): Unit
 }

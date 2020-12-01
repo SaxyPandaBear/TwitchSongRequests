@@ -40,19 +40,19 @@ class ConnectionSpec extends UnitSpec with BeforeAndAfterEach {
   }
 
   "Getting the Twitch access token" should "work" in {
-    connection.retrieveAccessToken should be("abc123")
+    connection.twitchAccessToken should be("abc123")
   }
 
   "Getting the Twitch refresh token" should "work" in {
-    connection.retrieveRefreshToken should be("foo")
+    connection.twitchRefreshToken should be("foo")
   }
 
   "Setting the Twitch access token to a new value" should
     "be reflected when getting the access token afterwards" in {
       val someAccessToken = "hello, world"
-      connection.retrieveAccessToken should be("abc123")
-      connection.updateAccessToken(someAccessToken)
-      connection.retrieveAccessToken should be(someAccessToken)
+      connection.twitchAccessToken should be("abc123")
+      connection.updateTwitchAccessToken(someAccessToken)
+      connection.twitchAccessToken should be(someAccessToken)
     }
 
   "Calling toItem" should "map values to the proper keys in the DynamoDB item" in {

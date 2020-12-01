@@ -1,5 +1,7 @@
 package com.github.saxypandabear.songrequests.ddb.model
 
+import java.util
+
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -77,11 +79,8 @@ case class Connection(
    * @return the Twitch access token associated with this channel ID
    */
   @JsonIgnore
-  def retrieveAccessToken(): String =
-    extractAccessToken(extractTwitchFromSession())
-
-  private def extractAccessToken(twitchToken: ObjectNode): String =
-    twitchToken.get("access_token").asText()
+  def twitchAccessToken(): String =
+    extractTwitchAccessToken(extractTwitchFromSession())
 
   /**
    * The refresh token value doesn't change. We can/should cache this value so we
@@ -90,28 +89,12 @@ case class Connection(
    * @return the Twitch refresh token associated with this channel ID
    */
   @JsonIgnore
-  def retrieveRefreshToken(): String = {
+  def twitchRefreshToken(): String = {
     if (refreshToken == null) {
       refreshToken = extractRefreshToken(extractTwitchFromSession())
     }
     refreshToken
   }
-
-  /**
-   * Parse the JSON object that represents the session state, and return a Jackson
-   * ObjectNode. We cast it to an ObjectNode because a JsonNode does not provide a
-   * way to update the value in the tree (see `setAccessToken`).
-   * @return the parsed JSON object
-   */
-  private def extractTwitchFromSession(): ObjectNode =
-    objectMapper
-      .readTree(sess)
-      .get("accessKeys")
-      .get("twitchToken")
-      .asInstanceOf[ObjectNode]
-
-  private def extractRefreshToken(twitchToken: ObjectNode): String =
-    twitchToken.get("refresh_token").asText()
 
   /**
    * Assuming that we retrieve a new access token from the authentication server,
@@ -125,7 +108,7 @@ case class Connection(
    * @param token new access token that is retrieved from the server
    */
   @JsonIgnore
-  def updateAccessToken(token: String): Unit = {
+  def updateTwitchAccessToken(token: String): Unit = {
     val sessionObject = objectMapper.readTree(sess).asInstanceOf[ObjectNode]
 
     // shouldn't use the `extractTwitchFromSession` method because
@@ -155,6 +138,35 @@ case class Connection(
         "type"             -> new AttributeValue().withS(`type`),
         "sess"             -> new AttributeValue().withS(sess)
     )
+
+  // needed for integration testing in Java since there is no ScalaConverter
+  // equivalent
+  @JsonIgnore
+  def toJavaValueMap: util.Map[String, AttributeValue] = {
+    val m = new util.HashMap[String, AttributeValue]()
+    for ((k, v) <- toValueMap)
+      m.put(k, v)
+    m
+  }
+
+  /**
+   * Parse the JSON object that represents the session state, and return a Jackson
+   * ObjectNode. We cast it to an ObjectNode because a JsonNode does not provide a
+   * way to update the value in the tree (see `setAccessToken`).
+   * @return the parsed JSON object
+   */
+  private def extractTwitchFromSession(): ObjectNode =
+    objectMapper
+      .readTree(sess)
+      .get("accessKeys")
+      .get("twitchToken")
+      .asInstanceOf[ObjectNode]
+
+  private def extractTwitchAccessToken(twitchToken: ObjectNode): String =
+    twitchToken.get("access_token").asText()
+
+  private def extractRefreshToken(twitchToken: ObjectNode): String =
+    twitchToken.get("refresh_token").asText()
 }
 
 object Connection {

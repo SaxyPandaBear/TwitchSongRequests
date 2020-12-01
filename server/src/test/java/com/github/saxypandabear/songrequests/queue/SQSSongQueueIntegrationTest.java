@@ -38,10 +38,6 @@ import static org.junit.Assert.*;
 @LocalstackDockerProperties(services = {"sqs", "cloudwatch"})
 public class SQSSongQueueIntegrationTest {
 
-    // note: can't make the global timeout too small because the first test
-    //       has to create the SQS queue, which adds a considerable amount
-    //       of overhead to the test that goes first (roughly 2 seconds
-    //       observed).
     @Rule
     public Timeout globalTimeout = new Timeout(5, TimeUnit.SECONDS);
 
@@ -76,7 +72,7 @@ public class SQSSongQueueIntegrationTest {
     }
 
     @After
-    public void cleanUp() {
+    public void tearDown() {
         // drop all of the existing messages from testing to prep for the next test.
         sqs.purgeQueue(new PurgeQueueRequest().withQueueUrl(songQueue.getQueueUrl()));
         songQueue.stop();

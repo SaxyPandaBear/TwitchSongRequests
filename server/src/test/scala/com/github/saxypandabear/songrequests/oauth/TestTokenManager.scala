@@ -121,7 +121,7 @@ object TestTokenManagerFactory
     new TestTokenManager(
         clientId,
         clientSecret,
-        connection.retrieveRefreshToken(),
+        connection.twitchRefreshToken(),
         refreshUri
     )
   }
