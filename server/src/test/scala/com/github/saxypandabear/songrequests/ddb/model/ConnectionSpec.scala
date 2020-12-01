@@ -40,29 +40,29 @@ class ConnectionSpec extends UnitSpec with BeforeAndAfterEach {
   }
 
   "Getting the Twitch access token" should "work" in {
-    connection.retrieveAccessToken should be("abc123")
+    connection.twitchAccessToken should be("abc123")
   }
 
   "Getting the Twitch refresh token" should "work" in {
-    connection.retrieveRefreshToken should be("foo")
+    connection.twitchRefreshToken should be("foo")
   }
 
   "Setting the Twitch access token to a new value" should
     "be reflected when getting the access token afterwards" in {
       val someAccessToken = "hello, world"
-      connection.retrieveAccessToken should be("abc123")
-      connection.updateAccessToken(someAccessToken)
-      connection.retrieveAccessToken should be(someAccessToken)
+      connection.twitchAccessToken should be("abc123")
+      connection.updateTwitchAccessToken(someAccessToken)
+      connection.twitchAccessToken should be(someAccessToken)
     }
 
   "Calling toItem" should "map values to the proper keys in the DynamoDB item" in {
-    val item = connection.toItem
-    item.getString("channelId") should be("1234567890")
-    item.getNumber("expires").longValue() should be(9876543210L)
-    item.getString("connectionStatus") should be("active")
+    val valueMap = connection.toValueMap
+    valueMap("channelId").getS should be("1234567890")
+    valueMap("expires").getN.toLong should be(9876543210L)
+    valueMap("connectionStatus").getS should be("active")
 
     // same sanity check as above
-    val sessionObject = objectMapper.readTree(item.getString("sess"))
+    val sessionObject = objectMapper.readTree(valueMap("sess").getS)
     val twitchToken   = sessionObject.get("accessKeys").get("twitchToken")
     twitchToken.get("access_token").asText() should be("abc123")
     twitchToken.get("refresh_token").asText() should be("foo")

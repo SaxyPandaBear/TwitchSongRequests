@@ -4,14 +4,15 @@ import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
 import com.github.saxypandabear.songrequests.util.{HttpUtil, JsonUtil}
 
 /**
- * Class that manages an OAuth token.
+ * Class that manages an OAuth token for Twitch. Twitch OAuth requests are
+ * handled slightly differently than Spotify, which is why this is separated.
  * @param clientId     Application client ID used to authenticate against Twitch
  * @param clientSecret Application client secret used to authenticate against Twitch
  * @param channelId    Twitch channel ID that is associated with the token that this class manages
  * @param refreshUri   URI target for requesting a refresh token
  * @param dataStore    Interface to perform operations on the database
  */
-class HttpOauthTokenManager(
+class TwitchOauthTokenManager(
     clientId: String,
     clientSecret: String,
     channelId: String,
@@ -25,7 +26,7 @@ class HttpOauthTokenManager(
    * Retrieve an access token
    * @return an OAuth access token
    */
-  def getAccessToken: String = connection.retrieveAccessToken()
+  def getAccessToken: String = connection.twitchAccessToken()
 
   /**
    * Performs the token refresh, and also persists the change to DynamoDB
@@ -34,7 +35,7 @@ class HttpOauthTokenManager(
   override def refresh(): OauthResponse = {
     val response =
       requestNewToken(clientId, clientSecret, refreshToken, refreshUri)
-    dataStore.updateConnectionDetailsById(channelId, connection)
+    dataStore.updateTwitchOAuthToken(channelId, response.accessToken)
     response
   }
 
@@ -89,9 +90,9 @@ object HttpOauthTokenManagerFactory extends OauthTokenManagerFactory {
     //       initialization instead of twice to optimize.
     val refreshToken = connectionDataStore
       .getConnectionDetailsById(channelId)
-      .retrieveRefreshToken()
+      .twitchRefreshToken()
 
-    new HttpOauthTokenManager(
+    new TwitchOauthTokenManager(
         clientId,
         clientSecret,
         channelId,
