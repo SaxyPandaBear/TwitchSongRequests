@@ -1,6 +1,7 @@
-package com.github.saxypandabear.songrequests.oauth
+package com.github.saxypandabear.songrequests.oauth.factory
 
 import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
+import com.github.saxypandabear.songrequests.oauth.OauthTokenManager
 
 trait OauthTokenManagerFactory {
 

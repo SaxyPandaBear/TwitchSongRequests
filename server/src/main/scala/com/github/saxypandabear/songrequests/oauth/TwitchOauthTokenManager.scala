@@ -1,6 +1,7 @@
 package com.github.saxypandabear.songrequests.oauth
 
 import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
+import com.github.saxypandabear.songrequests.oauth.factory.OauthTokenManagerFactory
 import com.github.saxypandabear.songrequests.util.{HttpUtil, JsonUtil}
 
 /**
