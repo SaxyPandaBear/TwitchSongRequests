@@ -179,7 +179,7 @@ object Connection {
   def apply(valueMap: Map[String, AttributeValue]): Connection = {
     val channelId = valueMap("channelId").getS
     val status    = valueMap("connectionStatus").getS
-    val expires   = valueMap("expires").getN.toLong // TODO: not sure if this works
+    val expires   = valueMap("expires").getN.toLong
     val theType   = valueMap("type").getS
     val session   = valueMap("sess").getS
     Connection(channelId, status, expires, theType, session)
