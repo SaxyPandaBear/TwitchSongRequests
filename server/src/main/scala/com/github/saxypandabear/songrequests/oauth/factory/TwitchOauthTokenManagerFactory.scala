@@ -1,8 +1,11 @@
-package com.github.saxypandabear.songrequests.oauth
-
+package com.github.saxypandabear.songrequests.oauth.factory
 import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
+import com.github.saxypandabear.songrequests.oauth.{
+  OauthTokenManager,
+  TwitchOauthTokenManager
+}
 
-trait OauthTokenManagerFactory {
+object TwitchOauthTokenManagerFactory extends OauthTokenManagerFactory {
 
   /**
    * Create some implementation of an OAuth token manager.
@@ -14,11 +17,26 @@ trait OauthTokenManagerFactory {
    *                            connection information
    * @return an implementation of an OAuth token manager
    */
-  def create(
+  override def create(
       clientId: String,
       clientSecret: String,
       channelId: String,
       refreshUri: String,
       connectionDataStore: ConnectionDataStore
-  ): OauthTokenManager
+  ): OauthTokenManager = {
+    // TODO: this does two database reads. if this becomes a bottleneck,
+    //       need to refactor this
+    val refreshToken = connectionDataStore
+      .getConnectionDetailsById(channelId)
+      .twitchRefreshToken()
+
+    new TwitchOauthTokenManager(
+        clientId,
+        clientSecret,
+        channelId,
+        refreshUri,
+        refreshToken,
+        connectionDataStore
+    )
+  }
 }

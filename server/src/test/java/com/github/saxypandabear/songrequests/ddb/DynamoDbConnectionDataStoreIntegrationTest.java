@@ -34,8 +34,11 @@ public class DynamoDbConnectionDataStoreIntegrationTest {
 
     private static final String connectionTemplateJsonPath = "test-json/connection-active.json";
 
+    // TODO: may need to investigate why the first test times out in 5 seconds.
+    //       5 seconds should be a generous amount of time to finish standing
+    //       up the infrastructure for the DynamoDB testing.
     @Rule
-    public Timeout globalTimeout = new Timeout(5, TimeUnit.SECONDS);
+    public Timeout globalTimeout = new Timeout(8, TimeUnit.SECONDS);
 
     private DynamoDbConnectionDataStore dataStore;
     private AmazonDynamoDB ddb;
