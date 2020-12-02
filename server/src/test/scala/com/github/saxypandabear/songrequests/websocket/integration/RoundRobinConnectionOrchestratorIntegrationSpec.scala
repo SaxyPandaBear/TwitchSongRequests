@@ -10,7 +10,7 @@ import com.github.saxypandabear.songrequests.lib.{
   UnitSpec
 }
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
-import com.github.saxypandabear.songrequests.oauth.TestTokenManagerFactory
+import com.github.saxypandabear.songrequests.oauth.factory.TestTokenManagerFactory
 import com.github.saxypandabear.songrequests.queue.InMemorySongQueue
 import com.github.saxypandabear.songrequests.websocket.TwitchSocketFactory
 import com.github.saxypandabear.songrequests.websocket.lib.WebSocketTestingUtil

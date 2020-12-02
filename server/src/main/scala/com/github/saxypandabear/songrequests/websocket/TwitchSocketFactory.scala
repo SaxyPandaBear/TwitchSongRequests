@@ -2,7 +2,7 @@ package com.github.saxypandabear.songrequests.websocket
 
 import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
-import com.github.saxypandabear.songrequests.oauth.OauthTokenManagerFactory
+import com.github.saxypandabear.songrequests.oauth.factory.OauthTokenManagerFactory
 import com.github.saxypandabear.songrequests.queue.SongQueue
 import com.github.saxypandabear.songrequests.websocket.listener.WebSocketListener
 
