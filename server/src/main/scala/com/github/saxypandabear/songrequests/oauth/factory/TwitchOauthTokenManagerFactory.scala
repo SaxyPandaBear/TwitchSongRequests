@@ -1,6 +1,9 @@
 package com.github.saxypandabear.songrequests.oauth.factory
 import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
-import com.github.saxypandabear.songrequests.oauth.OauthTokenManager
+import com.github.saxypandabear.songrequests.oauth.{
+  OauthTokenManager,
+  TwitchOauthTokenManager
+}
 
 object TwitchOauthTokenManagerFactory extends OauthTokenManagerFactory {
 
@@ -20,6 +23,20 @@ object TwitchOauthTokenManagerFactory extends OauthTokenManagerFactory {
       channelId: String,
       refreshUri: String,
       connectionDataStore: ConnectionDataStore
-  ): OauthTokenManager =
-    null // TODO: implement me
+  ): OauthTokenManager = {
+    // TODO: this does two database reads. if this becomes a bottleneck,
+    //       need to refactor this
+    val refreshToken = connectionDataStore
+      .getConnectionDetailsById(channelId)
+      .twitchRefreshToken()
+
+    new TwitchOauthTokenManager(
+        clientId,
+        clientSecret,
+        channelId,
+        refreshUri,
+        refreshToken,
+        connectionDataStore
+    )
+  }
 }

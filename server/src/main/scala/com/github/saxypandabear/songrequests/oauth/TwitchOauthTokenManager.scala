@@ -1,7 +1,6 @@
 package com.github.saxypandabear.songrequests.oauth
 
 import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
-import com.github.saxypandabear.songrequests.oauth.factory.OauthTokenManagerFactory
 import com.github.saxypandabear.songrequests.util.{HttpUtil, JsonUtil}
 
 /**
@@ -27,7 +26,7 @@ class TwitchOauthTokenManager(
    * Retrieve an access token
    * @return an OAuth access token
    */
-  def getAccessToken: String = connection.twitchAccessToken()
+  override def getAccessToken: String = connection.twitchAccessToken()
 
   /**
    * Performs the token refresh, and also persists the change to DynamoDB
@@ -64,42 +63,4 @@ class TwitchOauthTokenManager(
         )
       }
     }
-}
-
-object HttpOauthTokenManagerFactory extends OauthTokenManagerFactory {
-
-  /**
-   * Create some implementation of an OAuth token manager.
-   * @param clientId            application client id
-   * @param clientSecret        application client secret
-   * @param channelId           Twitch channel ID
-   * @param refreshUri          URI for re-authentication
-   * @param connectionDataStore database wrapper that stores the bulk of
-   *                            connection information
-   * @return an implementation of an OAuth token manager
-   */
-  override def create(
-      clientId: String,
-      clientSecret: String,
-      channelId: String,
-      refreshUri: String,
-      connectionDataStore: ConnectionDataStore
-  ): OauthTokenManager = {
-    // just need to extract the refresh token from the database
-    // TODO: because of how this is written, there are 2 database reads.
-    //       look into refactoring this so we only need to read once on
-    //       initialization instead of twice to optimize.
-    val refreshToken = connectionDataStore
-      .getConnectionDetailsById(channelId)
-      .twitchRefreshToken()
-
-    new TwitchOauthTokenManager(
-        clientId,
-        clientSecret,
-        channelId,
-        refreshUri,
-        refreshToken,
-        connectionDataStore
-    )
-  }
 }
