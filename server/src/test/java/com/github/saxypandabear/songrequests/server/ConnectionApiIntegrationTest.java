@@ -12,7 +12,7 @@ import com.github.saxypandabear.songrequests.ddb.model.Connection;
 import com.github.saxypandabear.songrequests.server.model.Channel;
 import com.github.saxypandabear.songrequests.util.JsonUtil;
 import com.github.saxypandabear.songrequests.util.ProjectProperties;
-import com.github.saxypandabear.songrequests.websocket.lib.WebSocketTestingUtil;
+import com.github.saxypandabear.songrequests.websocket.lib.WebSocketTestingUtil$;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.eclipse.jetty.server.Server;
@@ -34,7 +34,7 @@ import java.util.UUID;
 import static org.junit.Assert.*;
 
 @RunWith(LocalstackTestRunner.class)
-@LocalstackDockerProperties(services = {"cloudwatch"})
+@LocalstackDockerProperties(services = {"cloudwatch", "sqs", "dynamodb"})
 public class ConnectionApiIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(ConnectionApiIntegrationTest.class);
@@ -66,15 +66,23 @@ public class ConnectionApiIntegrationTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         apiPort = randomPort(5000);
         socketPort = randomPort(8000);
 
-        socketServer = WebSocketTestingUtil.build(socketPort);
+        // Java doesn't play nicely with Scala object singletons
+        socketServer = WebSocketTestingUtil$.MODULE$.build(socketPort);
+        socketServer.start();
 
         ProjectProperties properties = new ProjectProperties();
+        properties.setValue("env", "integration_test");
         properties.setValue("port", Integer.toString(apiPort));
+        properties.setValue("client.id", "foo");
+        properties.setValue("client.secret", "bar");
+        properties.setValue("twitch.refresh.uri", String.format("http://localhost:%d", socketPort));
         properties.setValue("cloudwatch.url", "http://localhost:4566");
+        properties.setValue("sqs.url", "http://localhost:4566");
+        properties.setValue("dynamodb.url", "http://localhost:4566");
         properties.setValue("twitch.port", Integer.toString(socketPort));
         tempPropertiesFilePath = properties.toTemporaryFile("integration-test");
         Main.main(new String[]{tempPropertiesFilePath.toString()});

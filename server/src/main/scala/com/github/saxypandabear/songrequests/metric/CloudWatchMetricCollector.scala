@@ -40,12 +40,15 @@ class CloudWatchMetricCollector(
       executorService.submit(new EmitMetricTask(client, name, value, tags))
     }
 
-  def stop(): Unit = {
-    running.getAndSet(false)
-    executorService.shutdown()
-    executorService.awaitTermination(5000, TimeUnit.MILLISECONDS)
-    client.shutdown()
-  }
+  def stop(): Unit =
+    running.synchronized {
+      if (running.get) {
+        running.getAndSet(false)
+        executorService.shutdown()
+        executorService.awaitTermination(5000, TimeUnit.MILLISECONDS)
+        client.shutdown()
+      }
+    }
 }
 
 class EmitMetricTask(

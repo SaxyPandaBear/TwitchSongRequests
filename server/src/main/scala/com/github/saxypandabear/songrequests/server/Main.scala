@@ -21,7 +21,7 @@ import com.github.saxypandabear.songrequests.ddb.{
   InMemoryConnectionDataStore
 }
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
-import com.github.saxypandabear.songrequests.oauth.factory.OauthTokenManagerFactory
+import com.github.saxypandabear.songrequests.oauth.factory.TwitchOauthTokenManagerFactory
 import com.github.saxypandabear.songrequests.queue.{
   InMemorySongQueue,
   SQSSongQueue,
@@ -45,13 +45,14 @@ import org.eclipse.jetty.server.Server
  * and all of the other infrastructure needed to run.
  */
 object Main extends StrictLogging {
-  private var server: Server                                     = _
-  private[server] var orchestrator: ConnectionOrchestrator       = _
-  private var metricsCollector: CloudWatchMetricCollector        = _
-  private var songQueue: SongQueue                               = _
-  private var connectionDataStore: ConnectionDataStore           = _
-  private var oauthTokenManagerFactory: OauthTokenManagerFactory = _
-  private var region: String                                     = _
+  // public scope for integration tests
+  var orchestrator: ConnectionOrchestrator                = _
+  private var server: Server                              = _
+  private var metricsCollector: CloudWatchMetricCollector = _
+  private var songQueue: SongQueue                        = _
+  private var connectionDataStore: ConnectionDataStore    = _
+  private var twitchSocketFactory: TwitchSocketFactory    = _
+  private var region: String                              = _
 
   def main(args: Array[String] = Array.empty): Unit = {
     logger.info("Reading system and default application properties")
@@ -69,7 +70,11 @@ object Main extends StrictLogging {
 
     region = properties.getString("region").getOrElse("us-east-1")
 
+    initMetricCollector(properties)
+    initConnectionDataStore(properties)
+    initSongQueue(properties)
     initOrchestrator(properties)
+    initTwitchSocketFactory(properties)
     start(properties.getInteger("port").getOrElse(8080))
   }
 
@@ -77,6 +82,7 @@ object Main extends StrictLogging {
     logger.info("Server starting on port {}", port)
     val applicationBinder = new ApplicationBinder()
       .withImplementation(orchestrator, classOf[ConnectionOrchestrator])
+      .withImplementation(twitchSocketFactory, classOf[TwitchSocketFactory])
     server = JettyUtil.build(port, applicationBinder)
     server.start()
   }
@@ -85,14 +91,20 @@ object Main extends StrictLogging {
     logger.info("Server shutting down")
     server.stop()
     orchestrator.stop()
+    songQueue.stop()
+    connectionDataStore.stop()
+    metricsCollector.stop()
   }
 
   private def createCloudWatchClient(
       projectProperties: ProjectProperties
   ): AmazonCloudWatch = {
-    val cloudWatchBuilder =
-      AmazonCloudWatchClientBuilder.standard().withRegion(region)
-    setLocalStackUrlIfPresent(
+    val cloudWatchBuilder = AmazonCloudWatchClientBuilder.standard()
+    setLocalStackUrlIfPresentElseRegion[
+        AmazonCloudWatchClientBuilder,
+        AmazonCloudWatch,
+        AmazonCloudWatchClientBuilder
+    ](
         cloudWatchBuilder,
         "cloudwatch.url",
         projectProperties
@@ -102,16 +114,23 @@ object Main extends StrictLogging {
   private def createSqsClient(
       projectProperties: ProjectProperties
   ): AmazonSQS = {
-    val sqsBuilder = AmazonSQSClientBuilder.standard().withRegion(region)
-    setLocalStackUrlIfPresent(sqsBuilder, "sqs.url", projectProperties).build()
+    val sqsBuilder = AmazonSQSClientBuilder.standard()
+    setLocalStackUrlIfPresentElseRegion[
+        AmazonSQSClientBuilder,
+        AmazonSQS,
+        AmazonSQSClientBuilder
+    ](sqsBuilder, "sqs.url", projectProperties).build()
   }
 
   private def createDynamoDbClient(
       projectProperties: ProjectProperties
   ): AmazonDynamoDB = {
-    val dynamoDbBuilder =
-      AmazonDynamoDBClientBuilder.standard().withRegion(region)
-    setLocalStackUrlIfPresent(
+    val dynamoDbBuilder = AmazonDynamoDBClientBuilder.standard()
+    setLocalStackUrlIfPresentElseRegion[
+        AmazonDynamoDBClientBuilder,
+        AmazonDynamoDB,
+        AmazonDynamoDBClientBuilder
+    ](
         dynamoDbBuilder,
         "dynamodb.url",
         projectProperties
@@ -126,7 +145,7 @@ object Main extends StrictLogging {
     val twitchUri = if (projectProperties.has("twitch.url")) {
       new URI(projectProperties.get("twitch.url"))
     } else if (projectProperties.has("twitch.port")) {
-      new URI(s"http://localhost:${projectProperties.get("twitch.port")}")
+      new URI(s"ws://localhost:${projectProperties.get("twitch.port")}")
     } else {
       throw new RuntimeException(
           "Cannot start server because no Twitch server configuration set."
@@ -140,6 +159,7 @@ object Main extends StrictLogging {
   private def initMetricCollector(
       projectProperties: ProjectProperties
   ): Unit = {
+    logger.info("Initializing metrics collector")
     val cloudWatch = createCloudWatchClient(projectProperties)
     metricsCollector = new CloudWatchMetricCollector(
         cloudWatch,
@@ -149,46 +169,70 @@ object Main extends StrictLogging {
     )
   }
 
-  private def initSongQueue(projectProperties: ProjectProperties): Unit =
+  private def initSongQueue(projectProperties: ProjectProperties): Unit = {
+    logger.info("Initializing song queue")
     songQueue = projectProperties.getString("env") match {
-      case Some("test") => new InMemorySongQueue()
-      case Some(_)      =>
+      case Some("local") => new InMemorySongQueue()
+      case Some(_)       =>
         new SQSSongQueue(createSqsClient(projectProperties), metricsCollector)
-      case None         => new InMemorySongQueue()
+      case None          => new InMemorySongQueue()
     }
+  }
 
   private def initConnectionDataStore(
       projectProperties: ProjectProperties
-  ): Unit =
+  ): Unit = {
+    logger.info("Initializing connection data store")
     connectionDataStore = projectProperties.getString("env") match {
-      case Some("test") => new InMemoryConnectionDataStore()
-      case Some(_)      =>
+      case Some("local") => new InMemoryConnectionDataStore()
+      case Some(_)       =>
         new DynamoDbConnectionDataStore(createDynamoDbClient(projectProperties))
-      case None         => new InMemoryConnectionDataStore()
+      case None          => new InMemoryConnectionDataStore()
     }
+  }
 
-  private def initTwitchOauthTokenManagerFactory(
+  private def initTwitchSocketFactory(
       projectProperties: ProjectProperties
-  ): Unit = {}
-
-  private def createTwitchSocketFactory(
-      projectProperties: ProjectProperties
-  ): TwitchSocketFactory = {
+  ): Unit = {
     val clientId         = projectProperties.get("client.id")
     val clientSecret     = projectProperties.get("client.secret")
     val twitchRefreshUri = projectProperties.get("twitch.refresh.uri")
     val logListener      = new LoggingWebSocketListener()
-    null // TODO: fix me
+
+    twitchSocketFactory = new TwitchSocketFactory(
+        clientId,
+        clientSecret,
+        twitchRefreshUri,
+        TwitchOauthTokenManagerFactory,
+        connectionDataStore,
+        songQueue,
+        metricsCollector,
+        Seq(logListener)
+    )
   }
 
-  private def setLocalStackUrlIfPresent[
+  /**
+   * The problem is that in order to properly interact with Localstack, we need
+   * to set the URL to the specified localstack URL
+   * @param builder the AWS client builder object
+   * @param key the key to search for in the properties object
+   * @param projectProperties enumerates all of the application and system properties for this
+   * @tparam Builder the Builder type
+   * @tparam Type the AWS Service
+   * @tparam T The specific AWS Service Builder type
+   * @return the builder that was passed in, with either an endpoint
+   *         configuration or region configuration
+   */
+  private def setLocalStackUrlIfPresentElseRegion[
       Builder <: T,
       Type,
       T <: AwsSyncClientBuilder[Builder, Type]
   ](builder: T, key: String, projectProperties: ProjectProperties): T = {
-    projectProperties.getString(key).foreach { url =>
-      val endpointConfiguration = new EndpointConfiguration(url, region)
-      builder.setEndpointConfiguration(endpointConfiguration)
+    projectProperties.getString(key) match {
+      case Some(url) =>
+        val endpointConfiguration = new EndpointConfiguration(url, region)
+        builder.setEndpointConfiguration(endpointConfiguration)
+      case None      => builder.setRegion(region)
     }
 
     builder

@@ -22,6 +22,12 @@ repositories {
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
 
+// old article that still works: https://chrismarks.wordpress.com/2013/07/31/compiling-a-mixed-scala-project-with-gradle/
+// without setting this, Gradle will attempt to compile the Java code before the Scala code. Everything outside of
+// the actual integration tests that use Localstack should be written in Scala, so this becomes an issue.
+sourceSets.test.scala.srcDir "src/test/java"
+sourceSets.test.java.srcDirs = []
+
 dependencies {
     implementation 'org.scala-lang:scala-library:2.12.8'
 
