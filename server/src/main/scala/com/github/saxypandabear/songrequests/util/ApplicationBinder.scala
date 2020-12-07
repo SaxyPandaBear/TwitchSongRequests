@@ -5,7 +5,7 @@ import org.glassfish.jersey.internal.inject.AbstractBinder
 import scala.collection.mutable
 
 /**
- * Bin
+ * Binder class that is used for dependency injection
  */
 class ApplicationBinder extends AbstractBinder {
   val implementationsToContracts =
