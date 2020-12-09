@@ -1,5 +1,8 @@
 package com.github.saxypandabear.songrequests.util
 
+import java.io.{BufferedInputStream, FileInputStream}
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path}
 import java.util.Properties
 
 import scala.collection.JavaConverters._
@@ -9,7 +12,7 @@ import scala.collection.mutable
  * Stores configuration and properties, and provides does the necessary
  * casting in order to fetch strongly typed primitive configuration values.
  */
-class ProjectProperties {
+class ProjectProperties extends Iterable[(String, String)] {
   private val internalMap = mutable.HashMap[String, String]()
 
   /**
@@ -30,7 +33,7 @@ class ProjectProperties {
    *
    * @return the size of the internal map
    */
-  def size: Int = internalMap.size
+  override def size: Int = internalMap.size
 
   /**
    * Exposes the set of keys that are defined in the properties object.
@@ -89,6 +92,33 @@ class ProjectProperties {
   }
 
   /**
+   * A convenience builder method to load a file at a given Path
+   * @param resourcePath
+   * @return
+   */
+  def withResourceAtPath(resourcePath: Path): ProjectProperties = {
+    if (
+        Files.exists(resourcePath) && Files.isReadable(resourcePath) && !Files
+          .isDirectory(resourcePath)
+    ) {
+      val properties                       = new Properties()
+      var inputStream: BufferedInputStream = null
+      try {
+        inputStream = new BufferedInputStream(
+            new FileInputStream(resourcePath.toAbsolutePath.toString)
+        )
+        properties.load(inputStream)
+      } finally if (inputStream != null) {
+        inputStream.close()
+      }
+      if (properties.size() > 0) {
+        internalMap ++= properties.asScala
+      }
+    }
+    this
+  }
+
+  /**
    * A convenience builder method to inject System properties, like application
    * properties passed in via the command line:
    * `java Foo -Dbar=Baz`
@@ -102,9 +132,8 @@ class ProjectProperties {
   }
 
   /**
-   * A "raw" get method. This method is provided in place of a potential
-   * `getString()` method because that would be redundant. This does not
-   * perform any checks to ensure that the key exists in the map.
+   * A "raw" get method. This does not perform any checks to ensure that the
+   * key exists in the map.
    *
    * Note: This is the only `get` function that does not wrap the output in
    *       an Option.
@@ -117,6 +146,15 @@ class ProjectProperties {
     internalMap(key)
 
   /**
+   * Get a string value from the map, given the input key. This is equivalent
+   * to just calling get() from the internal map.
+   *
+   * @param key key to use in order to fetch data from the map
+   * @return Some(value) if the key exists in the map, else None
+   */
+  def getString(key: String): Option[String] = internalMap.get(key)
+
+  /**
    * Get a boolean value from the map, given the input key. This should throw
    * an exception when the value this tries to parse is not able to be parsed
    * into a boolean value.
@@ -124,10 +162,40 @@ class ProjectProperties {
    * @param key key to use in order to fetch data from the map
    * @return Some(value) if the key exists in the map, and the raw value
    *         can be interpreted as a boolean, else None
-   * @throws IllegalArgumentException when the input is not able to be parsed as a boolean
+   * @throws IllegalArgumentException when the input can not parse into a boolean
    */
   def getBoolean(key: String): Option[Boolean] =
-    internalMap.get(key).map(v => v.toBoolean)
+    internalMap.get(key).map(_.toBoolean)
+
+  /**
+   * Get an integer value from the map, given the input key. This should throw
+   * an exception when the value this tries to parse is not able to be parsed
+   * into an integer value.
+   *
+   * @param key key to use in order to fetch data from the map
+   * @return Some(value) if the key exists in the map, and the raw value can be
+   *         interpreted as an integer, else None
+   * @throws IllegalArgumentException when the input can not parse into an integer
+   */
+  def getInteger(key: String): Option[Int] = internalMap.get(key).map(_.toInt)
+
+  override def iterator: Iterator[(String, String)] =
+    internalMap.iterator
+
+  /**
+   * Write the contents of the properties into a properties file.
+   * @param fileNamePrefix prefix for the file that will be written out to disk
+   * @return the Path to the temporary file
+   */
+  def toTemporaryFile(fileNamePrefix: String): Path = {
+    val path =
+      Files.createTempFile(fileNamePrefix, ".properties").toAbsolutePath
+    internalMap.synchronized {
+      val lines = internalMap.map { case (k, v) => s"$k = $v" }
+      Files.write(path, lines.asJava, StandardCharsets.UTF_8)
+    }
+    path
+  }
 
   /**
    * Convenience method that checks whether the internal map contains the input

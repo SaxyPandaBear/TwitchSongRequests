@@ -1,7 +1,8 @@
 package com.github.saxypandabear.songrequests.metric
 
 import java.util.Date
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.{ExecutorService, TimeUnit}
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.amazonaws.services.cloudwatch.model.{
@@ -26,13 +27,28 @@ class CloudWatchMetricCollector(
     client: AmazonCloudWatch,
     executorService: ExecutorService
 ) {
+  private val running = new AtomicBoolean(true)
+
+  def isRunning: Boolean = running.get()
 
   def emitCountMetric(
       name: String,
       value: Double,
       tags: Map[String, String] = Map.empty
   ): Unit =
-    executorService.submit(new EmitMetricTask(client, name, value, tags))
+    if (isRunning) {
+      executorService.submit(new EmitMetricTask(client, name, value, tags))
+    }
+
+  def stop(): Unit =
+    running.synchronized {
+      if (running.get) {
+        running.getAndSet(false)
+        executorService.shutdown()
+        executorService.awaitTermination(5000, TimeUnit.MILLISECONDS)
+        client.shutdown()
+      }
+    }
 }
 
 class EmitMetricTask(

@@ -1,4 +1,6 @@
 package com.github.saxypandabear.songrequests.ddb
+import java.util.concurrent.atomic.AtomicBoolean
+
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model._
 import com.github.saxypandabear.songrequests.ddb.model.Connection
@@ -9,7 +11,8 @@ import scala.collection.JavaConverters._
 class DynamoDbConnectionDataStore(dynamoDb: AmazonDynamoDB)
     extends ConnectionDataStore
     with LazyLogging {
-  val TABLE_NAME = "connections"
+  val TABLE_NAME      = "connections"
+  private val running = new AtomicBoolean(true)
 
   init()
 
@@ -118,7 +121,13 @@ class DynamoDbConnectionDataStore(dynamoDb: AmazonDynamoDB)
   }
 
   override def stop(): Unit =
-    dynamoDb.shutdown()
+    running.synchronized {
+      if (running.get()) {
+        running.getAndSet(false)
+        logger.info("Shutting down DynamoDB client")
+        dynamoDb.shutdown()
+      }
+    }
 
   private def init(): Unit = {
     logger.info("Initializing connection data store")

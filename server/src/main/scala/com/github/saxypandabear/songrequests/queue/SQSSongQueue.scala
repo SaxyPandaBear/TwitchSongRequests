@@ -1,5 +1,7 @@
 package com.github.saxypandabear.songrequests.queue
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.{
   MessageAttributeValue,
@@ -18,6 +20,7 @@ class SQSSongQueue(sqs: AmazonSQS, metricsCollector: CloudWatchMetricCollector)
   val METRIC_SEND_SUCCEEDED = "song-requests-succeeded"
   val METRIC_SEND_FAILED    = "song-requests-failed"
 
+  private val running          = new AtomicBoolean(true)
   private var queueUrl: String = _
 
   init()
@@ -65,10 +68,14 @@ class SQSSongQueue(sqs: AmazonSQS, metricsCollector: CloudWatchMetricCollector)
   }
 
   // don't shutdown the metrics collector since it's a shared instance.
-  override def stop(): Unit = {
-    logger.info("Shutting down SQS client")
-    sqs.shutdown()
-  }
+  override def stop(): Unit =
+    running.synchronized {
+      if (running.get) {
+        running.getAndSet(false)
+        logger.info("Shutting down SQS client")
+        sqs.shutdown()
+      }
+    }
 
   override def getQueueUrl: String = queueUrl
 

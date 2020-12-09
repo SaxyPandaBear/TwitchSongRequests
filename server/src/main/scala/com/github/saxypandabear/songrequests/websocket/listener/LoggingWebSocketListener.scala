@@ -35,7 +35,19 @@ class LoggingWebSocketListener extends WebSocketListener with LazyLogging {
       session: Session,
       error: Throwable
   ): Unit =
-    logger.info(
-        s"Error event happened for $channelId on ${session.getRemoteAddress.getHostName}: Cause: ${error.getMessage}"
-    )
+    if (session == null) {
+      logger.warn("Session is null for {}", channelId)
+      logger.error("Error event happened for {}", channelId, error)
+    } else if (session.getRemoteAddress == null) {
+      logger.warn("Session remote address is null {}", channelId)
+      logger.error("Error event happened for {}", channelId, error)
+    } else {
+
+      logger.info(
+          "Error event happened for {} on {}",
+          channelId,
+          session.getRemoteAddress.getHostName,
+          error
+      )
+    }
 }
