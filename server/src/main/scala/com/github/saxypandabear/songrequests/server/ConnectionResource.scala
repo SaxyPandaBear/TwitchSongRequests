@@ -1,6 +1,6 @@
 package com.github.saxypandabear.songrequests.server
 
-import com.github.saxypandabear.songrequests.server.model.Channel
+import com.github.saxypandabear.songrequests.server.model.{Channel, Health}
 import com.github.saxypandabear.songrequests.websocket.TwitchSocketFactory
 import com.github.saxypandabear.songrequests.websocket.orchestrator.ConnectionOrchestrator
 import javax.inject.Inject
@@ -25,8 +25,12 @@ class ConnectionResource {
   @GET
   @Path("/ping")
   @Produces(Array(MediaType.APPLICATION_JSON))
-  def ping(): String =
-    "pong"
+  def ping(): String = "pong"
+
+  @GET
+  @Path("health")
+  @Produces(Array(MediaType.APPLICATION_JSON))
+  def healthCheck(): Health = Health(!orchestrator.atCapacity)
 
   @POST
   @Path("/connect")
@@ -48,19 +52,15 @@ class ConnectionResource {
   @PUT
   @Path("/disconnect/{channel}")
   @Consumes(Array(MediaType.APPLICATION_JSON))
-  def disconnect(@PathParam("channel") channel: String): Response = {
-    var success = true
-    try orchestrator.disconnect(channel)
-    catch {
-      case _: Exception => success = false
-    }
-    if (success) {
+  def disconnect(@PathParam("channel") channel: String): Response =
+    try {
+      orchestrator.disconnect(channel)
       Response.noContent().build()
-    } else {
-      Response
-        .status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(s"Did not successfully disconnect $channel")
-        .build()
+    } catch {
+      case e: Exception =>
+        Response
+          .status(Response.Status.INTERNAL_SERVER_ERROR)
+          .entity(s"Did not successfully disconnect $channel: ${e.getMessage}")
+          .build()
     }
-  }
 }

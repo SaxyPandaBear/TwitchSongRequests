@@ -10,6 +10,7 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.saxypandabear.songrequests.ddb.model.Connection;
 import com.github.saxypandabear.songrequests.server.model.Channel;
+import com.github.saxypandabear.songrequests.server.model.Health;
 import com.github.saxypandabear.songrequests.util.JsonUtil;
 import com.github.saxypandabear.songrequests.util.ProjectProperties;
 import com.github.saxypandabear.songrequests.websocket.lib.WebSocketTestingUtil$;
@@ -86,6 +87,9 @@ public class ConnectionApiIntegrationTest {
         properties.setValue("twitch.port", Integer.toString(socketPort));
         tempPropertiesFilePath = properties.toTemporaryFile("integration-test");
         Main.main(new String[]{tempPropertiesFilePath.toString()});
+
+        // if the service fails to report health, should fail fast.
+        assertServiceIsHealthy();
     }
 
     @After
@@ -107,9 +111,15 @@ public class ConnectionApiIntegrationTest {
     }
 
     @Test
+    public void healthCheckShouldReportHealthyWhileOrchestratorCanAcceptConnections() throws JsonProcessingException {
+        assertServiceIsHealthy();
+    }
+
+    @Test
     public void connectResponse() throws JsonProcessingException {
         String id = putNewConnection();
         successfullyConnect(id);
+        assertServiceIsHealthy();
     }
 
     @Test
@@ -118,11 +128,36 @@ public class ConnectionApiIntegrationTest {
 
         // first, need to connect to the server
         successfullyConnect(id);
+        assertServiceIsHealthy();
+
 
         // after confirming that we are connected, disconnect from the server.
         successfullyDisconnect(id);
+        assertServiceIsHealthy();
     }
 
+    /**
+     * Check to make sure that the server reports that it is healthy.
+     *
+     * @throws JsonProcessingException if the response cannot be parsed into a Health object
+     */
+    private void assertServiceIsHealthy() throws JsonProcessingException {
+        String response = RestAssured
+                .get(String.format("http://localhost:%d/api/health", apiPort))
+                .then()
+                .extract()
+                .body()
+                .asString();
+        Health serverHealth = JsonUtil.objectMapper().readValue(response, Health.class);
+        assertTrue(serverHealth.healthy());
+    }
+
+    /**
+     * Attempt to start a connection to the service
+     *
+     * @param channelId Channel ID for something that is assumed to already exist in the database
+     * @throws JsonProcessingException if the channel object cannot be parsed into valid JSON
+     */
     private void successfullyConnect(String channelId) throws JsonProcessingException {
         Channel channel = Channel.apply(channelId);
         String response = RestAssured
@@ -147,7 +182,20 @@ public class ConnectionApiIntegrationTest {
         );
     }
 
+    /**
+     * Attempt to disconnect a channel from the service
+     *
+     * @param channelId Channel ID that is assumed to currently be connected,
+     *                  and already exists in the connection database
+     */
     private void successfullyDisconnect(String channelId) {
+        // first, need to make sure that this channel ID is reported as
+        // connected in the orchestrator
+        assertTrue(
+                "ID should currently exist in the orchestrator",
+                Main.orchestrator().connectionsToClients().exists(tuple -> tuple._2.contains(channelId))
+        );
+
         RestAssured
                 .given()
                 .contentType(ContentType.JSON)
@@ -166,6 +214,12 @@ public class ConnectionApiIntegrationTest {
         );
     }
 
+    /**
+     * Read the configured template JSON file that represents a Connection
+     * object and use it as a template for creating new Connection objects.
+     *
+     * @return the parsed Connection object from the template file
+     */
     private static Connection readTemplateConnectionObject() {
         try {
             return JsonUtil
