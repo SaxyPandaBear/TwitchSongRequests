@@ -115,7 +115,7 @@ class RoundRobinConnectionOrchestrator(
               socket.disconnect()
               // update internal state
               sockets -= socket
-              isAtCapacity.getAndSet(canOrchestratorAcceptNewConnection)
+              isAtCapacity.getAndSet(!canOrchestratorAcceptNewConnection)
             }
         }
       }
