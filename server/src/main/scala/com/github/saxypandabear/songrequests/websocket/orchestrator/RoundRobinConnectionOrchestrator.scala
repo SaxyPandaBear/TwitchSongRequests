@@ -102,23 +102,18 @@ class RoundRobinConnectionOrchestrator(
    * do not exist in the orchestrator (drop them)
    * @param channelId Twitch Channel ID to stop listening on
    */
-  override def disconnect(channelId: String): Unit =
+  override def disconnect(channelId: String): Unit = {
     indexedWebSocketConnections.values
       .map(_._2)
-      .find(sockets => sockets.map(_.channelId).contains(channelId))
-      .map { sockets =>
-        sockets.synchronized {
-          // disconnect from the WebSocketClient
-          sockets
-            .find(_.channelId == channelId)
-            .map { socket =>
-              socket.disconnect()
-              // update internal state
-              sockets -= socket
-              isAtCapacity.getAndSet(!canOrchestratorAcceptNewConnection)
-            }
+      .filter(socket => socket.map(_.channelId).contains(channelId))
+      .foreach { sockets =>
+        sockets.find(_.channelId == channelId).foreach { socket =>
+          socket.disconnect()
+          sockets -= socket
         }
       }
+    isAtCapacity.getAndSet(!canOrchestratorAcceptNewConnection)
+  }
 
   // TODO: implement me
   /**
@@ -179,9 +174,9 @@ class RoundRobinConnectionOrchestrator(
       }
 
   private def canOrchestratorAcceptNewConnection: Boolean =
-    indexedWebSocketConnections.values.foldLeft(true) {
+    indexedWebSocketConnections.values.foldLeft(false) {
       case (canAccept, (_, sockets)) =>
-        canAccept && sockets.size < maxAllowedConnectionsPerClient
+        canAccept || sockets.size < maxAllowedConnectionsPerClient
     }
 
   private def initInternalMap(
