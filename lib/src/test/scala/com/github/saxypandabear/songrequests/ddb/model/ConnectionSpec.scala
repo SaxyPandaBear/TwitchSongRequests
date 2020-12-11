@@ -1,6 +1,6 @@
 package com.github.saxypandabear.songrequests.ddb.model
 
-import com.github.saxypandabear.songrequests.lib.UnitSpec
+import lib.UnitSpec
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
 import org.scalatest.BeforeAndAfterEach
 

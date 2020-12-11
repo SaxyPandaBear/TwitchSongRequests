@@ -1,5 +1,6 @@
 apply plugin: 'scalaStyle'
 apply plugin: 'scala'
+apply plugin: 'java-library'
 
 buildscript {
     repositories {
@@ -29,6 +30,7 @@ sourceSets.test.scala.srcDir "src/test/java"
 sourceSets.test.java.srcDirs = []
 
 dependencies {
+    implementation project(':lib')
     implementation 'org.scala-lang:scala-library:2.12.8'
 
     // Logging
@@ -81,6 +83,7 @@ dependencies {
 
     // Need scala-xml at test runtime
     testRuntimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.1.1'
+    testImplementation(testFixtures(project(':lib')))
 }
 
 test {

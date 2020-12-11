@@ -1,4 +1,4 @@
-package com.github.saxypandabear.songrequests.lib
+package lib
 
 import org.scalatest.BeforeAndAfterEach
 
