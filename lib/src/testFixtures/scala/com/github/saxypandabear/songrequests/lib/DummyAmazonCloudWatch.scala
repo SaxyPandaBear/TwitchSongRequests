@@ -1,4 +1,4 @@
-package lib
+package com.github.saxypandabear.songrequests.lib
 
 import com.amazonaws.regions.Region
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch

@@ -1,6 +1,5 @@
 apply plugin: 'scalaStyle'
 apply plugin: 'scala'
-apply plugin: 'java'
 apply plugin: 'java-library'
 apply plugin: 'java-test-fixtures'
 
@@ -33,6 +32,7 @@ sourceSets.test.java.srcDirs = []
 
 dependencies {
     implementation 'org.scala-lang:scala-library:2.12.8'
+    testFixturesImplementation 'org.scala-lang:scala-library:2.12.8'
 
     // Logging
     implementation 'ch.qos.logback:logback-classic:1.2.3'
@@ -59,8 +59,8 @@ dependencies {
 
     // WebSocket stuff
     implementation 'org.eclipse.jetty.websocket:websocket-client:9.4.27.v20200227'
-    testImplementation 'org.eclipse.jetty.websocket:websocket-server:9.4.27.v20200227'
-    testImplementation 'org.eclipse.jetty.websocket:websocket-servlet:9.4.27.v20200227'
+    implementation 'org.eclipse.jetty.websocket:websocket-server:9.4.27.v20200227'
+    implementation 'org.eclipse.jetty.websocket:websocket-servlet:9.4.27.v20200227'
 
     // Dependencies for dealing with JSON
     implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'
@@ -68,20 +68,26 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.11.2'
 
     // Testing
-    testImplementation 'org.scalatestplus:mockito-3-4_2.12:3.2.2.0'
-    testImplementation 'io.rest-assured:rest-assured:4.3.1'
-    testImplementation('io.rest-assured:scala-support:4.3.1') {
+    implementation 'org.scalatestplus:mockito-3-4_2.12:3.2.2.0'
+    implementation 'io.rest-assured:rest-assured:4.3.1'
+    implementation('io.rest-assured:scala-support:4.3.1') {
         exclude group: 'org.scala-lang', module: 'scala-library' // this pulls in scala 2.13 which clashes
     }
     testImplementation('junit:junit:4.12') {
         exclude group: 'org.hamcrest', module: 'hamcrest-core'
     }
+    testFixturesImplementation('junit:junit:4.12') {
+        exclude group: 'org.hamcrest', module: 'hamcrest-core'
+    }
     testImplementation 'org.scalatest:scalatest_2.12:3.0.5'
+    testFixturesImplementation 'org.scalatest:scalatest_2.12:3.0.5'
     testImplementation 'org.mockito:mockito-scala_2.12:1.16.0'
     testImplementation 'cloud.localstack:localstack-utils:0.2.5'
 
     // Need scala-xml at test runtime
+    runtimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.1.1'
     testRuntimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.1.1'
+    testFixturesRuntimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.1.1'
 }
 
 test {
