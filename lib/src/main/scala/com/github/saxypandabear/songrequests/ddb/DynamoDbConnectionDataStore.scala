@@ -1,9 +1,9 @@
 package com.github.saxypandabear.songrequests.ddb
 import java.util.concurrent.atomic.AtomicBoolean
-
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model._
 import com.github.saxypandabear.songrequests.ddb.model.Connection
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.JavaConverters._
@@ -24,7 +24,7 @@ class DynamoDbConnectionDataStore(dynamoDb: AmazonDynamoDB)
    * @return a POJO that represents the connection document
    * @throws ResourceNotFoundException when the channelId does not exist in the data store
    */
-  override def getConnectionDetailsById(channelId: String): Connection = {
+  override def getConnectionDetailsById(channelId: ChannelId): Connection = {
     val request = new GetItemRequest()
       .withTableName(TABLE_NAME)
       .withConsistentRead(true)
@@ -44,7 +44,7 @@ class DynamoDbConnectionDataStore(dynamoDb: AmazonDynamoDB)
    * @param newStatus status value to persist
    */
   override def updateConnectionStatus(
-      channelId: String,
+      channelId: ChannelId,
       newStatus: String
   ): Unit = {
     val updateValues = Map(":c" -> new AttributeValue().withS(newStatus))
@@ -78,7 +78,7 @@ class DynamoDbConnectionDataStore(dynamoDb: AmazonDynamoDB)
    * @throws ResourceNotFoundException when the channelId does not exist in the data store
    */
   override def updateTwitchOAuthToken(
-      channelId: String,
+      channelId: ChannelId,
       accessToken: String
   ): Unit = {
     val connection   = getConnectionDetailsById(channelId)
@@ -111,7 +111,7 @@ class DynamoDbConnectionDataStore(dynamoDb: AmazonDynamoDB)
    * @param channelId the Twitch channel ID
    * @return true if the channel ID exists, false otherwise
    */
-  override def hasConnectionDetails(channelId: String): Boolean = {
+  override def hasConnectionDetails(channelId: ChannelId): Boolean = {
     val request = new GetItemRequest()
       .withTableName(TABLE_NAME)
       .withConsistentRead(true)
@@ -162,7 +162,8 @@ class DynamoDbConnectionDataStore(dynamoDb: AmazonDynamoDB)
     }
   }
 
-  private def getHashKey(channelId: String): Map[String, AttributeValue] = Map(
-      "channelId" -> new AttributeValue().withS(channelId)
-  )
+  private def getHashKey(channelId: ChannelId): Map[String, AttributeValue] =
+    Map(
+        "channelId" -> new AttributeValue().withS(channelId)
+    )
 }

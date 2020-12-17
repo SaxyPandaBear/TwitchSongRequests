@@ -1,6 +1,8 @@
 package com.github.saxypandabear.songrequests.server.model
 
-case class Channel(channelId: String) {
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
+
+case class Channel(channelId: ChannelId) {
   def this() {
     this("")
   }

@@ -1,5 +1,6 @@
 package com.github.saxypandabear.songrequests.websocket.listener
 
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import org.eclipse.jetty.websocket.api.Session
 
 /**
@@ -7,13 +8,21 @@ import org.eclipse.jetty.websocket.api.Session
  * ID because that helps to associate events to the specific channel it is listening on
  */
 trait WebSocketListener {
-  def onConnectEvent(channelId: String, session: Session): Unit
+  def onConnectEvent(channelId: ChannelId, session: Session): Unit
   def onCloseEvent(
-      channelId: String,
+      channelId: ChannelId,
       session: Session,
       statusCode: Int,
       reason: String
   ): Unit
-  def onMessageEvent(channelId: String, session: Session, message: String): Unit
-  def onErrorEvent(channelId: String, session: Session, error: Throwable): Unit
+  def onMessageEvent(
+      channelId: ChannelId,
+      session: Session,
+      message: String
+  ): Unit
+  def onErrorEvent(
+      channelId: ChannelId,
+      session: Session,
+      error: Throwable
+  ): Unit
 }

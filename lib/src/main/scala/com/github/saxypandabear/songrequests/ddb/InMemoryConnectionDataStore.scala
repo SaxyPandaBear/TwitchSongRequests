@@ -1,6 +1,7 @@
 package com.github.saxypandabear.songrequests.ddb
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException
 import com.github.saxypandabear.songrequests.ddb.model.Connection
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 
 import scala.collection.concurrent.TrieMap
 
@@ -15,7 +16,7 @@ class InMemoryConnectionDataStore extends ConnectionDataStore {
    * @return a POJO that represents the connection document
    * @throws ResourceNotFoundException when the channelId does not exist in the data store
    */
-  override def getConnectionDetailsById(channelId: String): Connection =
+  override def getConnectionDetailsById(channelId: ChannelId): Connection =
     idsToConnections.synchronized {
       idsToConnections.getOrElse(
           channelId,
@@ -31,7 +32,7 @@ class InMemoryConnectionDataStore extends ConnectionDataStore {
    * @param newStatus status value to persist
    */
   override def updateConnectionStatus(
-      channelId: String,
+      channelId: ChannelId,
       newStatus: String
   ): Unit =
     idsToConnections.synchronized {
@@ -50,7 +51,7 @@ class InMemoryConnectionDataStore extends ConnectionDataStore {
    * @throws ResourceNotFoundException when the channelId does not exist in the data store
    */
   override def updateTwitchOAuthToken(
-      channelId: String,
+      channelId: ChannelId,
       accessToken: String
   ): Unit =
     idsToConnections.synchronized {
@@ -64,7 +65,7 @@ class InMemoryConnectionDataStore extends ConnectionDataStore {
    * @param channelId the Twitch channel ID
    * @return true if the channel ID exists, false otherwise
    */
-  override def hasConnectionDetails(channelId: String): Boolean =
+  override def hasConnectionDetails(channelId: ChannelId): Boolean =
     idsToConnections.keys.exists(_ == channelId)
 
   // don't need to do anything
@@ -76,7 +77,7 @@ class InMemoryConnectionDataStore extends ConnectionDataStore {
    * @param channelId  the Twitch channel ID
    * @param connection connection object
    */
-  def putConnectionDetails(channelId: String, connection: Connection): Unit =
+  def putConnectionDetails(channelId: ChannelId, connection: Connection): Unit =
     idsToConnections.synchronized {
       idsToConnections.putIfAbsent(channelId, connection)
     }

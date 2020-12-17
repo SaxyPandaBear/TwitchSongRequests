@@ -2,6 +2,7 @@ package com.github.saxypandabear.songrequests.oauth.factory
 
 import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
 import com.github.saxypandabear.songrequests.oauth.OauthTokenManager
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 
 trait OauthTokenManagerFactory {
 
@@ -18,7 +19,7 @@ trait OauthTokenManagerFactory {
   def create(
       clientId: String,
       clientSecret: String,
-      channelId: String,
+      channelId: ChannelId,
       refreshUri: String,
       connectionDataStore: ConnectionDataStore
   ): OauthTokenManager

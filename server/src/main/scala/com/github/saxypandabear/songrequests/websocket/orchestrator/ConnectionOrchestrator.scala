@@ -1,5 +1,6 @@
 package com.github.saxypandabear.songrequests.websocket.orchestrator
 
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import com.github.saxypandabear.songrequests.websocket.TwitchSocket
 import org.eclipse.jetty.websocket.client.WebSocketClient
 
@@ -21,20 +22,23 @@ trait ConnectionOrchestrator {
    * @param socketFactory Function that takes a channel ID and returns a
    *                      TwitchSocket
    */
-  def connect(channelId: String, socketFactory: String => TwitchSocket): Boolean
+  def connect(
+      channelId: ChannelId,
+      socketFactory: String => TwitchSocket
+  ): Boolean
 
   /**
    * Stop listening to a connection to Twitch
    * @param channelId Twitch Channel ID to stop listening on
    */
-  def disconnect(channelId: String): Unit
+  def disconnect(channelId: ChannelId): Unit
 
   /**
    * Reconnect/bounce the WebSocket client to force it to reconnect, because
    * a connector received a reconnect event from the server
    * @param channelId Twitch Channel ID that received a reconnect event
    */
-  def reconnect(channelId: String): Unit
+  def reconnect(channelId: ChannelId): Unit
 
   /**
    * When an orchestrator is at capacity, the system should know to start
@@ -49,7 +53,7 @@ trait ConnectionOrchestrator {
    * @return a Map of WebSocket clients to the channel IDs that are connected
    *         to them
    */
-  def connectionsToClients: Map[WebSocketClient, Set[String]]
+  def connectionsToClients: Map[WebSocketClient, Set[ChannelId]]
 
   /**
    * Stop connections and perform any necessary clean-up

@@ -1,13 +1,13 @@
 package com.github.saxypandabear.songrequests.queue
 
 import java.util.concurrent.atomic.AtomicBoolean
-
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.{
   MessageAttributeValue,
   SendMessageRequest
 }
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.JavaConverters._
@@ -25,7 +25,7 @@ class SQSSongQueue(sqs: AmazonSQS, metricsCollector: CloudWatchMetricCollector)
 
   init()
 
-  override def queue(channelId: String, spotifyUri: String): Unit = {
+  override def queue(channelId: ChannelId, spotifyUri: String): Unit = {
     logger.info(
         "Received request from channel {} to queue Spotify song {}",
         channelId,
