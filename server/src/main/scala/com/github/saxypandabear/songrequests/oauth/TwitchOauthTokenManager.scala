@@ -1,6 +1,7 @@
 package com.github.saxypandabear.songrequests.oauth
 
 import com.github.saxypandabear.songrequests.ddb.ConnectionDataStore
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import com.github.saxypandabear.songrequests.util.{HttpUtil, JsonUtil}
 
 /**
@@ -15,7 +16,7 @@ import com.github.saxypandabear.songrequests.util.{HttpUtil, JsonUtil}
 class TwitchOauthTokenManager(
     clientId: String,
     clientSecret: String,
-    channelId: String,
+    channelId: ChannelId,
     refreshUri: String,
     refreshToken: String,
     dataStore: ConnectionDataStore

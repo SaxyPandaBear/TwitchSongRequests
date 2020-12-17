@@ -1,11 +1,11 @@
 package com.github.saxypandabear.songrequests.websocket
 
 import java.util.{Timer, TimerTask}
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
 import com.github.saxypandabear.songrequests.oauth.OauthTokenManager
 import com.github.saxypandabear.songrequests.queue.SongQueue
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
 import com.github.saxypandabear.songrequests.websocket.listener.WebSocketListener
 import com.typesafe.scalalogging.LazyLogging
@@ -23,7 +23,7 @@ import org.eclipse.jetty.websocket.api.annotations._
  */
 @WebSocket
 class TwitchSocket(
-    val channelId: String,
+    val channelId: ChannelId,
     oauthTokenManager: OauthTokenManager,
     songQueue: SongQueue,
     metrics: CloudWatchMetricCollector,

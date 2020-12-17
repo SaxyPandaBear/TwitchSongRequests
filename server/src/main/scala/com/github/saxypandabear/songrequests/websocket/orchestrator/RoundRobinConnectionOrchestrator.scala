@@ -2,8 +2,8 @@ package com.github.saxypandabear.songrequests.websocket.orchestrator
 
 import java.net.URI
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
-
 import com.github.saxypandabear.songrequests.metric.CloudWatchMetricCollector
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import com.github.saxypandabear.songrequests.websocket.TwitchSocket
 import org.eclipse.jetty.websocket.client.WebSocketClient
 
@@ -65,7 +65,7 @@ class RoundRobinConnectionOrchestrator(
    * @return true if successfully connected, false if at capacity
    */
   override def connect(
-      channelId: String,
+      channelId: ChannelId,
       socketFactory: String => TwitchSocket
   ): Boolean =
     if (!atCapacity) {
@@ -102,7 +102,7 @@ class RoundRobinConnectionOrchestrator(
    * do not exist in the orchestrator (drop them)
    * @param channelId Twitch Channel ID to stop listening on
    */
-  override def disconnect(channelId: String): Unit = {
+  override def disconnect(channelId: ChannelId): Unit = {
     indexedWebSocketConnections.values
       .map(_._2)
       .filter(socket => socket.map(_.channelId).contains(channelId))
@@ -121,7 +121,7 @@ class RoundRobinConnectionOrchestrator(
    * a connector received a reconnect event from the server
    * @param channelId Twitch Channel ID that received a reconnect event
    */
-  override def reconnect(channelId: String): Unit = {}
+  override def reconnect(channelId: ChannelId): Unit = {}
 
   /**
    * When an orchestrator is at capacity, the system should know to start
@@ -143,7 +143,7 @@ class RoundRobinConnectionOrchestrator(
    * @return a Map of WebSocket clients to the channel IDs that are connected
    *         to them
    */
-  override def connectionsToClients: Map[WebSocketClient, Set[String]] =
+  override def connectionsToClients: Map[WebSocketClient, Set[ChannelId]] =
     indexedWebSocketConnections
       .readOnlySnapshot()
       .values

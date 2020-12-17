@@ -1,4 +1,5 @@
 package com.github.saxypandabear.songrequests.websocket.listener
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.jetty.websocket.api.Session
 
@@ -6,13 +7,13 @@ import org.eclipse.jetty.websocket.api.Session
  * Just do some logging when events come in
  */
 class LoggingWebSocketListener extends WebSocketListener with LazyLogging {
-  override def onConnectEvent(channelId: String, session: Session): Unit =
+  override def onConnectEvent(channelId: ChannelId, session: Session): Unit =
     logger.info(
         s"Connect event happened for $channelId on ${session.getRemoteAddress.getHostName}"
     )
 
   override def onCloseEvent(
-      channelId: String,
+      channelId: ChannelId,
       session: Session,
       statusCode: Int,
       reason: String
@@ -22,7 +23,7 @@ class LoggingWebSocketListener extends WebSocketListener with LazyLogging {
     )
 
   override def onMessageEvent(
-      channelId: String,
+      channelId: ChannelId,
       session: Session,
       message: String
   ): Unit =
@@ -31,7 +32,7 @@ class LoggingWebSocketListener extends WebSocketListener with LazyLogging {
     )
 
   override def onErrorEvent(
-      channelId: String,
+      channelId: ChannelId,
       session: Session,
       error: Throwable
   ): Unit =

@@ -1,13 +1,14 @@
 package com.github.saxypandabear.songrequests.ddb.model
 
-import java.util
-
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.saxypandabear.songrequests.json.ConnectionDeserializer
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
+
+import java.util
 
 /**
  * Should look something like this:
@@ -56,7 +57,7 @@ import com.github.saxypandabear.songrequests.util.JsonUtil.objectMapper
  */
 @JsonDeserialize(using = classOf[ConnectionDeserializer])
 case class Connection(
-    @JsonProperty("channelId") channelId: String,
+    @JsonProperty("channelId") channelId: ChannelId,
     @JsonProperty("connectionStatus") connectionStatus: String,
     @JsonProperty("expires") expires: Long,
     @JsonProperty("type") `type`: String,

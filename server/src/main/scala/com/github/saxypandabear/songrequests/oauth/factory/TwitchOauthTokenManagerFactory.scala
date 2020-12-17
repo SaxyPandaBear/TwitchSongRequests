@@ -4,6 +4,7 @@ import com.github.saxypandabear.songrequests.oauth.{
   OauthTokenManager,
   TwitchOauthTokenManager
 }
+import com.github.saxypandabear.songrequests.types.Types.ChannelId
 
 object TwitchOauthTokenManagerFactory extends OauthTokenManagerFactory {
 
@@ -20,7 +21,7 @@ object TwitchOauthTokenManagerFactory extends OauthTokenManagerFactory {
   override def create(
       clientId: String,
       clientSecret: String,
-      channelId: String,
+      channelId: ChannelId,
       refreshUri: String,
       connectionDataStore: ConnectionDataStore
   ): OauthTokenManager = {
