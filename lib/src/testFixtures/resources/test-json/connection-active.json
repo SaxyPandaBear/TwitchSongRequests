@@ -1,0 +1,17 @@
+{
+  "connectionStatus": {
+    "S": "active"
+  },
+  "expires": {
+    "N": "9876543210"
+  },
+  "type": {
+    "S": "connect-session"
+  },
+  "channelId": {
+    "S": "1234567890"
+  },
+  "sess": {
+    "S": "{\"cookie\":{\"originalMaxAge\":null,\"expires\":null,\"httpOnly\":true,\"path\":\"/\"},\"accessKeys\":{\"twitchToken\":{\"access_token\":\"abc123\",\"refresh_token\":\"foo\",\"token_type\":\"bearer\"},\"spotifyToken\":{\"access_token\":\"321cba\",\"refresh_token\":\"bar\",\"token_type\":\"Bearer\",\"scope\":\"user-modify-playback-state user-read-playback-state\"}}}"
+  }
+}
