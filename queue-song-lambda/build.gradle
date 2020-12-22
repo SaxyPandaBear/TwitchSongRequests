@@ -25,8 +25,15 @@ repositories {
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
 
+// old article that still works: https://chrismarks.wordpress.com/2013/07/31/compiling-a-mixed-scala-project-with-gradle/
+// without setting this, Gradle will attempt to compile the Java code before the Scala code. Everything outside of
+// the actual integration tests that use Localstack should be written in Scala, so this becomes an issue.
+sourceSets.test.scala.srcDir "src/test/java"
+sourceSets.test.java.srcDirs = []
+
 // In this section you declare the dependencies for your production and test code
 dependencies {
+    implementation project(':lib')
     implementation 'org.scala-lang:scala-library:2.12.8'
 
     // Logging
@@ -51,6 +58,7 @@ dependencies {
         exclude group: 'org.hamcrest', module: 'hamcrest-core'
     }
     testImplementation 'org.scalatest:scalatest_2.12:3.0.5'
+    testImplementation 'cloud.localstack:localstack-utils:0.2.5'
 
     // Need scala-xml at test runtime
     testRuntimeOnly 'org.scala-lang.modules:scala-xml_2.12:1.1.1'

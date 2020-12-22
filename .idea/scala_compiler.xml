@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="Gradle 1" modules="queue-song-lambda.main,queue-song-lambda.test,twitch-song-requests-server.lib.main,twitch-song-requests-server.lib.test,twitch-song-requests-server.main,twitch-song-requests-server.server.main,twitch-song-requests-server.server.test,twitch-song-requests-server.test">
+    <profile name="Gradle 1" modules="queue-song-lambda.main,queue-song-lambda.test,twitch-song-requests-server.lib.main,twitch-song-requests-server.lib.test,twitch-song-requests-server.main,twitch-song-requests-server.passive-disconnect-lambda.main,twitch-song-requests-server.passive-disconnect-lambda.test,twitch-song-requests-server.queue-song-lambda.main,twitch-song-requests-server.queue-song-lambda.test,twitch-song-requests-server.server.main,twitch-song-requests-server.server.test,twitch-song-requests-server.test">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <parameters>
