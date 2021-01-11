@@ -1,6 +1,7 @@
-package com.github.saxypandabear.songrequests
+package com.github.saxypandabear.songrequests.disconnect
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import com.amazonaws.services.sqs.model.SendMessageRequest
 import com.github.saxypandabear.songrequests.ddb.{
   DynamoDbConnectionDataStore,
   InMemoryConnectionDataStore
@@ -48,7 +49,7 @@ class Main extends LazyLogging {
    * @param event consumed SQS event
    * @return The result of the execution, as a string message.
    */
-  def checkConnectionStatus(event: SQSEvent): String =
+  def checkConnections(event: SQSEvent): String =
     try {
       // TODO: try to parallelize this. I don't anticipate that this will
       //       actually help because it is most likely that the SQS event
@@ -123,5 +124,7 @@ class Main extends LazyLogging {
    * again if the channel is currently active.
    * @param message SQS message that was consumed
    */
-  private def putMessageBackIntoQueue(message: SQSEvent.SQSMessage): Unit = {}
+  private def putMessageBackIntoQueue(message: SQSEvent.SQSMessage): Unit = {
+    val request = new SendMessageRequest().withQueueUrl()
+  }
 }
