@@ -1,2 +1,2 @@
-rootProject.name = 'twitch-song-requests-server'
-include 'server', 'lib'
+rootProject.name = 'twitch-song-requests'
+include 'server', 'lib', 'queue-song-lambda'
