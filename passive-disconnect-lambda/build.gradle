@@ -53,6 +53,8 @@ dependencies {
     compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudwatch', version: '1.11.870'
     // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-lambda
     compile group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: '1.11.870'
+    // https://mvnrepository.com/artifact/com.amazonaws/aws-lambda-java-events
+    compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '3.6.0'
 
     // Dependencies for dealing with JSON
     implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'
