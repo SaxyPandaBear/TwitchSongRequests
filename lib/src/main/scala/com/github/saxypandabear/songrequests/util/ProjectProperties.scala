@@ -1,10 +1,14 @@
 package com.github.saxypandabear.songrequests.util
 
+import com.github.saxypandabear.songrequests.util.ProjectProperties.{
+  KEYS_FOR_SENSITIVE_DATA,
+  MASKED_VALUE
+}
+
 import java.io.{BufferedInputStream, FileInputStream}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.Properties
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
@@ -179,11 +183,9 @@ class ProjectProperties extends Iterable[(String, String)] {
    */
   def getInteger(key: String): Option[Int] = internalMap.get(key).map(_.toInt)
 
-  override def iterator: Iterator[(String, String)] =
-    internalMap.iterator
-
   /**
    * Write the contents of the properties into a properties file.
+   * This should only be used in tests.
    * @param fileNamePrefix prefix for the file that will be written out to disk
    * @return the Path to the temporary file
    */
@@ -205,4 +207,45 @@ class ProjectProperties extends Iterable[(String, String)] {
    */
   def has(key: String): Boolean =
     key != null && key.trim.nonEmpty && internalMap.contains(key)
+
+  /**
+   * Hook to iterate over the keys and values for the properties
+   * stored in the internal map. Note that this does not scrub/mask
+   * sensitive data
+   * @return
+   */
+  override def iterator: Iterator[(String, String)] =
+    internalMap.iterator
+
+  // this does a very primitive check to scrub out potentially
+  // sensitive data from the properties before they can get
+  // logged.
+  override def toString(): String = {
+    val masked  = internalMap.map { case (k, v) =>
+      if (
+          KEYS_FOR_SENSITIVE_DATA
+            .exists(flagged => k.toUpperCase().contains(flagged))
+      ) {
+        // mask the value
+        (k, MASKED_VALUE)
+      } else {
+        (k, v)
+      }
+    }
+    val builder = new mutable.StringBuilder()
+    builder.append("Project Properties:\n")
+    for ((k, v) <- masked)
+      builder.append(s"\t$k : $v\n")
+
+    builder.toString()
+  }
+}
+
+object ProjectProperties {
+  // Things that are in properties that should be masked,
+  // so that we don't leak secrets in logs. Note that these
+  // are all uppercase values, so the keys that are compared
+  // need to be transformed to be uppercase as well
+  val KEYS_FOR_SENSITIVE_DATA = Seq("KEY", "SECRET", "PASSWORD", "PWD")
+  val MASKED_VALUE            = "******"
 }
