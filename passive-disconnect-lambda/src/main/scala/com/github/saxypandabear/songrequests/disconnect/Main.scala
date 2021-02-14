@@ -125,6 +125,6 @@ class Main extends LazyLogging {
    * @param message SQS message that was consumed
    */
   private def putMessageBackIntoQueue(message: SQSEvent.SQSMessage): Unit = {
-    val request = new SendMessageRequest().withQueueUrl()
+    val request = new SendMessageRequest().withQueueUrl("")
   }
 }

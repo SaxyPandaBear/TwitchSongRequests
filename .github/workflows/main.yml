@@ -25,17 +25,10 @@ jobs:
         run: ng build --aot --prod
         shell: bash
         working-directory: ./ui
-      - name: Build shared Scala libs
-        run: gradle clean assemble testClasses
-        working-directory: ./lib
-      - name: Build server
-        run: gradle clean assemble testClasses
+      - name: Build Scala projects
+        run: gradle assemble
         shell: bash
-        working-directory: ./server
-      - name: Build song queue lambda
-        run: gradle clean assemble testClasses
-        shell: bash
-        working-directory: ./queue-song-lambda
+        working-directory: ./
   test:
     runs-on: ubuntu-latest
     services:
@@ -70,19 +63,7 @@ jobs:
         run: |
           echo "AWS_ACCESS_KEY_ID=abc123" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=foobar" >> $GITHUB_ENV
-      - name: Test shared libs
+      - name: Test Scala projects
         run: gradle test
         shell: bash
-        working-directory: ./lib
-      - name: Test server
-        run: gradle test
-        shell: bash
-        working-directory: ./server
-      - name: Test song queue lambda
-        run: gradle test
-        shell: bash
-        working-directory: ./queue-song-lambda
-      - name: Test passive disconnect lambda
-        run: gradle test
-        shell: bash
-        working-directory: ./passive-disconnect-lambda
+        working-directory: ./
