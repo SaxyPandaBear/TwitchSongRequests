@@ -1,2 +1,9 @@
-rootProject.name = 'twitch-song-requests'
-include 'server', 'lib', 'queue-song-lambda'
+/*
+// To declare projects as part of a multi-project build use the 'include' method
+include 'shared'
+include 'api'
+include 'services:webservice'
+*/
+
+rootProject.name = 'twitch-song-requests-server'
+include 'server', 'lib', 'queue-song-lambda', 'passive-disconnect-lambda'

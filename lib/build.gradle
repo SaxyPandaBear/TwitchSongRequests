@@ -45,6 +45,8 @@ dependencies {
     compile group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.870'
     // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-dynamodb
     compile group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.870'
+    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-sqs
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.870'
     // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-cloudwatch
     compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudwatch', version: '1.11.870'
 
