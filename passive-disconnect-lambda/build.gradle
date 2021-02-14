@@ -56,6 +56,11 @@ dependencies {
     // https://mvnrepository.com/artifact/com.amazonaws/aws-lambda-java-events
     compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '3.6.0'
 
+    // Dependencies for dealing with JSON
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+    implementation 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.11.2'
+
     testImplementation('junit:junit:4.12') {
         exclude group: 'org.hamcrest', module: 'hamcrest-core'
     }
