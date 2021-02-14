@@ -25,6 +25,9 @@ jobs:
         run: ng build --aot --prod
         shell: bash
         working-directory: ./ui
+      - name: Build shared Scala libs
+        run: gradle clean assemble testClasses
+        working-directory: ./lib
       - name: Build server
         run: gradle clean assemble testClasses
         shell: bash
@@ -67,6 +70,10 @@ jobs:
         run: |
           echo "AWS_ACCESS_KEY_ID=abc123" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=foobar" >> $GITHUB_ENV
+      - name: Test shared libs
+        run: gradle test
+        shell: bash
+        working-directory: ./lib
       - name: Test server
         run: gradle test
         shell: bash
@@ -75,3 +82,7 @@ jobs:
         run: gradle test
         shell: bash
         working-directory: ./queue-song-lambda
+      - name: Test passive disconnect lambda
+        run: gradle test
+        shell: bash
+        working-directory: ./passive-disconnect-lambda
