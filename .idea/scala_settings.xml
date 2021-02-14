@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaProjectSettings">
+    <option name="intInjectionMapping">
+      <map>
+        <entry key="xml" value="XML" />
+      </map>
+    </option>
+    <!-- this is used to suppress IntelliJ IDE errors in ScalaTest https://youtrack.jetbrains.com/issue/SCL-16025 -->
+    <option name="showAmbiguousImplicitArguments" value="false" />
+  </component>
+</project>

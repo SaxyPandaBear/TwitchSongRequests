@@ -106,4 +106,26 @@ class ProjectPropertiesSpec extends UnitSpec {
     properties.has("") should be(false)
     properties.has(null) should be(false)
   }
+
+  "The string representation of ProjectProperties" should "scrub out sensitive data" in {
+    val projectProperties = new ProjectProperties()
+    val offendingKey1     = "some_key"
+    val offendingKey2     = "Some_mixed_CASE_SeCrEt"
+    projectProperties.setValue(offendingKey1, "super-secret-value")
+    projectProperties.setValue("foo", "bar")
+    projectProperties.setValue(offendingKey2, "another super secret value")
+
+    projectProperties.toString().startsWith("Project Properties:\n") should be(
+        true
+    )
+    // don't need to compare against the whole string, because the iteration
+    // of the hash map is not guaranteed to maintain any consistent ordering
+    projectProperties
+      .toString()
+      .contains(s"\t$offendingKey1 : ${ProjectProperties.MASKED_VALUE}\n")
+    projectProperties
+      .toString()
+      .contains(s"\t$offendingKey2 : ${ProjectProperties.MASKED_VALUE}\n")
+    projectProperties.toString().contains("\tfoo: bar\n")
+  }
 }

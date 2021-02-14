@@ -54,9 +54,7 @@ object Main extends StrictLogging {
       properties.withResourceAtPath(Paths.get(filePath))
     }
 
-    logger.info("Starting server with following properties:")
-    for ((k, v) <- properties)
-      logger.info("{} = {}", k, v)
+    logger.info(properties.toString())
 
     region = properties.getString("region").getOrElse("us-east-1")
 
