@@ -1,6 +1,11 @@
-# Welcome to your CDK TypeScript project!
+# Getting Started
+1. `npm install -g aws-cdk`
+2. `npm install -g typescript`
+3. `npm install @aws-cdk/core @aws-cdk/aws-lambda @aws-cdk/aws-lambda-event-sources @aws-cdk/aws-sqs`
+4. Ensure that `npm run build` and `cdk synth` run successfully
+5. If adding new dependencies to the CDK stack first run `npm install <DEPENDENCY>`
+6. Always test changes by making sure `npm run build` and `cdk synth` run successfully and verifying that the output matches what is expected
 
-This is a blank project for TypeScript development with CDK.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
