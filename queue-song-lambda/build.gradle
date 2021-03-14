@@ -63,6 +63,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
     implementation 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.11.2'
 
+    testImplementation(testFixtures(project(':lib')))
     testImplementation('junit:junit:4.12') {
         exclude group: 'org.hamcrest', module: 'hamcrest-core'
     }

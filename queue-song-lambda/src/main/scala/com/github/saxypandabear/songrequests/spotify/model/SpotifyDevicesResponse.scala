@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.{
   JsonIgnoreProperties,
   JsonProperty
 }
+import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 
 // https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-a-users-available-devices
 case class SpotifyDevicesResponse(devices: Seq[Device]) {
@@ -15,11 +17,12 @@ case class SpotifyDevicesResponse(devices: Seq[Device]) {
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonNaming(classOf[SnakeCaseStrategy])
 case class Device(
     id: String,
-    @JsonProperty("is_active") isActive: Boolean,
-    @JsonProperty("is_private_session") isPrivateSession: Boolean,
-    @JsonProperty("is_restricted") isRestricted: Boolean,
+    isActive: Boolean,
+    isPrivateSession: Boolean,
+    isRestricted: Boolean,
     name: String,
     @JsonProperty("type") deviceType: String,
     volumePercent: Int

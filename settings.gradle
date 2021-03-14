@@ -5,5 +5,5 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'twitch-song-requests-server'
+rootProject.name = 'twitch-song-requests'
 include 'server', 'lib', 'queue-song-lambda', 'passive-disconnect-lambda'
