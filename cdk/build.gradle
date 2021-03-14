@@ -1,0 +1,12 @@
+plugins {
+    id "com.github.node-gradle.node" version "3.0.1"
+}
+
+task assemble(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'build']
+}
+
+task test(type: DefaultTask) {
+    logger.log(LogLevel.WARN, 'No test task for CDK currently')
+}

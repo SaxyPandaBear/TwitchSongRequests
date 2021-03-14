@@ -1,0 +1,11 @@
+node_modules
+
+# CDK generated files
+bin/*.js
+bin/*.d.ts
+lib/*.js
+lib/*.d.ts
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out

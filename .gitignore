@@ -64,12 +64,3 @@ out/
 
 # Ignore Gradle build output directory
 build
-
-
-#CDK generated files
-cdk/*.js
-cdk/*.d.ts
-
-# CDK asset staging directory
-cdk/.cdk.staging
-cdk/cdk.out

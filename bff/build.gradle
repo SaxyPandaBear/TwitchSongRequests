@@ -1,0 +1,11 @@
+plugins {
+    id "com.github.node-gradle.node" version "3.0.1"
+}
+
+task assemble(type: DefaultTask) {
+    logger.log(LogLevel.WARN, 'No build task for BFF currently')
+}
+
+task test(type: DefaultTask) {
+    logger.log(LogLevel.WARN, 'No test task for BFF currently')
+}
