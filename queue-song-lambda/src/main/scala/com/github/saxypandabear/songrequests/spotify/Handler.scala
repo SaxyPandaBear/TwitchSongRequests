@@ -6,7 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.saxypandabear.songrequests.ddb.model.Connection
 import com.github.saxypandabear.songrequests.ddb.{
   ConnectionDataStore,
-  DynamoDbConnectionDataStore
+  DynamoDbConnectionDataStore,
+  InMemoryConnectionDataStore
+}
+import com.github.saxypandabear.songrequests.spotify.model.{
+  Device,
+  SpotifyDevicesResponse
 }
 import com.github.saxypandabear.songrequests.util.{
   AwsUtil,
@@ -15,12 +20,10 @@ import com.github.saxypandabear.songrequests.util.{
 }
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.http.client.HttpClient
-import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.{HttpGet, HttpPost}
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClientBuilder
 
-import java.nio.charset.StandardCharsets
 import scala.collection.JavaConverters._
 
 /**
@@ -32,7 +35,8 @@ class Handler extends LazyLogging {
   val KEY_CHANNEL_ID    = "channelId"
   val KEY_CLIENT_ID     = "SpotifyClientId"
   val KEY_CLIENT_SECRET = "SpotifyClientSecret"
-  val KEY_BASE_URL      = "spotify.url"
+  val KEY_API_URL       = "spotify.api.url"
+  val KEY_OAUTH_URL     = "spotify.oauth.url"
 
   val projectProperties: ProjectProperties     =
     new ProjectProperties().withSystemProperties()
@@ -42,9 +46,10 @@ class Handler extends LazyLogging {
       projectProperties
   )
 
-  val clientId: String     = projectProperties.get(KEY_CLIENT_ID)
-  val clientSecret: String = projectProperties.get(KEY_CLIENT_SECRET)
-  val baseUrl: String      = projectProperties.get(KEY_BASE_URL)
+  val clientId: String          = projectProperties.get(KEY_CLIENT_ID)
+  val clientSecret: String      = projectProperties.get(KEY_CLIENT_SECRET)
+  val oauthUrl: String          = projectProperties.get(KEY_OAUTH_URL)
+  val spotifyApiBaseUrl: String = projectProperties.get(KEY_API_URL)
 
   def handle(event: SQSEvent): String = {
     for (record <- event.getRecords.asScala) {
@@ -76,12 +81,61 @@ class Handler extends LazyLogging {
       } else {
         val sessionObj   = objectMapper.readTree(connectionDetails.sess)
         val spotifyToken = sessionObj.get("accessKeys").get("spotifyToken")
-        val accessToken  = spotifyToken.get("access_token")
-        val refreshToken = spotifyToken.get("refresh_token")
+        val accessToken  = spotifyToken.get("access_token").asText()
+        val refreshToken = spotifyToken.get("refresh_token").asText()
 
+        val deviceOpt = findActiveComputer(accessToken)
+        deviceOpt.map(d => queueSong(accessToken, d, spotifyUri))
       }
     }
     ""
+  }
+
+  /**
+   * Call the Spotify API for this user, listing all of the available devices.
+   * Filter the response down to just the active, computer devices, and return
+   * the first device that matches the criteria.
+   * Ref: https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-a-users-available-devices
+   * @param accessToken User's Spotify OAuth 2.0 access token
+   * @return optionally, the first found active computer device for this user.
+   */
+  def findActiveComputer(accessToken: String): Option[Device] = {
+    val uriBuilder = new URIBuilder(s"$spotifyApiBaseUrl/devices")
+    val request    = new HttpGet(uriBuilder.build())
+    request.setHeader("Accept", "application/json")
+    request.setHeader("Authorization", s"Bearer $accessToken")
+
+    val httpResponse = httpClient.execute(request)
+    if (httpResponse.getStatusLine.getStatusCode != 200) {
+      logger.error("Something blew up") // TODO: make this more robust
+      None
+    }
+    val responseObj  = objectMapper.readValue(
+        httpResponse.getEntity.getContent,
+        classOf[SpotifyDevicesResponse]
+    )
+    responseObj.devices.find(d => d.isActive && d.deviceType == "Computer")
+  }
+
+  /**
+   * Given a device, queue a Spotify URI to that device
+   * for the given user.
+   * Ref: https://developer.spotify.com/documentation/web-api/reference/#endpoint-add-to-queue
+   * @param accessToken User OAuth access token
+   * @param device      Found active computer device to queue song on
+   * @param spotifyUri  Input Spotify URI
+   */
+  def queueSong(
+      accessToken: String,
+      device: Device,
+      spotifyUri: String
+  ): Unit = {
+    val request = new HttpPost(
+        s"$spotifyApiBaseUrl/queue?uri=$spotifyUri&device_id=${device.id}"
+    )
+    request.setHeader("Accept", "application/json")
+    request.setHeader("Authorization", s"Bearer $accessToken")
+    httpClient.execute(request)
   }
 
   /**
@@ -99,26 +153,32 @@ class Handler extends LazyLogging {
       clientSecret: String,
       refreshToken: String
   ): Unit = {
-    // TODO: figure this out
     val requestBody = Map[String, String](
         "grant_type"    -> "refresh_token",
         "refresh_token" -> refreshToken,
         "client_id"     -> clientId,
         "client_secret" -> clientSecret
     )
-    val uriBuilder  = new URIBuilder(baseUrl)
+    val uriBuilder  = new URIBuilder(oauthUrl)
     for ((k, v) <- requestBody)
       uriBuilder.addParameter(k, v)
-    val request = new HttpPost(uriBuilder.build())
-    request.setHeader("Accept", "application.json")
+    val request  = new HttpPost(uriBuilder.build())
+    request.setHeader("Accept", "application/json")
     request.setHeader("Content-Type", "application/x-www-form-urlencoded")
-    httpClient.execute(request)
+    // TODO: this will become obsolete (hopefully) by migrating to secrets
+    // manager to handle OAuth tokens, so leaving this unfinished for now.
+    val response = httpClient.execute(request)
   }
 
   private def initDataStore(
       projectProperties: ProjectProperties
   ): ConnectionDataStore =
-    new DynamoDbConnectionDataStore(
-        AwsUtil.createDynamoDbClient(projectProperties)
-    )
+    projectProperties.getString("env") match {
+      case Some("local") => new InMemoryConnectionDataStore()
+      case Some(_)       =>
+        new DynamoDbConnectionDataStore(
+            AwsUtil.createDynamoDbClient(projectProperties)
+        )
+      case None          => new InMemoryConnectionDataStore()
+    }
 }
