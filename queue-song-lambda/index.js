@@ -155,7 +155,7 @@ exports.handler = async function (event, context, callback) {
             console.error(error);
             throw error;
         }
-        // if the connection statis is not active, then we shouldn't try to queue
+        // if the connection status is not active, then we shouldn't try to queue
         // a song.
         if (connectionDetails.Item.connectionStatus.S !== 'active') {
             console.info('User is not connected to the main service. Dropping record');
