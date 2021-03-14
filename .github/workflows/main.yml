@@ -21,11 +21,10 @@ jobs:
       - name: Install Angular CLI
         run: sudo npm install -g @angular/cli
         working-directory: ./ui
-      - name: Build UI
-        run: ng build --aot --prod
-        shell: bash
-        working-directory: ./ui
-      - name: Build Scala projects
+      - name: Install CDK
+        run: sudo npm install -g aws-cdk typescript
+        working-directory: ./cdk
+      - name: Build projects
         run: gradle assemble
         shell: bash
         working-directory: ./
@@ -45,10 +44,9 @@ jobs:
         working-directory: ./ui
       - name: Install Angular CLI
         run: sudo npm install -g @angular/cli
-      - name: Test UI
-        run: ng test
-        shell: bash
-        working-directory: ./ui
+      - name: Install CDK
+        run: sudo npm install -g aws-cdk typescript
+        working-directory: ./cdk
       - name: Set up JDK 8
         uses: actions/setup-java@v1
         with:
@@ -63,7 +61,7 @@ jobs:
         run: |
           echo "AWS_ACCESS_KEY_ID=abc123" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=foobar" >> $GITHUB_ENV
-      - name: Test Scala projects
+      - name: Test projects
         run: gradle test
         shell: bash
         working-directory: ./
