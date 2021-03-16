@@ -1,8 +1,9 @@
-# TwitchSongRequestsUi
+TwitchSongRequestsUi
+====================
 
-TwitchSongRequestsUI
+> [wiki](https://github.com/SaxyPandaBear/TwitchSongRequests/wiki/Architecture-Deep-Dive#web-application)
 
-# Providing Client ID for Spotify and Twitch
+### Providing Client ID for Spotify and Twitch
 
 This application relies upon OAuth to grant access to user resources.
 To run this application locally, you must supply the following properties:
@@ -30,3 +31,18 @@ These clients ids must match the client ids found in the server-side configurati
 For local development purposes, we have the `local` environment we can use, located at:
 `./src/environment/environment.local.ts`. We can then use `ng build --local` which will
 replace the environment object with the contents we have in our local config file.
+
+### Build
+`gradle assemble`
+
+> Can build the UI with the underlying Angular CLI command: `ng build --aot --local`
+
+### Test
+`gradle test`
+
+> Can run the UI tests with the underlying Angular CLI command: `ng test`
+
+### Run locally
+`gradle run`
+
+> Can run the UI with the underlying Angular CLI command: `ng serve -o --aot --local`

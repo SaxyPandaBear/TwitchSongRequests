@@ -12,12 +12,14 @@ task assemble(type: NpxTask) {
     outputs.dir('dist')
 }
 
+task run(type: NpxTask) {
+    dependsOn(assemble)
+    command = 'ng'
+    args = ['serve', '-o']
+}
+
 task test(type: NpxTask) {
     dependsOn npmInstall
     command = 'ng'
     args = ['test']
-    inputs.files('package.json', 'package-lock.json', 'angular.json', 'tsconfig.json', 'tsconfig.app.json')
-    inputs.dir('src')
-    inputs.dir(fileTree("node_modules").exclude(".cache"))
-    outputs.dir('dist')
 }
