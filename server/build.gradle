@@ -1,6 +1,7 @@
 apply plugin: 'scalaStyle'
 apply plugin: 'scala'
 apply plugin: 'java-library'
+apply plugin: 'application'
 
 buildscript {
     repositories {
@@ -91,4 +92,8 @@ test {
         events "passed", "skipped", "failed", "standardOut", "standardError"
         showStandardStreams = true
     }
+}
+
+application {
+    mainClassName('com.github.saxypandabear.songrequests.server.Main')
 }

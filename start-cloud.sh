@@ -54,7 +54,6 @@ echo "Localstack is running!"
 export LOCALSTACK="localstack" # the value isn't that important. we just want the key to exist
 
 # after confirming the health of localstack, we can create our services
-# TODO: write cloudformation template to create SQS queue, lambda, dynamo
 # Before we can create the lambda, we need to put our function code that we zipped up ourselves into S3,
 # so that the template can read that zip from S3 to create the lambda.
 
@@ -75,7 +74,7 @@ aws cloudformation create-stack \
     --region us-east-1 \
     --endpoint-url http://localhost:4566 \
     --stack-name song-requests \
-    --template-body file://services.json \
+    --template-body file://cdk/cdk.out/CdkStack.template.json \
     --parameters ParameterKey=TwitchClientId,ParameterValue="$TWITCH_CLIENT_ID" \
                  ParameterKey=TwitchClientSecret,ParameterValue="$TWITCH_CLIENT_SECRET" \
                  ParameterKey=SpotifyClientId,ParameterValue="$SPOTIFY_CLIENT_ID" \

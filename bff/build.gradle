@@ -2,8 +2,10 @@ plugins {
     id "com.github.node-gradle.node" version "3.0.1"
 }
 
+// there's nothing really to build, other than making sure that the
+// dependencies are installed
 task assemble(type: DefaultTask) {
-    logger.log(LogLevel.WARN, 'No build task for BFF currently')
+    dependsOn npmInstall
 }
 
 task test(type: DefaultTask) {
