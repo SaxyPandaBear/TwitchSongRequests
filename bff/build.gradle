@@ -2,7 +2,9 @@ plugins {
     id "com.github.node-gradle.node" version "3.0.1"
 }
 
-task assemble(type: NpmTask) {
+// there's nothing really to build, other than making sure that the
+// dependencies are installed
+task assemble(type: DefaultTask) {
     dependsOn npmInstall
 }
 
