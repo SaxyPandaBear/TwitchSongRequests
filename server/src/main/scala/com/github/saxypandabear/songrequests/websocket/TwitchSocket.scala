@@ -163,13 +163,13 @@ class TwitchSocket(
     userInput != null && spotifyUriPattern.findFirstIn(userInput.trim).isDefined
 
   /**
-   * Simple check that the reward title is "TwitchSongRequests"
+   * Simple check on the reward title to make sure that it contains the phrase "TwitchSongRequests"
    * @param rewardTitle Title of the channel point redemption
-   * @return true if the title is "TwitchSongRequests", false otherwise
+   * @return true if the title contains "TwitchSongRequests", false otherwise
    */
   private[websocket] def isSongRequest(rewardTitle: String): Boolean =
     rewardTitle != null && rewardTitle
-      .matches(ExpectedRewardTitle)
+      .contains(ExpectedRewardTitle)
 
   override def hashCode(): Int = channelId.hashCode
 

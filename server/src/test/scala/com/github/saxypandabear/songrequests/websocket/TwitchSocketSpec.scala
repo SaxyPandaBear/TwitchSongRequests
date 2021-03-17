@@ -41,18 +41,16 @@ class TwitchSocketSpec extends UnitSpec {
     socket.inputMatchesSpotifyUri("") should be(false)
   }
 
-  "Checking a reward with the title 'TwitchSongRequests'" should "return true" in {
+  "Checking a reward title that contains the phrase 'TwitchSongRequests'" should "return true" in {
     socket.isSongRequest("This is a TwitchSongRequests reward") should be(true)
-    socket.isSongRequest("TwitchSongRequests") should be(true)
   }
 
   "Checking a reward title that does not contain the exact phrase" should "return false" in {
+    socket.isSongRequest("This is a song request reward") should be(false)
+    socket.isSongRequest("TWITCHSONGREQUESTS ALL CAPS") should be(false)
     socket.isSongRequest("This has a song, but is not a request") should be(
         false
     )
-    socket.isSongRequest("twitchsongrequests") should be(false)
-    socket.isSongRequest("This is a song request reward") should be(true)
-    socket.isSongRequest("SONG REQUEST ALL CAPS") should be(true)
     socket.isSongRequest(
         "Song\n request with a line break is invalid"
     ) should be(false)
