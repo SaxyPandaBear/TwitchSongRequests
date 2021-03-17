@@ -31,9 +31,10 @@ class TwitchSocket(
     pingFrequencyMs: Long = 60000
 ) extends LazyLogging {
 
-  private val spotifyUriPattern = "^(spotify:track:(\\w|\\d)+)$".r
-  private val pingTask          = new Timer()
-  private var session: Session  = _
+  private val ExpectedRewardTitle = "TwitchSongRequests"
+  private val spotifyUriPattern   = "^(spotify:track:(\\w|\\d)+)$".r
+  private val pingTask            = new Timer()
+  private var session: Session    = _
 
   /**
    * When we initially connect to the Twitch WebSocket, we should initiate a LISTEN
@@ -162,12 +163,13 @@ class TwitchSocket(
     userInput != null && spotifyUriPattern.findFirstIn(userInput.trim).isDefined
 
   /**
-   * Simple check on the reward title to make sure that it contains the phrase "song request"
+   * Simple check on the reward title to make sure that it contains the phrase "TwitchSongRequests"
    * @param rewardTitle Title of the channel point redemption
-   * @return true if the title contains "song request", false otherwise
+   * @return true if the title contains "TwitchSongRequests", false otherwise
    */
   private[websocket] def isSongRequest(rewardTitle: String): Boolean =
-    rewardTitle != null && rewardTitle.toLowerCase().contains("song request")
+    rewardTitle != null && rewardTitle
+      .contains(ExpectedRewardTitle)
 
   override def hashCode(): Int = channelId.hashCode
 
