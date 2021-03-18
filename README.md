@@ -75,6 +75,9 @@ For the Spotify integration, this project requires privileged access to the
 and access to the `user-read-playback-state` scope in order to read what 
 available players there are, and what song is currently playing.
 
+# Note: The below information is most likely out of date.
+> See this [issue](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/74)
+
 ## Running the server code locally
 
 Here's a quick way to get the server up and running, with the steps explained
