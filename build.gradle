@@ -5,23 +5,13 @@ allprojects {
 /**
  * This task is used to start all of the local infrastructure,
  * in order to test the service locally. It expects localstack
- * to be running
+ * to be running, and that the app credentials are stored in
+ * environment variables
  */
 task runLocalService(type: DefaultTask) {
     subprojects.each { dependsOn("${it.name}:assemble") }
     println('Checking environment variables to ensure credentials are present')
-    if (System.getenv('TWITCH_CLIENT_ID') == null) {
-        throw new RuntimeException('TWITCH_CLIENT_ID not configured in environment')
-    }
-    if (System.getenv('TWITCH_CLIENT_SECRET') == null) {
-        throw new RuntimeException('TWITCH_CLIENT_SECRET not configured in environment')
-    }
-    if (System.getenv('SPOTIFY_CLIENT_ID') == null) {
-        throw new RuntimeException('SPOTIFY_CLIENT_ID not configured in environment')
-    }
-    if (System.getenv('SPOTIFY_CLIENT_SECRET') == null) {
-        throw new RuntimeException('SPOTIFY_CLIENT_SECRET not configured in environment')
-    }
+    validateCredentials(System.getenv())
 
     println('Checking to make sure Localstack is currently running..')
     exec {
@@ -42,4 +32,26 @@ task runLocalService(type: DefaultTask) {
         )
     }
     println('Mapping SQS ARNs to environment variables')
+}
+
+/**
+ * Check the input map (expected to be map of System environment variables),
+ * for the required app credentials.
+ * @param vars A map of environment variable keys to their respective string values
+ * @throws RuntimeException if any of the required keys are missing, or if any of
+ *                          the values are empty
+ */
+static def validateCredentials(Map<String, String> vars) {
+    if (!vars.containsKey('TWITCH_CLIENT_ID') || vars.get('TWITCH_CLIENT_ID', '').length() < 1) {
+        throw new RuntimeException('TWITCH_CLIENT_ID not configured in environment')
+    }
+    if (!vars.containsKey('TWITCH_CLIENT_SECRET') || vars.get('TWITCH_CLIENT_SECRET', '').length() < 1) {
+        throw new RuntimeException('TWITCH_CLIENT_SECRET not configured in environment')
+    }
+    if (!vars.containsKey('SPOTIFY_CLIENT_ID') || vars.get('SPOTIFY_CLIENT_ID', '').length() < 1) {
+        throw new RuntimeException('SPOTIFY_CLIENT_ID not configured in environment')
+    }
+    if (!vars.containsKey('SPOTIFY_CLIENT_SECRET') || vars.get('SPOTIFY_CLIENT_SECRET', '').length() < 1) {
+        throw new RuntimeException('SPOTIFY_CLIENT_SECRET not configured in environment')
+    }
 }
