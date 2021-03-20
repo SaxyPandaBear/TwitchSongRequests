@@ -1,11 +1,13 @@
 # Getting Started
-1. `npm install -g aws-cdk`
-2. `npm install -g typescript`
-3. `npm install @aws-cdk/core @aws-cdk/aws-lambda @aws-cdk/aws-lambda-event-sources @aws-cdk/aws-sqs`
-4. Ensure that `npm run build` and `cdk synth` run successfully
-5. If adding new dependencies to the CDK stack first run `npm install <DEPENDENCY>`
-6. Always test changes by making sure `npm run build` and `cdk synth` run successfully and verifying that the output matches what is expected
+1. Navigate to the cdk directory in terminal
+2. `npm install monocdk`
+3. Run `npm run build` and `cdk synth` to test that everything is setup correctly and test cdk changes
 
+
+# CDK References
+* [AWS CDK API Reference](https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html)
+* [AWS CDK examples using TypeScript](https://github.com/aws-samples/aws-cdk-examples/tree/master/typescript)
+* [AWS intro to CDK](https://docs.aws.amazon.com/cdk/latest/guide/hello_world.html)
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
