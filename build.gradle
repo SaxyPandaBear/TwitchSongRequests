@@ -2,6 +2,44 @@ allprojects {
     apply plugin: 'idea'
 }
 
-tasks.register('start-local') {
-    println('boo')
+/**
+ * This task is used to start all of the local infrastructure,
+ * in order to test the service locally. It expects localstack
+ * to be running
+ */
+task runLocalService(type: DefaultTask) {
+    subprojects.each { dependsOn("${it.name}:assemble") }
+    println('Checking environment variables to ensure credentials are present')
+    if (System.getenv('TWITCH_CLIENT_ID') == null) {
+        throw new RuntimeException('TWITCH_CLIENT_ID not configured in environment')
+    }
+    if (System.getenv('TWITCH_CLIENT_SECRET') == null) {
+        throw new RuntimeException('TWITCH_CLIENT_SECRET not configured in environment')
+    }
+    if (System.getenv('SPOTIFY_CLIENT_ID') == null) {
+        throw new RuntimeException('SPOTIFY_CLIENT_ID not configured in environment')
+    }
+    if (System.getenv('SPOTIFY_CLIENT_SECRET') == null) {
+        throw new RuntimeException('SPOTIFY_CLIENT_SECRET not configured in environment')
+    }
+
+    println('Checking to make sure Localstack is currently running..')
+    exec {
+        commandLine('./healthcheck.sh')
+    }
+    println('Creating local infrastructure from CDK')
+    exec {
+        commandLine('aws', 'cloudformation', 'create-stack',
+                '--region', 'us-east-1',
+                '--endpoint-url', 'http://localhost:4566',
+                '--stack-name', 'song-requests',
+                '--template-body', 'file://cdk/cdk.out/CdkStack.template.json',
+                '--parameters',
+                'ParameterKey=TwitchClientId,ParameterValue="' + System.getenv('TWITCH_CLIENT_ID') + '"',
+                'ParameterKey=TwitchClientSecret,ParameterValue="' + System.getenv('TWITCH_CLIENT_SECRET') + '"',
+                'ParameterKey=SpotifyClientId,ParameterValue="' + System.getenv('SPOTIFY_CLIENT_ID') + '"',
+                'ParameterKey=SpotifyClientSecret,ParameterValue="' + System.getenv('SPOTIFY_CLIENT_SECRET') + '"'
+        )
+    }
+    println('Mapping SQS ARNs to environment variables')
 }
