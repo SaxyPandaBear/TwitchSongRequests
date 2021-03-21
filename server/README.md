@@ -21,10 +21,12 @@ If there is a need to allow for requesting entities that aren't just songs, we c
 look into that in the future.
 
 ### Build
-`gradle assemble`
+Run `gradle :server:assemble` in order to build the module.
+
+Run `gradle :server:scalaDocs` in order to generate ScalaDocs for the module
 
 ### Test
-`gradle test`
+`gradle :server:test`
 
 ### Run locally
 `gradle :server:run --args path/to/local/config/file`

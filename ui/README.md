@@ -28,6 +28,8 @@ These clients ids must match the client ids found in the server-side configurati
 
 ### Developing
 
+> This uses the Angular CLI: `npm install -g @angular/cli`
+
 For local development purposes, we have the `local` environment we can use, located at:
 `./src/environment/environment.local.ts`. We can then use `ng build --local` which will
 replace the environment object with the contents we have in our local config file.

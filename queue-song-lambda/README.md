@@ -54,3 +54,17 @@ in the root of the project, it packages the lambda code, deploys it to lambda, a
 hooks it up to the SQS queue that it needs to read from. Then you can simply just
 post a new SQS message to the queue, and then read through the CloudWatch logs to see
 what happened in the lambda execution.
+
+# TODO - fix the above
+
+### Build
+Run `gradle :queue-song-lambda:assemble` to build the module
+
+Run `gradle :queue-song-lambda:scalaDocs` to generate ScalaDocs for the module
+
+### Testing
+`gradle :queue-song-lambda:test`
+
+### Running locally
+Running this module locally depends on it being deployed to localstack
+as a Lambda. See the root README for how it should be deployed and tested.

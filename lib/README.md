@@ -29,10 +29,12 @@ noticeable in things like Localstack integration tests, since those
 must be written in Java.
 
 ### Build
-`gradle assemble`
+Run `gradle :lib:assemble` to build the module
+
+Run `gradle :lib:scalaDocs` to generate ScalaDocs for the module
 
 ### Test
-`gradle test`
+`gradle :lib:test`
 
 ### Run locally
 Not applicable, since this is a shared library module.
