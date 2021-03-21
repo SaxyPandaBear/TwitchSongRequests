@@ -9,7 +9,7 @@ exit 1
 aws dynamodb put-item \
     --endpoint-url http://localhost:4566 \
     --table-name connections \
-    --item file:///Users/andrew_huynh/Desktop/ddb.json
+    --item file://sandbox/demo-ddb-record.json
 
 # scan table
 aws dynamodb scan \
