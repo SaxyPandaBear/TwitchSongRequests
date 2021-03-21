@@ -7,6 +7,8 @@ task assemble(type: NpmTask) {
     args = ['run', 'build']
 }
 
-task test(type: DefaultTask) {
-    logger.log(LogLevel.WARN, 'No test task for CDK currently')
+task test(type: Task) {
+    doLast {
+        logger.log(LogLevel.WARN, 'No test task for CDK currently')
+    }
 }
