@@ -27,4 +27,4 @@ look into that in the future.
 `gradle test`
 
 ### Run locally
-`gradle run`
+`gradle :server:run --args path/to/local/config/file`

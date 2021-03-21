@@ -284,6 +284,7 @@ npm install
 cd ..
 # 4. Start up localstack (in another shell)
 # START COMMANDS ON DIFFERENT SHELL TERMINAL
+# note: can also execute "pipenv run localstack start"
 pipenv shell
 localstack start # Make sure you have Docker running on your machine before this step
 # END COMMANDS ON DIFFERENT SHELL TERMINAL

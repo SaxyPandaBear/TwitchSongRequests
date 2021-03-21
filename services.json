@@ -52,7 +52,7 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Description": "Lambda function that accepts messages from SQS, in order to queue songs to Spotify",
-                "Handler": "index.handler",
+                "Handler": "com.github.saxypandabear.songrequests.spotify.Handler::handle",
                 "Role": {
                     "Fn::GetAtt": [
                         "LambdaExecutionRole",
@@ -61,9 +61,9 @@
                 },
                 "Code": {
                     "S3Bucket": "twitch-song-requests",
-                    "S3Key": "function.zip"
+                    "S3Key": "queue-song-lambda.zip"
                 },
-                "Runtime": "nodejs12.x",
+                "Runtime": "java8",
                 "MemorySize": 512,
                 "Timeout": 30,
                 "Environment": {

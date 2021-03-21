@@ -64,7 +64,7 @@ aws s3 mb s3://twitch-song-requests --endpoint-url http://localhost:4566 --regio
 # Then, we can package and deploy the lambda function to S3
 echo "Packaging lambda code and writing the zip file to the S3 bucket"
 cd ./queue-song-lambda
-./build.sh && ./deploy.sh
+./deploy.sh
 
 cd ..
 # Now we can use the cloudformation template to create all of our services.
@@ -74,7 +74,7 @@ aws cloudformation create-stack \
     --region us-east-1 \
     --endpoint-url http://localhost:4566 \
     --stack-name song-requests \
-    --template-body file://cdk/cdk.out/CdkStack.template.json \
+    --template-body file://services.json \
     --parameters ParameterKey=TwitchClientId,ParameterValue="$TWITCH_CLIENT_ID" \
                  ParameterKey=TwitchClientSecret,ParameterValue="$TWITCH_CLIENT_SECRET" \
                  ParameterKey=SpotifyClientId,ParameterValue="$SPOTIFY_CLIENT_ID" \
