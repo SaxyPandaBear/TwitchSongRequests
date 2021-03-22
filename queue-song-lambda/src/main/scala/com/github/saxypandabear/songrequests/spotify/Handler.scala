@@ -51,6 +51,12 @@ class Handler extends LazyLogging {
   val oauthUrl: String          = projectProperties.get(KEY_OAUTH_URL)
   val spotifyApiBaseUrl: String = projectProperties.get(KEY_API_URL)
 
+  /**
+   * Main Lambda entry-point that accepts the SQS event message(s) and does
+   * work on them.
+   * @param event SQS event received by Lambda
+   * @return empty string on success
+   */
   def handle(event: SQSEvent): String = {
     for (record <- event.getRecords.asScala) {
       val channelId  =

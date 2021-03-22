@@ -25,7 +25,6 @@ class ConnectionDeserializer
     val connectionStatus = parsed.get("connectionStatus").get("S").asText()
     val expires          = parsed.get("expires").get("N").asLong()
     val connectionType   = parsed.get("type").get("S").asText()
-    // TODO: this might not work
     val session          = parsed.get("sess").get("S").asText()
 
     Connection(channelId, connectionStatus, expires, connectionType, session)
