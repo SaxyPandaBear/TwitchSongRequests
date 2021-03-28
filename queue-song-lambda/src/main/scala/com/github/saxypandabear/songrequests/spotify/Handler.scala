@@ -35,8 +35,8 @@ class Handler extends LazyLogging {
   val KEY_CHANNEL_ID    = "channelId"
   val KEY_CLIENT_ID     = "SpotifyClientId"
   val KEY_CLIENT_SECRET = "SpotifyClientSecret"
-  val KEY_API_URL       = "spotify.api.url"
-  val KEY_OAUTH_URL     = "spotify.oauth.url"
+  val KEY_API_URL       = "SpotifyApiUrl"
+  val KEY_OAUTH_URL     = "SpotifyOauthUrl"
 
   val projectProperties: ProjectProperties     =
     new ProjectProperties().withSystemProperties()
