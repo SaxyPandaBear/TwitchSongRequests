@@ -1,7 +1,6 @@
 package com.github.saxypandabear.songrequests.oauth
 
 import com.github.saxypandabear.songrequests.oauth.TestTokenManager.clientIdsToTokens
-import com.typesafe.scalalogging.LazyLogging
 
 import java.util.UUID
 import scala.collection.mutable
@@ -11,8 +10,7 @@ class TestTokenManager(
     clientSecret: String,
     refreshToken: String,
     uri: String
-) extends OauthTokenManager(clientId, clientSecret, refreshToken, uri)
-    with LazyLogging {
+) extends OauthTokenManager(clientId, clientSecret, refreshToken, uri) {
   var accessToken: String = _
 
   /**
