@@ -73,7 +73,10 @@
                         },
                         "SpotifyClientSecret": {
                             "Ref": "SpotifyClientSecret"
-                        }
+                        },
+                        "SpotifyApiUrl": "https://api.spotify.com/v1/me/player",
+                        "SpotifyOauthUrl": "something",
+                        "env": "localstack"
                     }
                 },
                 "DependsOn": "LambdaExecutionRole"
