@@ -1,7 +1,9 @@
 package com.github.saxypandabear.songrequests.oauth
 
-import java.util.UUID
+import com.github.saxypandabear.songrequests.oauth.TestTokenManager.clientIdsToTokens
+import com.typesafe.scalalogging.LazyLogging
 
+import java.util.UUID
 import scala.collection.mutable
 
 class TestTokenManager(
@@ -9,16 +11,23 @@ class TestTokenManager(
     clientSecret: String,
     refreshToken: String,
     uri: String
-) extends OauthTokenManager(clientId, clientSecret, refreshToken, uri) {
+) extends OauthTokenManager(clientId, clientSecret, refreshToken, uri)
+    with LazyLogging {
   var accessToken: String = _
 
   /**
    * Retrieve an access token
    * @return an OAuth access token
    */
-  override def getAccessToken: String =
-    TestTokenManager.clientIdsToTokens
-      .getOrElseUpdate(clientId, UUID.randomUUID().toString)
+  override def getAccessToken: String = {
+    if (clientIdsToTokens.contains(clientId)) {
+      logger.warn(s"$clientId not currently in the map. Writing it")
+    }
+    val token =
+      clientIdsToTokens.getOrElseUpdate(clientId, UUID.randomUUID().toString)
+    logger.info(s"$clientIdsToTokens")
+    token
+  }
 
   /**
    * Initiate a request to refresh the OAuth token, presumably because
