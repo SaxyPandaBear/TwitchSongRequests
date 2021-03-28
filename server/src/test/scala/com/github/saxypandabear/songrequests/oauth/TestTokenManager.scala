@@ -19,15 +19,8 @@ class TestTokenManager(
    * Retrieve an access token
    * @return an OAuth access token
    */
-  override def getAccessToken: String = {
-    if (clientIdsToTokens.contains(clientId)) {
-      logger.warn(s"$clientId not currently in the map. Writing it")
-    }
-    val token =
-      clientIdsToTokens.getOrElseUpdate(clientId, UUID.randomUUID().toString)
-    logger.info(s"$clientIdsToTokens")
-    token
-  }
+  override def getAccessToken: String =
+    clientIdsToTokens.getOrElseUpdate(clientId, UUID.randomUUID().toString)
 
   /**
    * Initiate a request to refresh the OAuth token, presumably because
