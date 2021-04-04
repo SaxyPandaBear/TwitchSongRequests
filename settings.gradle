@@ -6,7 +6,7 @@ include 'services:webservice'
 */
 
 rootProject.name = 'twitch-song-requests'
-include 'server'
+include 'event-interceptor'
 include 'lib'
 include 'queue-song-lambda'
 include 'stream-activity'
