@@ -75,6 +75,9 @@ For the Spotify integration, this project requires privileged access to the
 and access to the `user-read-playback-state` scope in order to read what 
 available players there are, and what song is currently playing.
 
+# Note: The below information is most likely out of date.
+> See this [issue](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/74)
+
 ## Running the server code locally
 
 Here's a quick way to get the server up and running, with the steps explained
@@ -281,6 +284,7 @@ npm install
 cd ..
 # 4. Start up localstack (in another shell)
 # START COMMANDS ON DIFFERENT SHELL TERMINAL
+# note: can also execute "pipenv run localstack start"
 pipenv shell
 localstack start # Make sure you have Docker running on your machine before this step
 # END COMMANDS ON DIFFERENT SHELL TERMINAL

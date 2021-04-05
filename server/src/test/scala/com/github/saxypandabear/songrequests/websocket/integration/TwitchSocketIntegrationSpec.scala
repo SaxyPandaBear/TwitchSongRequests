@@ -66,6 +66,7 @@ class TwitchSocketIntegrationSpec
     testListener.clear()
     testingSongQueue.clear()
     WebSocketTestingUtil.reset()
+    TestTokenManager.flush()
 
     server = WebSocketTestingUtil.build(port)
     server.start()

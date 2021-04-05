@@ -1,7 +1,8 @@
 package com.github.saxypandabear.songrequests.oauth
 
-import java.util.UUID
+import com.github.saxypandabear.songrequests.oauth.TestTokenManager.clientIdsToTokens
 
+import java.util.UUID
 import scala.collection.mutable
 
 class TestTokenManager(
@@ -17,8 +18,7 @@ class TestTokenManager(
    * @return an OAuth access token
    */
   override def getAccessToken: String =
-    TestTokenManager.clientIdsToTokens
-      .getOrElseUpdate(clientId, UUID.randomUUID().toString)
+    clientIdsToTokens.getOrElseUpdate(clientId, UUID.randomUUID().toString)
 
   /**
    * Initiate a request to refresh the OAuth token, presumably because

@@ -35,8 +35,8 @@ class Handler extends LazyLogging {
   val KEY_CHANNEL_ID    = "channelId"
   val KEY_CLIENT_ID     = "SpotifyClientId"
   val KEY_CLIENT_SECRET = "SpotifyClientSecret"
-  val KEY_API_URL       = "spotify.api.url"
-  val KEY_OAUTH_URL     = "spotify.oauth.url"
+  val KEY_API_URL       = "SpotifyApiUrl"
+  val KEY_OAUTH_URL     = "SpotifyOauthUrl"
 
   val projectProperties: ProjectProperties     =
     new ProjectProperties().withSystemProperties()
@@ -51,6 +51,12 @@ class Handler extends LazyLogging {
   val oauthUrl: String          = projectProperties.get(KEY_OAUTH_URL)
   val spotifyApiBaseUrl: String = projectProperties.get(KEY_API_URL)
 
+  /**
+   * Main Lambda entry-point that accepts the SQS event message(s) and does
+   * work on them.
+   * @param event SQS event received by Lambda
+   * @return empty string on success
+   */
   def handle(event: SQSEvent): String = {
     for (record <- event.getRecords.asScala) {
       val channelId  =

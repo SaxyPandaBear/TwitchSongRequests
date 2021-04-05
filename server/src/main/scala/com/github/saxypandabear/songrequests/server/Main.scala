@@ -27,7 +27,7 @@ import com.typesafe.scalalogging.StrictLogging
 import org.eclipse.jetty.server.Server
 
 import java.net.URI
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 import java.util.concurrent.Executors
 
 /**
@@ -50,8 +50,18 @@ object Main extends StrictLogging {
       .withSystemProperties()
       .withResource("application.properties")
     for (filePath <- args) {
-      logger.info("Loading override configuration from: {}", filePath)
-      properties.withResourceAtPath(Paths.get(filePath))
+      logger.info(
+          "Attempting to load override configuration from: {}",
+          filePath
+      )
+      val path = Paths.get(filePath)
+      if (Files.exists(path)) {
+        properties.withResourceAtPath(path)
+      } else {
+        logger.warn(
+            s"Configuration at path $filePath does not exist. Skipping."
+        )
+      }
     }
 
     logger.info(properties.toString())

@@ -1,9 +1,5 @@
 package com.github.saxypandabear.songrequests.metric
 
-import java.util.Date
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.{ExecutorService, TimeUnit}
-
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.amazonaws.services.cloudwatch.model.{
   Dimension,
@@ -13,6 +9,9 @@ import com.amazonaws.services.cloudwatch.model.{
 }
 import com.typesafe.scalalogging.LazyLogging
 
+import java.util.Date
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.{ExecutorService, TimeUnit}
 import scala.collection.JavaConverters._
 
 /**
@@ -29,8 +28,18 @@ class CloudWatchMetricCollector(
 ) {
   private val running = new AtomicBoolean(true)
 
+  /**
+   * Check if the metric collector is active
+   * @return true if the collector is running, false otherwise
+   */
   def isRunning: Boolean = running.get()
 
+  /**
+   * Emit a metric to CloudWatch.
+   * @param name Name of the CW metric
+   * @param value Numeric value for the metric
+   * @param tags Optional tags to include on the metric. Defaults to an empty Map
+   */
   def emitCountMetric(
       name: String,
       value: Double,
@@ -40,6 +49,9 @@ class CloudWatchMetricCollector(
       executorService.submit(new EmitMetricTask(client, name, value, tags))
     }
 
+  /**
+   * Stop emitting metrics and tear down all of the resources
+   */
   def stop(): Unit =
     running.synchronized {
       if (running.get) {
@@ -51,6 +63,13 @@ class CloudWatchMetricCollector(
     }
 }
 
+/**
+ * Runnable task for asynchronously submitting metrics to CloudWatch
+ * @param client CW client
+ * @param name name of the metric to emit
+ * @param value numeric value for the metric
+ * @param tags key-value pairs to associate with the metric
+ */
 class EmitMetricTask(
     client: AmazonCloudWatch,
     name: String,
@@ -84,6 +103,12 @@ class EmitMetricTask(
     )
   }
 
+  /**
+   * Utility method that transforms the key-value pairs into the required
+   * CloudWatch POJOs
+   * @param tags key-value pairs for the metric
+   * @return list of Dimension objects based on the key-value pairs
+   */
   private def convertMapToDimensions(
       tags: Map[String, String]
   ): Seq[Dimension] =

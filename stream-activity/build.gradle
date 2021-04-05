@@ -77,3 +77,14 @@ test {
         showStandardStreams = true
     }
 }
+
+// https://docs.aws.amazon.com/lambda/latest/dg/java-package.html#java-package-gradle
+task packageZip(type: Zip) {
+    dependsOn clean
+    from compileScala
+    from compileJava
+    from processResources
+    into('lib') {
+        from configurations.runtimeClasspath
+    }
+}
