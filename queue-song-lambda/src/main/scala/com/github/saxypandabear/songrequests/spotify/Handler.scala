@@ -57,7 +57,7 @@ class Handler extends LazyLogging {
    * @param event SQS event received by Lambda
    * @return empty string on success
    */
-  def handle(event: SQSEvent): String = {
+  def handleRequest(event: SQSEvent): String = {
     for (record <- event.getRecords.asScala) {
       val channelId  =
         record.getMessageAttributes.get(KEY_CHANNEL_ID).getStringValue
