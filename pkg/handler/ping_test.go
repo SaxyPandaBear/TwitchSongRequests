@@ -25,4 +25,5 @@ func TestPingHandler(t *testing.T) {
 
 	// Check the status code is what we expect.
 	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "Pong", rr.Body.String())
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 )
 
-type eventSubNotification struct {
+type EventSubNotification struct {
 	Subscription helix.EventSubSubscription `json:"subscription"`
 	Challenge    string                     `json:"challenge"`
 	Event        json.RawMessage            `json:"event"`
@@ -46,7 +46,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 
 	log.Println("verified signature for subscription")
 
-	var vals eventSubNotification
+	var vals EventSubNotification
 	if err = json.NewDecoder(bytes.NewReader(body)).Decode(&vals); err != nil {
 		log.Println("failed to unmarshal request body", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -60,11 +60,11 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	log.Printf("User '%s' submitted '%s' with input '%s'", redeemEvent.UserName, redeemEvent.Reward.ID, redeemEvent.UserInput)
+	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
 	if err = h.publisher.Publish(redeemEvent.UserInput); err != nil {
 		log.Println("failed to publish")
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

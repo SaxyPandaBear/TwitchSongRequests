@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	topicType    = "channel.channel_points_custom_reward_redemption.add"
 	topicVersion = "1"
 	subMethod    = "webhook"
 )
@@ -20,12 +19,16 @@ type SubscribeRequest struct {
 }
 
 type EventSubHandler struct {
-	client *helix.Client
+	client      *helix.Client
+	callbackUrl string
+	secret      string
 }
 
-func NewEventSubHandler(c *helix.Client) EventSubHandler {
+func NewEventSubHandler(c *helix.Client, callbackUrl, secret string) EventSubHandler {
 	return EventSubHandler{
-		client: c,
+		client:      c,
+		callbackUrl: callbackUrl,
+		secret:      secret,
 	}
 }
 
@@ -48,13 +51,15 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	}
 
 	createSub := helix.EventSubSubscription{
-		Type:    topicType,
+		Type:    helix.EventSubTypeChannelPointsCustomRewardRedemptionAdd,
 		Version: topicVersion,
 		Condition: helix.EventSubCondition{
 			BroadcasterUserID: req.UserID,
 		},
 		Transport: helix.EventSubTransport{
-			Method: subMethod,
+			Method:   subMethod,
+			Callback: e.callbackUrl,
+			Secret:   e.secret,
 		},
 	}
 	_, err = e.client.CreateEventSubSubscription(&createSub)

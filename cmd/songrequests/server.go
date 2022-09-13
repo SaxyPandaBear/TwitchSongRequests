@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
+
+	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 
 	"github.com/gorilla/mux"
 	"github.com/nicklaw5/helix"
-	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
+	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/handler"
 	"github.com/saxypandabear/twitchsongrequests/pkg/spotify"
 )
@@ -23,7 +24,13 @@ func StartServer(port int) error {
 	r := mux.NewRouter()
 	r.HandleFunc("/", handler.PingHandler).Methods("GET")
 
-	twitchOptions, err := loadTwitchClientOptions()
+	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
+	if err != nil {
+		log.Println("failed", err)
+		return err
+	}
+
+	twitchOptions, err := util.LoadTwitchClientOptions()
 	if err != nil {
 		log.Println("failed to load Twitch configurations ", err)
 		return err
@@ -33,14 +40,16 @@ func StartServer(port int) error {
 		log.Println("failed to create Twitch client ", err)
 		return err
 	}
-	eventSub := handler.NewEventSubHandler(twitch)
+	eventSub := handler.NewEventSubHandler(twitch, "", s)
 
-	s, err := getEventSubSecret()
+	spotifyOptions, err := util.LoadSpotifyClientOptions()
 	if err != nil {
-		log.Println("failed", err)
+		log.Println("failed to load Spotify configurations ", err)
 		return err
 	}
-	p := spotify.SpotifyPlayeQueue{}
+	p := spotify.SpotifyPlayeQueue{
+		Auth: spotifyOptions,
+	}
 	reward := handler.NewRewardHandler(s, p)
 
 	r.HandleFunc("/subscribe", eventSub.SubscribeToTopic).Methods("POST")
@@ -58,39 +67,4 @@ func StartServer(port int) error {
 
 	log.Printf("Starting server on %s\n", srv.Addr)
 	return srv.ListenAndServe()
-}
-
-// loadTwitchClientOptions reads from environment variables in order to populate
-// configuration options for the Twitch client.
-func loadTwitchClientOptions() (*helix.Options, error) {
-	clientID, ok := os.LookupEnv(constants.TwitchClientIDKey)
-	if !ok {
-		return nil, fmt.Errorf("%s is not defined in the environment", constants.TwitchClientIDKey)
-	} else if len(clientID) < 1 {
-		return nil, fmt.Errorf("%s is empty", constants.TwitchClientIDKey)
-	}
-
-	opt := helix.Options{
-		ClientID: clientID,
-	}
-
-	// handle case where we are running locally with the Twitch CLI mock server
-	url, ok := os.LookupEnv(constants.MockServerURLKey)
-	if ok && len(url) > 0 {
-		log.Printf("Using mocked Twitch API hosted at %s\n", url)
-		opt.APIBaseURL = url
-	}
-
-	return &opt, nil
-}
-
-func getEventSubSecret() (string, error) {
-	s, ok := os.LookupEnv(constants.TwitchEventSubSecret)
-	if !ok {
-		return "", fmt.Errorf("%s is not defined in the environment", constants.TwitchEventSubSecret)
-	} else if len(s) < 1 {
-		return "", fmt.Errorf("%s is empty", constants.TwitchEventSubSecret)
-	}
-
-	return s, nil
 }
