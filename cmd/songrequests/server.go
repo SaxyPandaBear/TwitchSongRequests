@@ -47,7 +47,7 @@ func StartServer(port int) error {
 		log.Println("failed to load Spotify configurations ", err)
 		return err
 	}
-	p := spotify.SpotifyPlayeQueue{
+	p := spotify.SpotifyPlayerQueue{
 		Auth: spotifyOptions,
 	}
 	reward := handler.NewRewardHandler(s, p)
