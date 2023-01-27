@@ -8,7 +8,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/cmd/songrequests"
 )
 
-var port = flag.Int("port", 8080, "port that the HTTP server listens on")
+var port = flag.Int("port", 8000, "port that the HTTP server listens on")
 
 func main() {
 	flag.Parse()

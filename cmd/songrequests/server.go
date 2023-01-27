@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
-
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
+	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/handler"
 	"github.com/saxypandabear/twitchsongrequests/pkg/spotify"
 )
@@ -21,8 +21,18 @@ func StartServer(port int) error {
 	}
 	addr := fmt.Sprintf(":%d", port)
 
-	r := mux.NewRouter()
-	r.HandleFunc("/", handler.PingHandler).Methods("GET")
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	// Set a timeout value on the request context (ctx), that will signal
+	// through ctx.Done() that the request has timed out and further
+	// processing should be stopped.
+	r.Use(middleware.Timeout(60 * time.Second))
+
+	r.Get("/", handler.PingHandler)
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
 	if err != nil {
@@ -50,10 +60,10 @@ func StartServer(port int) error {
 	p := spotify.SpotifyPlayerQueue{
 		Auth: spotifyOptions,
 	}
-	reward := handler.NewRewardHandler(s, p)
+	reward := handler.NewRewardHandler(s, &p)
 
-	r.HandleFunc("/subscribe", eventSub.SubscribeToTopic).Methods("POST")
-	r.HandleFunc("/callback", reward.ChannelPointRedeem)
+	r.Post("/subscribe", eventSub.SubscribeToTopic)
+	r.Post("/callback", reward.ChannelPointRedeem)
 
 	http.Handle("/", r)
 

@@ -13,6 +13,6 @@ type SpotifyPlayerQueue struct {
 	Auth *spotifyauth.Authenticator
 }
 
-func (s SpotifyPlayerQueue) Publish(val interface{}) error {
+func (s *SpotifyPlayerQueue) Publish(val interface{}) error {
 	return nil
 }
