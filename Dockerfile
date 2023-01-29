@@ -1,5 +1,7 @@
 FROM golang:1.19.5-alpine3.17
 
+ARG PORT # injected from Railway at build time
+
 ENV APP_HOME /go/src/twitchsongrequests
 
 WORKDIR "${APP_HOME}"
@@ -12,6 +14,6 @@ RUN go mod verify
 
 RUN go build .
 
-EXPOSE 8000
+EXPOSE $PORT
 
 CMD ["./twitchsongrequests"]
