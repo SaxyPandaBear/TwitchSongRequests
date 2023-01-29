@@ -53,6 +53,8 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	log.Printf("EventSub notification: %s\n", string(body))
+
 	var redeemEvent helix.EventSubChannelPointsCustomRewardRedemptionEvent
 	if err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&redeemEvent); err != nil {
 		log.Println("failed to unmarshal payload", err)

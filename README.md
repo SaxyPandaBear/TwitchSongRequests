@@ -37,8 +37,30 @@ Then, use the app access token from the above command to authentication.
 
 Get your own user payload, and note the user ID from the response.
 ```bash
-twitch api get /users -q loginname=YourTwitchUsername
+twitch api get /users -q login=YourTwitchUsername
 ```
+
+The response will look something like this:
+```json
+{
+  "data": [
+    {
+      "broadcaster_type": "affiliate",
+      "created_at": "2015-11-03T23:03:04Z",
+      "description": "A description about the user",
+      "display_name": "SaxyPandaBear",
+      "id": "1234567890",
+      "login": "saxypandabear",
+      "offline_image_url": "https://some-image1.png",
+      "profile_image_url": "https://some-image2.png",
+      "type": "",
+      "view_count": 1337
+    }
+  ]
+}
+```
+
+Jot down the `id` in the JSON response body
 
 Subscribe to the channel point reward redemption event, replacing the `USER_ID`,
 `TOKEN`, `CLIENT_ID`, `CALLBACK_URL`, and `SUB_SECRET` with your own values.
