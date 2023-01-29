@@ -80,6 +80,34 @@ Verify that the subscription was made successfully:
 twitch api get /eventsub/subscriptions -q user_id=$USER_ID
 ```
 
+The response will look like:
+```json
+{
+  "data": [
+    {
+      "condition": {
+        "broadcaster_user_id": "1234567890",
+        "reward_id": ""
+      },
+      "cost": 0,
+      "created_at": "2023-01-29T04:23:21.008351071Z",
+      "id": "abc-123-def-456",
+      "status": "webhook_callback_verification_pending",
+      "transport": {
+        "callback": "https://this-service/endpoint",
+        "method": "webhook"
+      },
+      "type": "channel.channel_points_custom_reward_redemption.add",
+      "version": "1"
+    }
+  ],
+  "pagination": {
+    "cursor": ""
+  },
+  "total": 1
+}
+```
+
 ### Run local API server to handle callback
 Start the server locally
 ```bash
@@ -103,5 +131,15 @@ twitch event trigger add-redemption -s $SUB_SECRET -F http://localhost:8080/call
 2022/09/05 10:49:46 52f644c8-33da-4a30-bc81-beccb4cb678a Test Reward from CLI
 ```
 
+### Cleanup
+After testing, clean up the EventSub subscription:
+```bash
+twitch api get /eventsub/subscriptions -q user_id=$USER_ID
+
+# jot down the relevant EventSub subscription ID
+
+curl -X DELETE https://api.twitch.tv/helix/eventsub/subscriptions?id=$SUB_ID -H 'Authorization: Bearer $TOKEN' -H 'Client-Id: $CLIENT_ID'
+```
+
 ## Deploying
-TBD
+This service is deployed directly to Railway, via the supplied Dockerfile at the root of the repo.

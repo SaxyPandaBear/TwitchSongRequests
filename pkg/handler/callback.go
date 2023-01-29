@@ -53,21 +53,25 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	log.Printf("EventSub notification: %s\n", string(body))
+	// when initially verifying the subscription, there won't be an event in the request
+	// body. need to handle this gracefully in the API by skipping.
 
-	var redeemEvent helix.EventSubChannelPointsCustomRewardRedemptionEvent
-	if err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&redeemEvent); err != nil {
-		log.Println("failed to unmarshal payload", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	if vals.Event != nil {
+		log.Printf("Found event to consume: %s", string(vals.Event))
+		var redeemEvent helix.EventSubChannelPointsCustomRewardRedemptionEvent
+		if err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&redeemEvent); err != nil {
+			log.Println("failed to unmarshal payload", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
+		log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
-	if err = h.publisher.Publish(redeemEvent.UserInput); err != nil {
-		log.Println("failed to publish")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		if err = h.publisher.Publish(redeemEvent.UserInput); err != nil {
+			log.Println("failed to publish")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
