@@ -32,7 +32,7 @@ func StartServer(port int) error {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Get("/", handler.PingHandler)
+	r.Get("/ping", handler.PingHandler)
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
 	if err != nil {

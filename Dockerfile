@@ -1,4 +1,4 @@
-FROM golang:1.19.5-alpine3.17 as builder
+FROM golang:1.19.5-alpine3.17
 
 ENV APP_HOME /go/src/twitchsongrequests
 

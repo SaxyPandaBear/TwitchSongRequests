@@ -4,6 +4,12 @@ Integrate Twitch channel point rewards directly with a user's Spotify player.
 Configure a channel point reward to accept a Spotify song URL, and enqueue
 the song in the user's current playing session.
 
+## Streamer setup
+TBD
+
+## How does it work?
+TBD
+
 ## Running the project
 TBD
 

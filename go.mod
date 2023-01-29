@@ -6,7 +6,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/nicklaw5/helix v1.25.0
 	github.com/stretchr/testify v1.8.1
-	github.com/zmb3/spotify/v2 v2.2.1
+	github.com/zmb3/spotify/v2 v2.3.1
 )
 
 require (
