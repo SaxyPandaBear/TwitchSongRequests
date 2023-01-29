@@ -6,9 +6,15 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
+)
+
+const (
+	verificationType  = "webhook_callback_verification"
+	messageTypeHeader = "Twitch-Eventsub-Message-Type"
 )
 
 type EventSubNotification struct {
@@ -54,7 +60,13 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 
 	// when initially verifying the subscription, there won't be an event in the request
-	// body. need to handle this gracefully in the API by skipping.
+	// body. need to handle this gracefully in the API by responding directly with the challenge.
+	// https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#responding-to-a-challenge-request
+	if isVerificationRequest(r) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(vals.Challenge))
+		return // short-circuit here because of the request type
+	}
 
 	if vals.Event != nil {
 		log.Printf("Found event to consume: %s", string(vals.Event))
@@ -78,4 +90,8 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	if _, err = w.Write([]byte("ok")); err != nil {
 		log.Println("failed to write response body", err)
 	}
+}
+
+func isVerificationRequest(r *http.Request) bool {
+	return verificationType == r.Header.Get(strings.ToLower(messageTypeHeader))
 }
