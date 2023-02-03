@@ -18,8 +18,15 @@ func LoadTwitchClientOptions() (*helix.Options, error) {
 		return nil, err
 	}
 
+	clientSecret, err := GetFromEnv(constants.TwitchClientSecretKey)
+	if err != nil {
+		return nil, err
+	}
+
 	opt := helix.Options{
-		ClientID: clientID,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		UserAgent:    "TwitchSongRequests",
 	}
 
 	// handle case where we are running locally with the Twitch CLI mock server
@@ -40,7 +47,12 @@ func LoadSpotifyClientOptions() (*spotifyauth.Authenticator, error) {
 		return nil, err
 	}
 
-	return spotifyauth.New(spotifyauth.WithClientID(clientID)), nil
+	clientSecret, err := GetFromEnv(constants.SpotifyClientSecretKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return spotifyauth.New(spotifyauth.WithClientID(clientID), spotifyauth.WithClientSecret(clientSecret)), nil
 }
 
 // GetFromEnv tries to read an environment variable by key, and if:

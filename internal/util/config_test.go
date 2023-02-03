@@ -1,7 +1,6 @@
 package util_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
@@ -18,8 +17,7 @@ func TestTwitchClientMissing(t *testing.T) {
 }
 
 func TestTwitchClientEmpty(t *testing.T) {
-	os.Setenv(constants.TwitchClientIDKey, "")
-	defer os.Unsetenv(constants.TwitchClientIDKey)
+	t.Setenv(constants.TwitchClientIDKey, "")
 
 	opts, err := util.LoadTwitchClientOptions()
 	assert.Nil(t, opts)
@@ -28,8 +26,8 @@ func TestTwitchClientEmpty(t *testing.T) {
 }
 
 func TestMockServerUrlMissing(t *testing.T) {
-	os.Setenv(constants.TwitchClientIDKey, "foo")
-	defer os.Unsetenv(constants.TwitchClientIDKey)
+	t.Setenv(constants.TwitchClientIDKey, "foo")
+	t.Setenv(constants.TwitchClientSecretKey, "bar")
 
 	opts, err := util.LoadTwitchClientOptions()
 	assert.NotNil(t, opts)
@@ -39,16 +37,16 @@ func TestMockServerUrlMissing(t *testing.T) {
 }
 
 func TestMockServerUrlPresent(t *testing.T) {
-	os.Setenv(constants.TwitchClientIDKey, "foo")
-	os.Setenv(constants.MockServerURLKey, "bar")
-	defer os.Unsetenv(constants.TwitchClientIDKey)
-	defer os.Unsetenv(constants.MockServerURLKey)
+	t.Setenv(constants.TwitchClientIDKey, "foo")
+	t.Setenv(constants.TwitchClientSecretKey, "bar")
+	t.Setenv(constants.MockServerURLKey, "baz")
 
 	opts, err := util.LoadTwitchClientOptions()
 	assert.NotNil(t, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", opts.ClientID)
-	assert.Equal(t, "bar", opts.APIBaseURL)
+	assert.Equal(t, "bar", opts.ClientSecret)
+	assert.Equal(t, "baz", opts.APIBaseURL)
 }
 
 func TestSpotifyClientMissing(t *testing.T) {
@@ -59,8 +57,7 @@ func TestSpotifyClientMissing(t *testing.T) {
 }
 
 func TestSpotifyClientEmpty(t *testing.T) {
-	os.Setenv(constants.SpotifyClientIDKey, "")
-	defer os.Unsetenv(constants.SpotifyClientIDKey)
+	t.Setenv(constants.SpotifyClientIDKey, "")
 
 	auth, err := util.LoadSpotifyClientOptions()
 	assert.Nil(t, auth)
@@ -69,8 +66,8 @@ func TestSpotifyClientEmpty(t *testing.T) {
 }
 
 func TestSpotifyClientHappyPath(t *testing.T) {
-	os.Setenv(constants.SpotifyClientIDKey, "foo")
-	defer os.Unsetenv(constants.SpotifyClientIDKey)
+	t.Setenv(constants.SpotifyClientIDKey, "foo")
+	t.Setenv(constants.SpotifyClientSecretKey, "bar")
 
 	auth, err := util.LoadSpotifyClientOptions()
 	assert.NotNil(t, auth)

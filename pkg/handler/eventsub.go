@@ -24,8 +24,8 @@ type EventSubHandler struct {
 	secret      string
 }
 
-func NewEventSubHandler(c *helix.Client, callbackURL, secret string) EventSubHandler {
-	return EventSubHandler{
+func NewEventSubHandler(c *helix.Client, callbackURL, secret string) *EventSubHandler {
+	return &EventSubHandler{
 		client:      c,
 		callbackURL: callbackURL,
 		secret:      secret,

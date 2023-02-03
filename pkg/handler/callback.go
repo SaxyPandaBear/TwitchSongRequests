@@ -28,8 +28,8 @@ type RewardHandler struct {
 	publisher queue.Publisher
 }
 
-func NewRewardHandler(s string, publisher queue.Publisher) RewardHandler {
-	return RewardHandler{
+func NewRewardHandler(s string, publisher queue.Publisher) *RewardHandler {
+	return &RewardHandler{
 		secret:    s,
 		publisher: publisher,
 	}
