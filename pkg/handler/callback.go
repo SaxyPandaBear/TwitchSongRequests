@@ -62,9 +62,11 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	// when initially verifying the subscription, there won't be an event in the request
 	// body. need to handle this gracefully in the API by responding directly with the challenge.
 	// https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#responding-to-a-challenge-request
-	if isVerificationRequest(r) {
+	if IsVerificationRequest(r) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(vals.Challenge))
+		if _, err = w.Write([]byte(vals.Challenge)); err != nil {
+			log.Println("failed to write challenge response for verification", err)
+		}
 		return // short-circuit here because of the request type
 	}
 
@@ -92,6 +94,6 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func isVerificationRequest(r *http.Request) bool {
+func IsVerificationRequest(r *http.Request) bool {
 	return verificationType == r.Header.Get(strings.ToLower(messageTypeHeader))
 }

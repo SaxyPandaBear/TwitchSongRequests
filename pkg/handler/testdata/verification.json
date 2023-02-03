@@ -1,0 +1,19 @@
+{
+    "subscription": {
+        "id": "5095b448-f691-47b3-8acc-d53e813376a7",
+        "status": "webhook_callback_verification_pending",
+        "type": "channel.channel_points_custom_reward_redemption.add",
+        "version": "1",
+        "condition": {
+            "broadcaster_user_id": "106060203",
+            "reward_id": ""
+        },
+        "transport": {
+            "method": "webhook",
+            "callback": "https://example.com/webhooks/callback"
+        },
+        "created_at": "2023-01-29T04:42:55.296915984Z",
+        "cost": 0
+    },
+    "challenge": "REPLACEME"
+}

@@ -20,14 +20,14 @@ type SubscribeRequest struct {
 
 type EventSubHandler struct {
 	client      *helix.Client
-	callbackUrl string
+	callbackURL string
 	secret      string
 }
 
-func NewEventSubHandler(c *helix.Client, callbackUrl, secret string) EventSubHandler {
+func NewEventSubHandler(c *helix.Client, callbackURL, secret string) EventSubHandler {
 	return EventSubHandler{
 		client:      c,
-		callbackUrl: callbackUrl,
+		callbackURL: callbackURL,
 		secret:      secret,
 	}
 }
@@ -58,7 +58,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		},
 		Transport: helix.EventSubTransport{
 			Method:   subMethod,
-			Callback: e.callbackUrl,
+			Callback: e.callbackURL,
 			Secret:   e.secret,
 		},
 	}

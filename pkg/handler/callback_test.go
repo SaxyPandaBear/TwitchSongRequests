@@ -38,6 +38,12 @@ func (m mockReadCloser) Close() error {
 	return nil
 }
 
+type headerTestCase struct {
+	header       string
+	verification string
+	shouldPass   bool
+}
+
 // make sure that dummyPublisher maintains the Publisher interface
 var (
 	_ queue.Publisher = dummyPublisher{
@@ -56,6 +62,9 @@ var (
 
 //go:embed testdata/redeem.json
 var redeemPayload string
+
+//go:embed testdata/verification.json
+var verificationPayload string
 
 func (p dummyPublisher) Publish(val interface{}) error {
 	if p.shouldFail {
@@ -345,16 +354,99 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 		handler.ServeHTTP(rr, req)
 	}()
 
-	var event interface{}
 	select {
-	case event = <-m:
+	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(time.Second):
 		t.Log("no event expected")
 	}
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	assert.Nil(t, event)
+}
+
+// The endpoint used for webhook callbacks must also verify itself:
+// https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#responding-to-a-challenge-request
+func TestVerifyWebhookCallback(t *testing.T) {
+	m := make(chan interface{})
+	p := dummyPublisher{
+		messages:   m,
+		shouldFail: false,
+	}
+
+	rh := handler.NewRewardHandler(dummySecret, p)
+
+	challenge := generateUserInput(t)
+	payload := strings.Replace(verificationPayload, replace, challenge, 1)
+	assert.NotEmpty(t, payload)
+	assert.False(t, strings.Contains(payload, replace))
+
+	var payloadMap handler.EventSubNotification
+	err := json.Unmarshal([]byte(payload), &payloadMap)
+	assert.NoError(t, err)
+	assert.NotNil(t, payloadMap)
+
+	req, err := http.NewRequest("POST", "/callback", strings.NewReader(payload))
+	assert.NoError(t, err)
+
+	// spoof signature header
+	ts := time.Now().Format(time.RFC3339)
+	sig := deriveEventsubSignature(t, payload, eventSubMsgID, ts, dummySecret)
+	req.Header.Add(msgIDHeader, eventSubMsgID)
+	req.Header.Add(msgTimestampHeader, ts)
+	req.Header.Add(msgSignatureHeader, sig)
+
+	// add header so that the service knows that Twitch is trying to verify the callback
+	req.Header.Add("Twitch-Eventsub-Message-Type", "webhook_callback_verification")
+
+	assert.True(t, handler.IsVerificationRequest(req))
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+
+	go func() {
+		handler.ServeHTTP(rr, req)
+	}()
+
+	select {
+	case <-m:
+		t.Error("should not have received a message")
+	case <-time.After(time.Second):
+		t.Log("no event expected")
+	}
+
+	assert.Equal(t, challenge, rr.Body.String())
+}
+
+func TestIsVerificationRequest(t *testing.T) {
+	tests := []headerTestCase{
+		{
+			header:       "foo",
+			verification: "bar",
+		},
+		{
+			header:       "Twitch-Eventsub-Message-Type",
+			verification: "webhook_callback_verification",
+			shouldPass:   true,
+		},
+		{
+			verification: "foo",
+		},
+		{
+			header: "foo",
+		},
+		{},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%s: %s", test.header, test.verification), func(t *testing.T) {
+			req, err := http.NewRequest("POST", "/foo", strings.NewReader("hello, world!"))
+			assert.NoError(t, err)
+
+			req.Header.Add(test.header, test.verification)
+
+			assert.Equal(t, test.shouldPass, handler.IsVerificationRequest(req))
+		})
+	}
 }
 
 func generateUserInput(t *testing.T) string {
