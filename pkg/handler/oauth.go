@@ -37,6 +37,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 	}
 
 	// TODO: remove this after debugging
+	log.Println(r.URL.String())
 	log.Println(r.URL.EscapedFragment())
 	for k, v := range r.URL.Query() {
 		log.Printf("%s: %v\n", k, v)
