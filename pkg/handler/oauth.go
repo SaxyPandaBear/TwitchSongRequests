@@ -4,14 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"regexp"
 
 	"github.com/nicklaw5/helix"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
-)
-
-var (
-	twitchAccessCodePattern *regexp.Regexp = regexp.MustCompile(`^access_token=([A-Za-z0-9]*)$`)
 )
 
 type OAuthRedirectHandler struct {
@@ -37,13 +32,19 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 	}
 
 	// TODO: remove this after debugging
-	log.Println(r.URL.String())
-	log.Println(r.URL.EscapedFragment())
+	log.Println("request")
 	for k, v := range r.URL.Query() {
 		log.Printf("%s: %v\n", k, v)
 	}
 
-	code := ExtractTwitchAccessCode(r.URL.Fragment)
+	log.Println("response?")
+	if r.Response != nil {
+		for k, v := range r.Response.Request.URL.Query() {
+			log.Printf("%s: %v\n", k, v)
+		}
+	}
+
+	code := r.URL.Query().Get("code")
 	if code == "" {
 		log.Println("could not extract access code from redirect")
 		success = false
@@ -86,13 +87,4 @@ func (h *OAuthRedirectHandler) HandleSpotifyRedirect(w http.ResponseWriter, r *h
 		log.Println("failed to include payload", err)
 	}
 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
-}
-
-func ExtractTwitchAccessCode(s string) string {
-	groups := twitchAccessCodePattern.FindStringSubmatch(s)
-	if len(groups) < 1 {
-		return ""
-	}
-
-	return groups[len(groups)-1]
 }
