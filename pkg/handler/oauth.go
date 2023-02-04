@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -44,6 +45,14 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		}
 	}
 
+	log.Println("request body?")
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Println("boom")
+	} else {
+		log.Println(string(body))
+	}
+
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		log.Println("could not extract access code from redirect")
@@ -61,7 +70,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		}
 	}
 
-	_, err := w.Write([]byte(fmt.Sprintf("twitch: %v", success)))
+	_, err = w.Write([]byte(fmt.Sprintf("twitch: %v", success)))
 	if err != nil {
 		log.Println("failed to include payload", err)
 	}
