@@ -58,7 +58,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 			if err != nil {
 				log.Println("oops", err)
 			} else if !ok {
-				log.Println("failed to validate", data.Error)
+				log.Printf("failed to validate. HTTP %d; Error: %s; Error Status: %d; Message: %s\n", data.StatusCode, data.Error, data.ErrorStatus, data.ErrorMessage)
 			} else if data != nil {
 				log.Println("validated", data.Data.UserID, data.Data.Login)
 			}
