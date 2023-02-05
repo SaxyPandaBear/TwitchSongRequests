@@ -23,9 +23,15 @@ func LoadTwitchClientOptions() (*helix.Options, error) {
 		return nil, err
 	}
 
+	redirectURL, err := GetFromEnv(constants.RedirectURL)
+	if err != nil {
+		redirectURL = "localhost:8000"
+	}
+
 	opt := helix.Options{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
+		RedirectURI:  redirectURL,
 		UserAgent:    "TwitchSongRequests",
 	}
 
