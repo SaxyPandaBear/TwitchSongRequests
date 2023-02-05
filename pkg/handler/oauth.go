@@ -28,11 +28,6 @@ func NewOAuthRedirectHandler(uri string, spotify *spotifyauth.Authenticator, twi
 
 // https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/
 func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("foo") == "bar" {
-		log.Println("booom")
-		return
-	}
-
 	var success = true
 
 	if r.URL.Query().Has("error") {
@@ -40,7 +35,8 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		success = false
 	}
 
-	code := ExtractTwitchAccessCode(r.URL.EscapedFragment())
+	// code := ExtractTwitchAccessCode(r.URL.EscapedFragment())
+	code := r.URL.Query().Get("code")
 	if code == "" {
 		log.Println("could not extract access code from redirect")
 		success = false
