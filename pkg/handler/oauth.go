@@ -44,6 +44,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 			success = false
 		}
 		if token != nil {
+			log.Printf("token response: HTTP %d; %s", token.StatusCode, token.ErrorMessage)
 			log.Println("successfully got user access token", token.Data.AccessToken, token.Data.ExpiresIn, token.Data.RefreshToken)
 
 			// authorize for this call
