@@ -28,9 +28,12 @@ func NewOAuthRedirectHandler(uri string, spotify *spotifyauth.Authenticator, twi
 
 // https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/
 func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *http.Request) {
-	var success = true
+	if r.Header.Get("foo") == "bar" {
+		log.Println("booom")
+		return
+	}
 
-	log.Println(r.URL.String())
+	var success = true
 
 	if r.URL.Query().Has("error") {
 		log.Printf("failed to authorize: %s\n", r.URL.Query().Get("error_description"))
@@ -58,7 +61,9 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 	if err != nil {
 		log.Println("failed to include payload", err)
 	}
-	http.Redirect(w, r, h.redirectURL, http.StatusFound)
+
+	w.Header().Add("foo", "bar")
+	http.Redirect(w, r, r.URL.String(), http.StatusFound)
 }
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
