@@ -23,7 +23,7 @@ func LoadTwitchClientOptions() (*helix.Options, error) {
 		return nil, err
 	}
 
-	redirectURL, err := GetFromEnv(constants.RedirectURL)
+	redirectURL, err := GetFromEnv(constants.TwitchRedirectURL)
 	if err != nil {
 		redirectURL = "localhost:8000"
 	}
