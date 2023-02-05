@@ -66,6 +66,7 @@ func StartServer(port int) error {
 	r.Post("/callback", reward.ChannelPointRedeem)
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
+	log.Println("Configured site redirects to", redirectURL)
 
 	oauth := handler.NewOAuthRedirectHandler(redirectURL, spotifyOptions, twitch)
 	r.Get("/oauth/twitch", oauth.HandleTwitchRedirect)

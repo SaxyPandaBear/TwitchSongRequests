@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
+	"sync"
 
 	"github.com/nicklaw5/helix"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 )
+
+var mu sync.Mutex
 
 type OAuthRedirectHandler struct {
 	redirectURL string
@@ -51,7 +53,10 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 	log.Printf("token response: HTTP %d; %s", token.StatusCode, token.ErrorMessage)
 
 	// authorize for this call
+	mu.Lock()
+	defer mu.Unlock()
 	h.twitch.SetUserAccessToken(token.Data.AccessToken)
+
 	ok, data, err := h.twitch.ValidateToken(token.Data.AccessToken)
 	if err != nil {
 		log.Println("oops", err)
@@ -63,9 +68,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 
 	// TODO: store
 	log.Println("store something")
-	// TODO: figure out browser redirect?
-	r, err = http.NewRequestWithContext(r.Context(), "GET", h.redirectURL, strings.NewReader(""))
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 }
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
