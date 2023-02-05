@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/nicklaw5/helix"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
@@ -48,7 +49,6 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		return
 	}
 	log.Printf("token response: HTTP %d; %s", token.StatusCode, token.ErrorMessage)
-	log.Println("successfully got user access token", token.Data.AccessToken, token.Data.ExpiresIn, token.Data.RefreshToken)
 
 	// authorize for this call
 	h.twitch.SetUserAccessToken(token.Data.AccessToken)
@@ -58,14 +58,14 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 	} else if !ok {
 		log.Printf("failed to validate. Error Status: %d; Message: %s\n", data.ErrorStatus, data.ErrorMessage)
 	} else if data != nil {
-		log.Println("validated", data.Data.UserID, data.Data.Login)
+		log.Println("validated", data.Data.Login)
 	}
 
 	// TODO: store
 	log.Println("store something")
-
-	fmt.Fprintln(w, "successfully authorized")
-	http.Redirect(w, r, h.redirectURL, http.StatusFound)
+	// TODO: figure out browser redirect?
+	r, err = http.NewRequestWithContext(r.Context(), "GET", h.redirectURL, strings.NewReader(""))
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/

@@ -5,7 +5,7 @@ Configure a channel point reward to accept a Spotify song URL, and enqueue
 the song in the user's current playing session.
 
 ## How do I use it?
-1. Authorize the service to access your Twitch channel point redemptions: [link](https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=vahfw8gww3oq9g57efph9rjcmtbxwk&redirect_uri=https://twitchsongrequests-production.up.railway.app/oauth/twitch&scope=channel%3Aread%3Aredemptions)
+1. Authorize the service to access your Twitch channel point redemptions: [<kbd> <br>Authorize<br> </kbd>](https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=vahfw8gww3oq9g57efph9rjcmtbxwk&redirect_uri=https://twitchsongrequests-production.up.railway.app/oauth/twitch&scope=channel%3Aread%3Aredemptions)
 1. Authorize the service to access your Spotify player [TODO]
 1. Navigate to your Twitch channel
 1. Redeem a channel point reward with a Spotify URI as input
