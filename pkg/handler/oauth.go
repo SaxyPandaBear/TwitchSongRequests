@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/nicklaw5/helix"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 )
-
-var mu sync.Mutex
 
 type OAuthRedirectHandler struct {
 	redirectURL string
@@ -47,11 +44,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 			success = false
 		}
 		if token != nil {
-			log.Println("successfully got user access token")
-
-			// need to derive who this user is to associate for Spotify connection
-			mu.Lock()
-			defer mu.Unlock()
+			log.Println("successfully got user access token", token.Data.AccessToken, token.Data.ExpiresIn, token.Data.RefreshToken)
 
 			// authorize for this call
 			h.twitch.SetUserAccessToken(token.Data.AccessToken)
@@ -59,7 +52,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 			if err != nil {
 				log.Println("oops", err)
 			} else if !ok {
-				log.Printf("failed to validate. HTTP %d; Error: %s; Error Status: %d; Message: %s\n", data.StatusCode, data.Error, data.ErrorStatus, data.ErrorMessage)
+				log.Printf("failed to validate. Error Status: %d; Message: %s\n", data.ErrorStatus, data.ErrorMessage)
 			} else if data != nil {
 				log.Println("validated", data.Data.UserID, data.Data.Login)
 			}
