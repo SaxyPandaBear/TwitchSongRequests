@@ -29,8 +29,13 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 
 	// TODO: debugging
 	log.Println("form values")
-	for k, v := range r.Form {
-		log.Printf("%s: %v\n", k, v)
+	e := r.ParseForm()
+	if e != nil {
+		log.Println("oopsie", e)
+	} else {
+		for k, v := range r.Form {
+			log.Printf("%s: %v\n", k, v)
+		}
 	}
 
 	if r.URL.Query().Has("error") {
