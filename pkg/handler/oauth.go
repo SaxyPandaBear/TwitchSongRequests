@@ -63,12 +63,13 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 	}
 
 	w.Header().Add("foo", "bar")
-	http.Redirect(w, r, r.URL.String(), http.StatusFound)
+	http.Redirect(w, r, "/foo", http.StatusFound)
 }
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
 func (h *OAuthRedirectHandler) HandleSpotifyRedirect(w http.ResponseWriter, r *http.Request) {
 	var success = true
+	// TODO: get code
 	token, err := h.spotify.Token(r.Context(), "", r)
 	if err != nil {
 		log.Printf("failed to retrieve Spotify token: %v\n", err)

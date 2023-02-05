@@ -74,6 +74,7 @@ func StartServer(port int) error {
 	oauth := handler.NewOAuthRedirectHandler(redirectURL, spotifyOptions, twitch)
 	r.Get("/oauth/twitch", oauth.HandleTwitchRedirect)
 	r.Get("/oauth/spotify", oauth.HandleSpotifyRedirect)
+	r.Get("/foo", oauth.HandleTwitchRedirect)
 
 	http.Handle("/", r)
 
