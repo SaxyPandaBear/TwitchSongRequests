@@ -54,6 +54,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 			defer mu.Unlock()
 
 			// authorize for this call
+			h.twitch.SetUserAccessToken(token.Data.AccessToken)
 			ok, data, err := h.twitch.ValidateToken(token.Data.AccessToken)
 			if err != nil {
 				log.Println("oops", err)
