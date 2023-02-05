@@ -35,7 +35,6 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		success = false
 	}
 
-	// code := ExtractTwitchAccessCode(r.URL.EscapedFragment())
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		log.Println("could not extract access code from redirect")
@@ -49,6 +48,8 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		}
 		if token != nil {
 			log.Println("successfully got user access token")
+			// TODO: for debugging
+			log.Println(token.Data.AccessToken)
 			// TODO: store
 		}
 	}
@@ -58,8 +59,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		log.Println("failed to include payload", err)
 	}
 
-	w.Header().Add("foo", "bar")
-	http.Redirect(w, r, "/foo", http.StatusFound)
+	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 }
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
