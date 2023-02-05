@@ -30,6 +30,8 @@ func NewOAuthRedirectHandler(uri string, spotify *spotifyauth.Authenticator, twi
 func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *http.Request) {
 	var success = true
 
+	log.Println(r.URL.String())
+
 	if r.URL.Query().Has("error") {
 		log.Printf("failed to authorize: %s\n", r.URL.Query().Get("error_description"))
 		success = false
