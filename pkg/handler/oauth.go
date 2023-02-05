@@ -25,49 +25,46 @@ func NewOAuthRedirectHandler(uri string, spotify *spotifyauth.Authenticator, twi
 
 // https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/
 func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *http.Request) {
-	var success = true
-
 	if r.URL.Query().Has("error") {
 		log.Printf("failed to authorize: %s\n", r.URL.Query().Get("error_description"))
-		success = false
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, "failed to authorize")
+		return
 	}
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		log.Println("could not extract access code from redirect")
-		success = false
-	} else {
-		// https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#use-the-authorization-code-to-get-a-token
-		token, err := h.twitch.RequestUserAccessToken(code)
-		if err != nil {
-			log.Printf("failed to retrieve user access token: %v\n", err)
-			success = false
-		}
-		if token != nil {
-			log.Printf("token response: HTTP %d; %s", token.StatusCode, token.ErrorMessage)
-			log.Println("successfully got user access token", token.Data.AccessToken, token.Data.ExpiresIn, token.Data.RefreshToken)
-
-			// authorize for this call
-			h.twitch.SetUserAccessToken(token.Data.AccessToken)
-			ok, data, err := h.twitch.ValidateToken(token.Data.AccessToken)
-			if err != nil {
-				log.Println("oops", err)
-			} else if !ok {
-				log.Printf("failed to validate. Error Status: %d; Message: %s\n", data.ErrorStatus, data.ErrorMessage)
-			} else if data != nil {
-				log.Println("validated", data.Data.UserID, data.Data.Login)
-			}
-
-			// TODO: store
-			log.Println("store something")
-		}
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, "failed to authorize")
+		return
 	}
-
-	_, err := w.Write([]byte(fmt.Sprintf("twitch: %v", success)))
+	// https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#use-the-authorization-code-to-get-a-token
+	token, err := h.twitch.RequestUserAccessToken(code)
 	if err != nil {
-		log.Println("failed to include payload", err)
+		log.Printf("failed to retrieve user access token: %v\n", err)
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, "failed to authorize")
+		return
+	}
+	log.Printf("token response: HTTP %d; %s", token.StatusCode, token.ErrorMessage)
+	log.Println("successfully got user access token", token.Data.AccessToken, token.Data.ExpiresIn, token.Data.RefreshToken)
+
+	// authorize for this call
+	h.twitch.SetUserAccessToken(token.Data.AccessToken)
+	ok, data, err := h.twitch.ValidateToken(token.Data.AccessToken)
+	if err != nil {
+		log.Println("oops", err)
+	} else if !ok {
+		log.Printf("failed to validate. Error Status: %d; Message: %s\n", data.ErrorStatus, data.ErrorMessage)
+	} else if data != nil {
+		log.Println("validated", data.Data.UserID, data.Data.Login)
 	}
 
+	// TODO: store
+	log.Println("store something")
+
+	fmt.Fprintln(w, "successfully authorized")
 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 }
 
