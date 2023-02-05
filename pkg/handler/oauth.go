@@ -57,11 +57,14 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 			ok, data, err := h.twitch.ValidateToken(token.Data.AccessToken)
 			if err != nil {
 				log.Println("oops", err)
-			} else if ok && data != nil {
-				log.Println("validated user token:", data.Data.UserID, data.Data.Login)
+			} else if !ok {
+				log.Println("failed to validate")
+			} else if data != nil {
+				log.Println("validated", data.Data.UserID, data.Data.Login)
 			}
 
 			// TODO: store
+			log.Println("store something")
 		}
 	}
 
