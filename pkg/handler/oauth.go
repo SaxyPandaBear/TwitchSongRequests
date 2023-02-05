@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"regexp"
+	"sync"
 
 	"github.com/nicklaw5/helix"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 )
 
-var twitchAccessCodePattern *regexp.Regexp = regexp.MustCompile(`^access_token=([A-Za-z0-9]*)$`)
+var mu sync.Mutex
 
 type OAuthRedirectHandler struct {
 	redirectURL string
@@ -48,8 +48,21 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		}
 		if token != nil {
 			log.Println("successfully got user access token")
-			// TODO: for debugging
-			log.Println(token.Data.AccessToken)
+
+			// need to derive who this user is to associate for Spotify connection
+			mu.Lock()
+			defer mu.Unlock()
+
+			// authorize for this call
+			h.twitch.SetUserAccessToken(token.Data.AccessToken)
+			resp, err := h.twitch.GetUsers(nil)
+			if err != nil {
+				log.Println("boo", err)
+			}
+
+			for _, user := range resp.Data.Users {
+				log.Println(user.ID)
+			}
 			// TODO: store
 		}
 	}
@@ -82,13 +95,4 @@ func (h *OAuthRedirectHandler) HandleSpotifyRedirect(w http.ResponseWriter, r *h
 		log.Println("failed to include payload", err)
 	}
 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
-}
-
-func ExtractTwitchAccessCode(s string) string {
-	groups := twitchAccessCodePattern.FindStringSubmatch(s)
-	if len(groups) < 1 {
-		return ""
-	}
-
-	return groups[len(groups)-1]
 }
