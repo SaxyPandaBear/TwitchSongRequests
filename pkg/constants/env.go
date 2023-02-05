@@ -8,4 +8,5 @@ const (
 	SpotifyClientIDKey      = "SPOTIFY_CLIENT_ID"
 	SpotifyClientSecretKey  = "SPOTIFY_CLIENT_SECRET"
 	TwitchRedirectURL       = "TWITCH_REDIRECT_URL"
+	SiteRedirectURL         = "SITE_REDIRECT_URL"
 )

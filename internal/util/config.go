@@ -75,3 +75,15 @@ func GetFromEnv(key string) (string, error) {
 
 	return s, nil
 }
+
+// GetFromEnvOrDefault tries to get the environment variable by the given key,
+// and if the var is empty/undefined, it returns the supplied default
+// value instead.
+func GetFromEnvOrDefault(key, def string) string {
+	s, err := GetFromEnv(key)
+	if err != nil {
+		return def
+	}
+
+	return s
+}

@@ -73,3 +73,10 @@ func TestSpotifyClientHappyPath(t *testing.T) {
 	assert.NotNil(t, auth)
 	assert.NoError(t, err)
 }
+
+func TestGetFromEnvOrDefault(t *testing.T) {
+	t.Setenv("foo", "bar")
+
+	assert.Equal(t, "bar", util.GetFromEnvOrDefault("foo", "baz"))
+	assert.Equal(t, "baz", util.GetFromEnvOrDefault("bar", "baz"))
+}

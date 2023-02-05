@@ -65,11 +65,7 @@ func StartServer(port int) error {
 	r.Post("/subscribe", eventSub.SubscribeToTopic)
 	r.Post("/callback", reward.ChannelPointRedeem)
 
-	redirectURL, err := util.GetFromEnv(constants.TwitchRedirectURL)
-	if err != nil {
-		// redirect to self
-		redirectURL = fmt.Sprintf("http://localhost:%s", addr)
-	}
+	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
 	oauth := handler.NewOAuthRedirectHandler(redirectURL, spotifyOptions, twitch)
 	r.Get("/oauth/twitch", oauth.HandleTwitchRedirect)
