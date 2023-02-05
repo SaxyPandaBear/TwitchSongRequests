@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 
@@ -27,30 +26,16 @@ func NewOAuthRedirectHandler(uri string, spotify *spotifyauth.Authenticator, twi
 // https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/
 func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *http.Request) {
 	var success = true
-	if r.URL.Query().Has("error") {
-		log.Printf("failed to authorize: %s\n", r.URL.Query().Get("error_description"))
-		success = false
-	}
 
-	// TODO: remove this after debugging
-	log.Println("request")
-	for k, v := range r.URL.Query() {
+	// TODO: debugging
+	log.Println("form values")
+	for k, v := range r.Form {
 		log.Printf("%s: %v\n", k, v)
 	}
 
-	log.Println("response?")
-	if r.Response != nil {
-		for k, v := range r.Response.Request.URL.Query() {
-			log.Printf("%s: %v\n", k, v)
-		}
-	}
-
-	log.Println("request body?")
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Println("boom")
-	} else {
-		log.Println(string(body))
+	if r.URL.Query().Has("error") {
+		log.Printf("failed to authorize: %s\n", r.URL.Query().Get("error_description"))
+		success = false
 	}
 
 	code := r.URL.Query().Get("code")
@@ -70,7 +55,7 @@ func (h *OAuthRedirectHandler) HandleTwitchRedirect(w http.ResponseWriter, r *ht
 		}
 	}
 
-	_, err = w.Write([]byte(fmt.Sprintf("twitch: %v", success)))
+	_, err := w.Write([]byte(fmt.Sprintf("twitch: %v", success)))
 	if err != nil {
 		log.Println("failed to include payload", err)
 	}
