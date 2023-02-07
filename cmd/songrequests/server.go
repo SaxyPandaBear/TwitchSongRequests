@@ -12,6 +12,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
+	"github.com/saxypandabear/twitchsongrequests/pkg/site"
 	"github.com/saxypandabear/twitchsongrequests/pkg/spotify"
 )
 
@@ -31,6 +32,9 @@ func StartServer(port int) error {
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
+
+	homePage := site.NewHomePageRenderer()
+	r.Get("/", homePage.HomePage)
 
 	r.Get("/ping", api.PingHandler)
 
