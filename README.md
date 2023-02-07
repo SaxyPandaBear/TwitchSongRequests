@@ -5,14 +5,22 @@ Configure a channel point reward to accept a Spotify song URL, and enqueue
 the song in the user's current playing session.
 
 ## How do I use it?
-1. Authorize the service to access your Twitch channel point redemptions: [<kbd> <br>Authorize<br> </kbd>](https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=vahfw8gww3oq9g57efph9rjcmtbxwk&redirect_uri=https://twitchsongrequests-production.up.railway.app/oauth/twitch&scope=channel%3Aread%3Aredemptions)
-1. Authorize the service to access your Spotify player [TODO]
+1. Authorize the service with Twitch: <kbd> <br>[Authorize](https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=vahfw8gww3oq9g57efph9rjcmtbxwk&redirect_uri=https://twitchsongrequests-production.up.railway.app/oauth/twitch&scope=channel%3Aread%3Aredemptions)<br> </kbd>
+1. Authorize the service with Spotify: **TODO**
 1. Navigate to your Twitch channel
 1. Redeem a channel point reward with a Spotify URI as input
 1. Check if your Spotify player has queued the song
 
-## How does it work?
+### Example
+TDB
+
+## Troubleshooting
 TBD
+
+## How does it work?
+The TwitchSongRequests service will authorize to your Twitch account so that the service can listen for
+channel point redemption events from your channel. Once the service receives an event, it will process that
+event in order to queue the given Spotify song into your connected Spotify player. 
 
 ## Running the project
 Run the project locally:
@@ -23,6 +31,7 @@ go build .
 ./twitchsongrequests
 ```
 
+### Required variables
 TODO - project env vars
 
 ## Testing

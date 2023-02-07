@@ -10,8 +10,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
+	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
-	"github.com/saxypandabear/twitchsongrequests/pkg/handler"
 	"github.com/saxypandabear/twitchsongrequests/pkg/spotify"
 )
 
@@ -32,7 +32,9 @@ func StartServer(port int) error {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Get("/ping", handler.PingHandler)
+	r.Get("/ping", api.PingHandler)
+
+	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
 	if err != nil {
@@ -50,7 +52,6 @@ func StartServer(port int) error {
 		log.Println("failed to create Twitch client ", err)
 		return err
 	}
-	eventSub := handler.NewEventSubHandler(twitch, "", s)
 
 	spotifyOptions, err := util.LoadSpotifyClientOptions()
 	if err != nil {
@@ -60,17 +61,14 @@ func StartServer(port int) error {
 	p := spotify.SpotifyPlayerQueue{
 		Auth: spotifyOptions,
 	}
-	reward := handler.NewRewardHandler(s, &p)
+	reward := api.NewRewardHandler(s, &p)
 
-	r.Post("/subscribe", eventSub.SubscribeToTopic)
 	r.Post("/callback", reward.ChannelPointRedeem)
 
-	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
-	log.Println("Configured site redirects to", redirectURL)
-
-	oauth := handler.NewOAuthRedirectHandler(redirectURL, spotifyOptions, twitch)
-	r.Get("/oauth/twitch", oauth.HandleTwitchRedirect)
-	r.Get("/oauth/spotify", oauth.HandleSpotifyRedirect)
+	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitch)
+	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyOptions)
+	r.Get("/oauth/twitch", twitchRedirect.SubscribeToTopic)
+	r.Get("/oauth/spotify", spotifyRedirect.Authenticate)
 
 	http.Handle("/", r)
 

@@ -13,6 +13,8 @@ type SpotifyPlayerQueue struct {
 	Auth *spotifyauth.Authenticator
 }
 
-func (s *SpotifyPlayerQueue) Publish(val interface{}) error {
+// Publish will validate that the input matches a valid Spotify URL scheme,
+// and then attempt to publish it to
+func (s *SpotifyPlayerQueue) Publish(target, val string) error {
 	return nil
 }
