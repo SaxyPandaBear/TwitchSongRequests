@@ -11,7 +11,7 @@ type HomePageRenderer struct {
 
 func NewHomePageRenderer() *HomePageRenderer {
 	return &HomePageRenderer{
-		tmpl: template.Must(template.ParseFiles("home.html")),
+		tmpl: template.Must(template.ParseFiles("pkg/site/home.html")),
 	}
 }
 
