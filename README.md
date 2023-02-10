@@ -38,7 +38,7 @@ TODO - project env vars
 
 ### Unit testing
 ```bash
-go test -v ./...
+go test ./... -cover -v -timeout 10s
 ```
 
 ### Set up Twitch CLI

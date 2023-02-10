@@ -28,9 +28,9 @@ type RewardHandler struct {
 	publisher queue.Publisher
 }
 
-func NewRewardHandler(s string, publisher queue.Publisher) *RewardHandler {
+func NewRewardHandler(twitchSecret string, publisher queue.Publisher) *RewardHandler {
 	return &RewardHandler{
-		secret:    s,
+		secret:    twitchSecret,
 		publisher: publisher,
 	}
 }
@@ -80,8 +80,8 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		}
 
 		log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
-
-		if err = h.publisher.Publish(redeemEvent.BroadcasterUserID, redeemEvent.UserInput); err != nil {
+		// TODO: get access token for Spotify and create Spotify client
+		if err = h.publisher.Publish(nil, redeemEvent.UserInput); err != nil {
 			log.Println("failed to publish")
 			w.WriteHeader(http.StatusInternalServerError)
 			return

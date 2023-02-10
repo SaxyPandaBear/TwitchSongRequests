@@ -18,6 +18,7 @@ import (
 
 	"github.com/nicklaw5/helix"
 	"github.com/stretchr/testify/assert"
+	"github.com/zmb3/spotify/v2"
 
 	handler "github.com/saxypandabear/twitchsongrequests/pkg/api"
 
@@ -25,13 +26,8 @@ import (
 )
 
 type dummyPublisher struct {
-	messages   chan *message
+	messages   chan string
 	shouldFail bool
-}
-
-type message struct {
-	id    string
-	value string
 }
 
 type mockReadCloser struct{}
@@ -55,14 +51,15 @@ var (
 		messages:   nil,
 		shouldFail: false,
 	}
-	dummySecret        = "dummy"
-	eventSubMsgID      = "foo"
-	size               = 20
-	letters            = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	replace            = "REPLACEME"
-	msgIDHeader        = "Twitch-Eventsub-Message-Id"
-	msgTimestampHeader = "Twitch-Eventsub-Message-Timestamp"
-	msgSignatureHeader = "Twitch-Eventsub-Message-Signature"
+	dummySecret         = "dummy"
+	eventSubMsgID       = "foo"
+	size                = 20
+	letters             = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	replace             = "REPLACEME"
+	msgIDHeader         = "Twitch-Eventsub-Message-Id"
+	msgTimestampHeader  = "Twitch-Eventsub-Message-Timestamp"
+	msgSignatureHeader  = "Twitch-Eventsub-Message-Signature"
+	testResponseTimeout = time.Millisecond * 50
 )
 
 //go:embed testdata/redeem.json
@@ -71,17 +68,17 @@ var redeemPayload string
 //go:embed testdata/verification.json
 var verificationPayload string
 
-func (p dummyPublisher) Publish(a, b string) error {
+func (p dummyPublisher) Publish(client *spotify.Client, url string) error {
 	if p.shouldFail {
 		return errors.New("oops")
 	}
 
-	p.messages <- &message{id: a, value: b}
+	p.messages <- url
 	return nil
 }
 
 func TestPublishRedeem(t *testing.T) {
-	m := make(chan *message)
+	m := make(chan string)
 	p := dummyPublisher{
 		messages:   m,
 		shouldFail: false,
@@ -116,23 +113,22 @@ func TestPublishRedeem(t *testing.T) {
 		handler.ServeHTTP(rr, req)
 	}()
 
-	var event *message
+	var event string
 	select {
 	case event = <-m:
 		t.Logf("received %v", event)
-	case <-time.After(time.Second):
+	case <-time.After(testResponseTimeout):
 		t.Error("did not receive message in time")
 	}
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	assert.NotNil(t, event)
+	assert.NotEmpty(t, event)
 
-	assert.Equal(t, "12826", event.id)
-	assert.Equal(t, userInput, event.value)
+	assert.Equal(t, userInput, event)
 }
 
 func TestPublishRedeemEmptyBody(t *testing.T) {
-	m := make(chan *message)
+	m := make(chan string)
 	p := dummyPublisher{
 		messages:   m,
 		shouldFail: false,
@@ -168,20 +164,18 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 		handler.ServeHTTP(rr, req)
 	}()
 
-	var event *message
 	select {
-	case event = <-m:
+	case <-m:
 		t.Error("should not have received a message")
-	case <-time.After(time.Second):
+	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")
 	}
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	assert.Nil(t, event)
 }
 
 func TestPublishRedeemFails(t *testing.T) {
-	m := make(chan *message)
+	m := make(chan string)
 	p := dummyPublisher{
 		messages:   m,
 		shouldFail: true,
@@ -216,20 +210,18 @@ func TestPublishRedeemFails(t *testing.T) {
 		handler.ServeHTTP(rr, req)
 	}()
 
-	var event *message
 	select {
-	case event = <-m:
+	case <-m:
 		t.Error("should not have received a message")
-	case <-time.After(time.Second):
+	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")
 	}
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
-	assert.Nil(t, event)
 }
 
 func TestPublishRedeemInvalidSignature(t *testing.T) {
-	m := make(chan *message)
+	m := make(chan string)
 	p := dummyPublisher{
 		messages:   m,
 		shouldFail: false,
@@ -259,20 +251,18 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 		handler.ServeHTTP(rr, req)
 	}()
 
-	var event *message
 	select {
-	case event = <-m:
+	case <-m:
 		t.Error("should not have received a message")
-	case <-time.After(time.Second):
+	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")
 	}
 
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
-	assert.Nil(t, event)
 }
 
 func TestPublishRedeemInvalidJSON(t *testing.T) {
-	m := make(chan *message)
+	m := make(chan string)
 	p := dummyPublisher{
 		messages:   m,
 		shouldFail: false,
@@ -307,20 +297,18 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 		handler.ServeHTTP(rr, req)
 	}()
 
-	var event *message
 	select {
-	case event = <-m:
+	case <-m:
 		t.Error("should not have received a message")
-	case <-time.After(time.Second):
+	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")
 	}
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	assert.Nil(t, event)
 }
 
 func TestPublishRedeemInvalidPayload(t *testing.T) {
-	m := make(chan *message)
+	m := make(chan string)
 	p := dummyPublisher{
 		messages:   m,
 		shouldFail: false,
@@ -362,7 +350,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 	select {
 	case <-m:
 		t.Error("should not have received a message")
-	case <-time.After(time.Second):
+	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")
 	}
 
@@ -372,7 +360,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 // The endpoint used for webhook callbacks must also verify itself:
 // https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#responding-to-a-challenge-request
 func TestVerifyWebhookCallback(t *testing.T) {
-	m := make(chan *message)
+	m := make(chan string)
 	p := dummyPublisher{
 		messages:   m,
 		shouldFail: false,
@@ -415,7 +403,7 @@ func TestVerifyWebhookCallback(t *testing.T) {
 	select {
 	case <-m:
 		t.Error("should not have received a message")
-	case <-time.After(time.Second):
+	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")
 	}
 

@@ -12,14 +12,16 @@ import (
 
 type TwitchAuthZHandler struct {
 	redirectURL string
+	state       string
 	client      *helix.Client
 }
 
 var twitchMu sync.Mutex
 
-func NewTwitchAuthZHandler(url string, c *helix.Client) *TwitchAuthZHandler {
+func NewTwitchAuthZHandler(url, state string, c *helix.Client) *TwitchAuthZHandler {
 	return &TwitchAuthZHandler{
 		redirectURL: url,
+		state:       state,
 		client:      c,
 	}
 }
