@@ -1,16 +1,11 @@
 package users
 
 type User struct {
-	TwitchID string
-	TwitchAuth
+	TwitchID    string
+	TwitchAuth  Auth
+	SpotifyAuth Auth
 }
 
-type TwitchAuth struct {
-	AccessToken  string
-	RefreshToken string
-}
-
-type SpotifyAuth struct {
-	AccessToken  string
-	RefreshToken string
+type Auth struct {
+	AccessToken, RefreshToken string
 }

@@ -5,8 +5,11 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/nicklaw5/helix"
+	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
+	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 )
 
@@ -14,15 +17,20 @@ type TwitchAuthZHandler struct {
 	redirectURL string
 	state       string
 	client      *helix.Client
+	userStore   db.UserStore
 }
 
-var twitchMu sync.Mutex
+var (
+	twitchMu     sync.Mutex
+	maxCookieAge int = int((time.Hour * 24 * 7).Seconds()) // expire after a week
+)
 
-func NewTwitchAuthZHandler(url, state string, c *helix.Client) *TwitchAuthZHandler {
+func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.UserStore) *TwitchAuthZHandler {
 	return &TwitchAuthZHandler{
 		redirectURL: url,
 		state:       state,
 		client:      c,
+		userStore:   userStore,
 	}
 }
 
@@ -69,11 +77,27 @@ func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Req
 	// TODO: store
 	user := users.User{
 		TwitchID: data.Data.UserID,
-		TwitchAuth: users.TwitchAuth{
+		TwitchAuth: users.Auth{
 			AccessToken:  token.Data.AccessToken,
 			RefreshToken: token.Data.RefreshToken,
 		},
 	}
-	log.Println("TODO: store information on", user.TwitchID)
+
+	err = h.userStore.AddUser(&user)
+	if err != nil {
+		log.Printf("failed to store auth details for %s\n", user.TwitchID)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "failed to save details on user")
+		return // don't set a cookie on the client
+	}
+
+	// add a cookie in the response
+	twitchCookie := http.Cookie{
+		Name:   constants.TwitchIDCookieKey,
+		Value:  user.TwitchID,
+		MaxAge: maxCookieAge,
+	}
+	http.SetCookie(w, &twitchCookie)
+
 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 }

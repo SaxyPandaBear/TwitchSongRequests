@@ -21,6 +21,7 @@ import (
 	"github.com/zmb3/spotify/v2"
 
 	handler "github.com/saxypandabear/twitchsongrequests/pkg/api"
+	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 )
@@ -45,7 +46,6 @@ type headerTestCase struct {
 	shouldPass   bool
 }
 
-// make sure that dummyPublisher maintains the Publisher interface
 var (
 	_ queue.Publisher = dummyPublisher{
 		messages:   nil,
@@ -83,8 +83,9 @@ func TestPublishRedeem(t *testing.T) {
 		messages:   m,
 		shouldFail: false,
 	}
+	u := db.InMemoryUserStore{}
 
-	rh := handler.NewRewardHandler(dummySecret, p)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, replace, userInput, 1)
@@ -133,8 +134,9 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 		messages:   m,
 		shouldFail: false,
 	}
+	u := db.InMemoryUserStore{}
 
-	rh := handler.NewRewardHandler(dummySecret, p)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, replace, userInput, 1)
@@ -180,8 +182,9 @@ func TestPublishRedeemFails(t *testing.T) {
 		messages:   m,
 		shouldFail: true,
 	}
+	u := db.InMemoryUserStore{}
 
-	rh := handler.NewRewardHandler(dummySecret, p)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, replace, userInput, 1)
@@ -226,8 +229,9 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 		messages:   m,
 		shouldFail: false,
 	}
+	u := db.InMemoryUserStore{}
 
-	rh := handler.NewRewardHandler(dummySecret, p)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, replace, userInput, 1)
@@ -267,8 +271,9 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 		messages:   m,
 		shouldFail: false,
 	}
+	u := db.InMemoryUserStore{}
 
-	rh := handler.NewRewardHandler(dummySecret, p)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, replace, userInput, 1)
@@ -313,8 +318,9 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 		messages:   m,
 		shouldFail: false,
 	}
+	u := db.InMemoryUserStore{}
 
-	rh := handler.NewRewardHandler(dummySecret, p)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, replace, userInput, 1)
@@ -365,8 +371,9 @@ func TestVerifyWebhookCallback(t *testing.T) {
 		messages:   m,
 		shouldFail: false,
 	}
+	u := db.InMemoryUserStore{}
 
-	rh := handler.NewRewardHandler(dummySecret, p)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, replace, challenge, 1)

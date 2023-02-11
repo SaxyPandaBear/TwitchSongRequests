@@ -1,17 +1,21 @@
 package songrequests
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5"
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
+	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/site"
 	"github.com/saxypandabear/twitchsongrequests/pkg/spotify"
 )
@@ -21,6 +25,15 @@ func StartServer(port int) error {
 		log.Fatalf("Invalid port: %d", port)
 	}
 	addr := fmt.Sprintf(":%d", port)
+
+	// connect to Postgres DB
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatalf("Unable to connect to database: %v\n", err)
+	}
+	defer conn.Close(context.Background())
+
+	userStore := db.NewPostgresUserStore(conn)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -65,13 +78,14 @@ func StartServer(port int) error {
 		log.Println("failed to load Spotify configurations ", err)
 		return err
 	}
+
 	p := spotify.SpotifyPlayerQueue{}
-	reward := api.NewRewardHandler(s, &p)
+	reward := api.NewRewardHandler(s, &p, userStore)
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 
-	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch)
-	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions)
+	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore)
+	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions, userStore)
 	r.Get("/oauth/twitch", twitchRedirect.SubscribeToTopic)
 	r.Get("/oauth/spotify", spotifyRedirect.Authenticate)
 

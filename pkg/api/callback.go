@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/nicklaw5/helix"
+	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 )
 
@@ -26,12 +27,14 @@ type EventSubNotification struct {
 type RewardHandler struct {
 	secret    string
 	publisher queue.Publisher
+	userStore db.UserStore
 }
 
-func NewRewardHandler(twitchSecret string, publisher queue.Publisher) *RewardHandler {
+func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore) *RewardHandler {
 	return &RewardHandler{
 		secret:    twitchSecret,
 		publisher: publisher,
+		userStore: userStore,
 	}
 }
 

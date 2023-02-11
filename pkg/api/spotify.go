@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
+	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 )
 
@@ -13,9 +14,10 @@ type SpotifyAuthZHandler struct {
 	redirectURL   string
 	state         string
 	authenticator *spotifyauth.Authenticator
+	userStore     db.UserStore
 }
 
-func NewSpotifyAuthZHandler(url, state string, auth *spotifyauth.Authenticator) *SpotifyAuthZHandler {
+func NewSpotifyAuthZHandler(url, state string, auth *spotifyauth.Authenticator, userStore db.UserStore) *SpotifyAuthZHandler {
 	return &SpotifyAuthZHandler{
 		redirectURL:   url,
 		state:         state,
@@ -27,6 +29,8 @@ func NewSpotifyAuthZHandler(url, state string, auth *spotifyauth.Authenticator) 
 func (h *SpotifyAuthZHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(constants.TwitchIDCookieKey)
 	if err != nil {
+		// There is no point in authenticatingwith Spotify because
+		// the Twitch user ID is the primary key for a user
 		log.Println("Twitch ID is not available")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, "missing Twitch ID cookie")
