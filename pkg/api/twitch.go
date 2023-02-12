@@ -76,11 +76,9 @@ func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Req
 
 	// TODO: store
 	user := users.User{
-		TwitchID: data.Data.UserID,
-		TwitchAuth: users.Auth{
-			AccessToken:  token.Data.AccessToken,
-			RefreshToken: token.Data.RefreshToken,
-		},
+		TwitchID:           data.Data.UserID,
+		TwitchAccessToken:  token.Data.AccessToken,
+		TwitchRefreshToken: token.Data.RefreshToken,
 	}
 
 	err = h.userStore.AddUser(&user)

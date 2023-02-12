@@ -9,6 +9,7 @@ import (
 type UserStore interface {
 	GetUser(id string) (*users.User, error)
 	AddUser(user *users.User) error
+	UpdateUser(user *users.User) error
 	DeleteUser(id string) error
 }
 
@@ -31,6 +32,11 @@ func (s *InMemoryUserStore) GetUser(id string) (*users.User, error) {
 func (s *InMemoryUserStore) AddUser(user *users.User) error {
 	s.Data[user.TwitchID] = user
 	return nil // TODO: not sure if it's worth testing negative case
+}
+
+func (s *InMemoryUserStore) UpdateUser(user *users.User) error {
+	s.Data[user.TwitchID] = user
+	return nil
 }
 
 func (s *InMemoryUserStore) DeleteUser(id string) error {

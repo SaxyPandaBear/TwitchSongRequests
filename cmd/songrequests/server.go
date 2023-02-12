@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
@@ -27,13 +27,13 @@ func StartServer(port int) error {
 	addr := fmt.Sprintf(":%d", port)
 
 	// connect to Postgres DB
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	defer conn.Close(context.Background())
+	defer dbpool.Close()
 
-	userStore := db.NewPostgresUserStore(conn)
+	userStore := db.NewPostgresUserStore(dbpool)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
