@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
@@ -39,6 +40,8 @@ func StartServer(port int) error {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
+	r.Use(middleware.CleanPath)
+	r.Use(httprate.LimitByIP(100, time.Minute))
 	r.Use(middleware.Recoverer)
 
 	// Set a timeout value on the request context (ctx), that will signal
@@ -46,10 +49,13 @@ func StartServer(port int) error {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	homePage := site.NewHomePageRenderer()
-	r.Get("/", homePage.HomePage)
+	r.NotFound(site.NotFound)
+	r.MethodNotAllowed(site.NotAllowed)
 
-	r.Get("/ping", api.PingHandler)
+	pageHandler := site.NewSiteRenderer(userStore)
+	r.Get("/", pageHandler.HomePage)
+
+	r.Use(middleware.Heartbeat("/ping"))
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
