@@ -48,6 +48,7 @@ func StartServer(port int) error {
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(middleware.Heartbeat("/ping"))
 
 	r.Mount("/debug", middleware.Profiler())
 
@@ -56,8 +57,6 @@ func StartServer(port int) error {
 
 	pageHandler := site.NewSiteRenderer(userStore)
 	r.Get("/", pageHandler.HomePage)
-
-	r.Get("/ping", api.PingHandler)
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
