@@ -48,7 +48,6 @@ func StartServer(port int) error {
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
-	r.Use(middleware.Heartbeat("/ping"))
 
 	r.Mount("/debug", middleware.Profiler())
 
