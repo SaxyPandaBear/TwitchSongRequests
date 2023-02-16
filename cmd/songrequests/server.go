@@ -56,6 +56,7 @@ func StartServer(port int) error {
 	r.Get("/", pageHandler.HomePage)
 
 	r.Use(middleware.Heartbeat("/ping"))
+	r.Mount("/debug", middleware.Profiler())
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
