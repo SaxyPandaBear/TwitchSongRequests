@@ -58,6 +58,8 @@ func StartServer(port int) error {
 	pageHandler := site.NewSiteRenderer(userStore)
 	r.Get("/", pageHandler.HomePage)
 
+	r.Get("/ping", api.PingHandler)
+
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
