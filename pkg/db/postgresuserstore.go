@@ -26,7 +26,8 @@ func (db *PostgresUserStore) GetUser(id string) (*users.User, error) {
 		TwitchID: id,
 	}
 
-	err := db.pool.QueryRow(context.Background(), "select twitch_access, twitch_refresh, spotify_access, spotify_refresh where id=$1", id).
+	err := db.pool.QueryRow(context.Background(),
+		"select twitch_access, twitch_refresh, spotify_access, spotify_refresh where id=$1 on conflict do nothing", id).
 		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken)
 
 	if err != nil {
