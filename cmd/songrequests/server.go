@@ -2,6 +2,8 @@ package songrequests
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,14 +25,33 @@ import (
 
 func StartServer(port int) error {
 	if port < 1 {
-		log.Fatalf("Invalid port: %d", port)
+		return fmt.Errorf("invalid port %d", port)
 	}
 	addr := fmt.Sprintf(":%d", port)
+
+	// cipher is used to encrypt and decrypt user data that gets stored as cookies.
+	cipherKey, err := util.GetFromEnv(constants.CipherKey)
+	if err != nil {
+		log.Println("failed to load encryption cipher")
+		return err
+	}
+
+	c, err := aes.NewCipher([]byte(cipherKey))
+	if err != nil {
+		log.Println("failed to create cipher")
+		return err
+	}
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		log.Println("failed to create gcm")
+		return err
+	}
 
 	// connect to Postgres DB
 	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Fatalf("Unable to connect to database: %v\n", err)
+		log.Println("failed to connect to Postgres database")
+
 	}
 	defer dbpool.Close()
 
@@ -55,14 +76,14 @@ func StartServer(port int) error {
 	r.NotFound(site.NotFound)
 	r.MethodNotAllowed(site.NotAllowed)
 
-	pageHandler := site.NewSiteRenderer(userStore)
+	pageHandler := site.NewSiteRenderer(userStore, gcm)
 	r.Get("/", pageHandler.HomePage)
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
 	if err != nil {
-		log.Println("failed", err)
+		log.Println("failed to load Twitch auth state key", err)
 		return err
 	}
 
@@ -91,8 +112,8 @@ func StartServer(port int) error {
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 
-	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore)
-	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions, userStore)
+	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore, gcm)
+	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions, userStore, gcm)
 	r.Get("/oauth/twitch", twitchRedirect.SubscribeToTopic)
 	r.Get("/oauth/spotify", spotifyRedirect.Authenticate)
 
