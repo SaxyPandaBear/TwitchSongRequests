@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
@@ -21,10 +20,7 @@ type TwitchAuthZHandler struct {
 	userStore   db.UserStore
 }
 
-var (
-	twitchMu  sync.Mutex
-	cookieAge int = int((time.Hour * 24 * 14).Seconds())
-)
+var twitchMu sync.Mutex
 
 func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.UserStore) *TwitchAuthZHandler {
 	return &TwitchAuthZHandler{
@@ -82,14 +78,19 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 
 	ok, data, err := h.client.ValidateToken(token.Data.AccessToken)
 	if err != nil {
-		log.Println("oops", err)
+		log.Println("error occurred while validating Twitch OAuth token", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, "failed to validate Twitch OAuth token")
+		return
 	} else if !ok {
 		log.Printf("failed to validate. Error Status: %d; Message: %s\n", data.ErrorStatus, data.ErrorMessage)
-	} else if data != nil {
-		log.Println("validated", data.Data.Login)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, "failed to validate Twitch OAuth token")
+		return
 	}
 
-	// TODO: store
+	log.Println("validated", data.Data.Login)
+
 	user := users.User{
 		TwitchID:           data.Data.UserID,
 		TwitchAccessToken:  token.Data.AccessToken,
@@ -109,7 +110,7 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 		Name:   constants.TwitchIDCookieKey,
 		Path:   "/oauth/twitch",
 		Value:  base64.StdEncoding.EncodeToString([]byte(user.TwitchID)),
-		MaxAge: cookieAge,
+		Secure: true,
 	}
 	http.SetCookie(w, &twitchCookie)
 

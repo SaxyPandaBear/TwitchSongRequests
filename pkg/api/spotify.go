@@ -70,10 +70,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// TODO: remove this
-	if token != nil {
-		log.Println("successfully got Spotify token")
-	}
+	log.Println("successfully got Spotify token")
 
 	u.SpotifyAccessToken = token.AccessToken
 	u.SpotifyRefreshToken = token.RefreshToken
