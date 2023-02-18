@@ -27,7 +27,7 @@ func (db *PostgresUserStore) GetUser(id string) (*users.User, error) {
 	}
 
 	err := db.pool.QueryRow(context.Background(),
-		"select twitch_access, twitch_refresh, spotify_access, spotify_refresh where id=$1 on conflict do nothing", id).
+		"select twitch_access, twitch_refresh, spotify_access, spotify_refresh where id=$1", id).
 		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken)
 
 	if err != nil {
@@ -39,7 +39,7 @@ func (db *PostgresUserStore) GetUser(id string) (*users.User, error) {
 
 func (db *PostgresUserStore) AddUser(user *users.User) error {
 	if _, err := db.pool.Exec(context.Background(),
-		"insert into users(id, twitch_access, twitch_refresh, last_updated) values ($1, $2, $3, $4)",
+		"insert into users(id, twitch_access, twitch_refresh, last_updated) values ($1, $2, $3, $4) on conflict do nothing",
 		user.TwitchID,
 		user.TwitchAccessToken,
 		user.TwitchRefreshToken,
