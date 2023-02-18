@@ -1,14 +1,13 @@
 package api
 
 import (
-	"crypto/cipher"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
 	"sync"
 
 	"github.com/nicklaw5/helix"
-	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
@@ -19,20 +18,18 @@ type TwitchAuthZHandler struct {
 	state       string
 	client      *helix.Client
 	userStore   db.UserStore
-	gcm         cipher.AEAD
 }
 
 var (
 	twitchMu sync.Mutex
 )
 
-func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.UserStore, gcm cipher.AEAD) *TwitchAuthZHandler {
+func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.UserStore) *TwitchAuthZHandler {
 	return &TwitchAuthZHandler{
 		redirectURL: url,
 		state:       state,
 		client:      c,
 		userStore:   userStore,
-		gcm:         gcm,
 	}
 }
 
@@ -83,16 +80,6 @@ func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Req
 		TwitchRefreshToken: token.Data.RefreshToken,
 	}
 
-	// encrypt the cookie value before saving to the database in case this fails
-	// because we don't want to pollute the database
-	encrypted, err := util.EncryptTwitchID(user.TwitchID, h.gcm, util.DefaultNonceGenerator)
-	if err != nil {
-		log.Printf("failed to encrypt %s: %v\n", user.TwitchID, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "failed to encrypt user ID")
-		return
-	}
-
 	err = h.userStore.AddUser(&user)
 	if err != nil {
 		log.Printf("failed to store auth details for %s\n", user.TwitchID)
@@ -104,7 +91,7 @@ func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Req
 	// add a cookie in the response
 	twitchCookie := http.Cookie{
 		Name:  constants.TwitchIDCookieKey,
-		Value: string(encrypted),
+		Value: base64.StdEncoding.EncodeToString([]byte(user.TwitchID)),
 	}
 	http.SetCookie(w, &twitchCookie)
 

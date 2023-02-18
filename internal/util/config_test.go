@@ -68,6 +68,7 @@ func TestSpotifyClientEmpty(t *testing.T) {
 func TestSpotifyClientHappyPath(t *testing.T) {
 	t.Setenv(constants.SpotifyClientIDKey, "foo")
 	t.Setenv(constants.SpotifyClientSecretKey, "bar")
+	t.Setenv(constants.SpotifyRedirectURL, "baz")
 
 	auth, err := util.LoadSpotifyClientOptions()
 	assert.NotNil(t, auth)

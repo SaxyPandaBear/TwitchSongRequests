@@ -1,12 +1,11 @@
 package api
 
 import (
-	"crypto/cipher"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
@@ -17,16 +16,14 @@ type SpotifyAuthZHandler struct {
 	state         string
 	authenticator *spotifyauth.Authenticator
 	userStore     db.UserStore
-	gcm           cipher.AEAD
 }
 
-func NewSpotifyAuthZHandler(url, state string, auth *spotifyauth.Authenticator, userStore db.UserStore, gcm cipher.AEAD) *SpotifyAuthZHandler {
+func NewSpotifyAuthZHandler(url, state string, auth *spotifyauth.Authenticator, userStore db.UserStore) *SpotifyAuthZHandler {
 	return &SpotifyAuthZHandler{
 		redirectURL:   url,
 		state:         state,
 		authenticator: auth,
 		userStore:     userStore,
-		gcm:           gcm,
 	}
 }
 
@@ -49,12 +46,11 @@ func (h *SpotifyAuthZHandler) Authenticate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	bytes, err := util.DecryptTwitchID(cookie.Value, h.gcm)
+	bytes, err := base64.StdEncoding.DecodeString(cookie.Value)
 	if err != nil {
-		log.Println("failed to decrypt cookie value", err)
+		log.Println("failed to decode cookie value", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "failed to decrypt cookie value")
-		return
+		fmt.Fprintln(w, "failed to decode cookie value")
 	}
 
 	userID := string(bytes)

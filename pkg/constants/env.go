@@ -9,12 +9,13 @@ const (
 	SpotifyClientSecretKey  = "SPOTIFY_CLIENT_SECRET"
 
 	// Server configs
-	MockServerURLKey  = "MOCK_SERVER_URL"
-	TwitchRedirectURL = "TWITCH_REDIRECT_URL"
-	SiteRedirectURL   = "SITE_REDIRECT_URL"
-	SpotifyStateKey   = "SPOTIFY_STATE"
-	TwitchStateKey    = "TWITCH_STATE"
-	CipherKey         = "CIPHER_KEY"
+	MockServerURLKey   = "MOCK_SERVER_URL"
+	TwitchRedirectURL  = "TWITCH_REDIRECT_URL"
+	SpotifyRedirectURL = "SPOTIFY_REDIRECT_URL"
+	SiteRedirectURL    = "SITE_REDIRECT_URL"
+	SpotifyStateKey    = "SPOTIFY_STATE"
+	TwitchStateKey     = "TWITCH_STATE"
+	CipherKey          = "CIPHER_KEY"
 
 	// Shared cookie
 	TwitchIDCookieKey = "TwitchSongRequests-Twitch-ID"

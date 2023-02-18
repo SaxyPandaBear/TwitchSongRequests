@@ -58,7 +58,15 @@ func LoadSpotifyClientOptions() (*spotifyauth.Authenticator, error) {
 		return nil, err
 	}
 
-	return spotifyauth.New(spotifyauth.WithClientID(clientID), spotifyauth.WithClientSecret(clientSecret)), nil
+	redirect, err := GetFromEnv(constants.SpotifyRedirectURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return spotifyauth.New(
+		spotifyauth.WithClientID(clientID),
+		spotifyauth.WithClientSecret(clientSecret),
+		spotifyauth.WithRedirectURL(redirect)), nil
 }
 
 // GetFromEnv tries to read an environment variable by key, and if:

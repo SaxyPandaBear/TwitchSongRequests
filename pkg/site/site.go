@@ -1,12 +1,11 @@
 package site
 
 import (
-	"crypto/cipher"
+	"encoding/base64"
 	"html/template"
 	"log"
 	"net/http"
 
-	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
@@ -18,17 +17,15 @@ var (
 
 type SiteRenderer struct {
 	userStore db.UserStore
-	gcm       cipher.AEAD
 }
 
 type HomePageData struct {
 	Authenticated bool
 }
 
-func NewSiteRenderer(u db.UserStore, gcm cipher.AEAD) *SiteRenderer {
+func NewSiteRenderer(u db.UserStore) *SiteRenderer {
 	return &SiteRenderer{
 		userStore: u,
-		gcm:       gcm,
 	}
 }
 
@@ -68,9 +65,9 @@ func (h *SiteRenderer) getHomePageData(r *http.Request) *HomePageData {
 		return &d
 	}
 
-	idBytes, err := util.DecryptTwitchID(c.Value, h.gcm)
+	idBytes, err := base64.StdEncoding.DecodeString(c.Value)
 	if err != nil {
-		log.Println("failed to decrypt cookie value", err)
+		log.Println("failed to decode cookie value", err)
 		return &d
 	}
 	id := string(idBytes)

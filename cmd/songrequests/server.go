@@ -2,8 +2,6 @@ package songrequests
 
 import (
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,24 +26,6 @@ func StartServer(port int) error {
 		return fmt.Errorf("invalid port %d", port)
 	}
 	addr := fmt.Sprintf(":%d", port)
-
-	// cipher is used to encrypt and decrypt user data that gets stored as cookies.
-	cipherKey, err := util.GetFromEnv(constants.CipherKey)
-	if err != nil {
-		log.Println("failed to load encryption cipher")
-		return err
-	}
-
-	c, err := aes.NewCipher([]byte(cipherKey))
-	if err != nil {
-		log.Println("failed to create cipher")
-		return err
-	}
-	gcm, err := cipher.NewGCM(c)
-	if err != nil {
-		log.Println("failed to create gcm")
-		return err
-	}
 
 	// connect to Postgres DB
 	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
@@ -76,7 +56,7 @@ func StartServer(port int) error {
 	r.NotFound(site.NotFound)
 	r.MethodNotAllowed(site.NotAllowed)
 
-	pageHandler := site.NewSiteRenderer(userStore, gcm)
+	pageHandler := site.NewSiteRenderer(userStore)
 	r.Get("/", pageHandler.HomePage)
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
@@ -112,8 +92,8 @@ func StartServer(port int) error {
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 
-	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore, gcm)
-	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions, userStore, gcm)
+	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore)
+	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions, userStore)
 	r.Get("/oauth/twitch", twitchRedirect.SubscribeToTopic)
 	r.Get("/oauth/spotify", spotifyRedirect.Authenticate)
 
