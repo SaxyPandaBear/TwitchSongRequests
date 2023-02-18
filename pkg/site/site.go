@@ -108,7 +108,7 @@ func GenerateTwitchAuthorizeURL(config AuthConfig) string {
 		"redirect_uri":  {config.RedirectURL},
 		"response_type": {"code"},
 		"state":         {config.State},
-		"scope":         {"channel-read-redemptions"},
+		"scope":         {"channel:read:redemptions"},
 	}
 
 	u := url.URL{
