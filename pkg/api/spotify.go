@@ -67,6 +67,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 		log.Println("failed to get spotify auth token for user", userID)
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "failed to get Spotify auth token")
+		return
 	}
 
 	// TODO: remove this

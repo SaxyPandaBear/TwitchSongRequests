@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
@@ -21,7 +22,8 @@ type TwitchAuthZHandler struct {
 }
 
 var (
-	twitchMu sync.Mutex
+	twitchMu  sync.Mutex
+	cookieAge int = int((time.Hour * 24 * 14).Seconds())
 )
 
 func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.UserStore) *TwitchAuthZHandler {
@@ -104,8 +106,10 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 
 	// add a cookie in the response
 	twitchCookie := http.Cookie{
-		Name:  constants.TwitchIDCookieKey,
-		Value: base64.StdEncoding.EncodeToString([]byte(user.TwitchID)),
+		Name:   constants.TwitchIDCookieKey,
+		Path:   "/oauth/twitch",
+		Value:  base64.StdEncoding.EncodeToString([]byte(user.TwitchID)),
+		MaxAge: cookieAge,
 	}
 	http.SetCookie(w, &twitchCookie)
 
