@@ -51,13 +51,8 @@ func StartServer(port int) error {
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.Heartbeat("/ping"))
 
-	r.Mount("/debug", middleware.Profiler())
-
 	r.NotFound(site.NotFound)
 	r.MethodNotAllowed(site.NotAllowed)
-
-	pageHandler := site.NewSiteRenderer(userStore)
-	r.Get("/", pageHandler.HomePage)
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
@@ -96,6 +91,15 @@ func StartServer(port int) error {
 	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions, userStore)
 	r.Get("/oauth/twitch", twitchRedirect.SubscribeToTopic)
 	r.Get("/oauth/spotify", spotifyRedirect.Authenticate)
+
+	twitchConfig := site.AuthConfig{
+		ClientID:    twitchOptions.ClientID,
+		RedirectURL: twitchOptions.RedirectURI,
+		State:       twitchState,
+	}
+
+	pageHandler := site.NewSiteRenderer(userStore, twitchConfig)
+	r.Get("/", pageHandler.HomePage)
 
 	http.Handle("/", r)
 

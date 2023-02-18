@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
@@ -15,17 +16,26 @@ var (
 	homePage = template.Must(template.ParseFiles("pkg/site/home.html"))
 )
 
+type AuthConfig struct {
+	ClientID    string
+	RedirectURL string
+	State       string
+}
+
 type SiteRenderer struct {
 	userStore db.UserStore
+	twitch    AuthConfig
 }
 
 type HomePageData struct {
+	TwitchAuthURL string
 	Authenticated bool
 }
 
-func NewSiteRenderer(u db.UserStore) *SiteRenderer {
+func NewSiteRenderer(u db.UserStore, twitch AuthConfig) *SiteRenderer {
 	return &SiteRenderer{
 		userStore: u,
+		twitch:    twitch,
 	}
 }
 
@@ -52,7 +62,10 @@ func NotAllowed(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SiteRenderer) getHomePageData(r *http.Request) *HomePageData {
-	d := HomePageData{}
+	d := HomePageData{
+		TwitchAuthURL: GenerateTwitchAuthorizeURL(h.twitch),
+		Authenticated: false,
+	}
 
 	c, err := r.Cookie(constants.TwitchIDCookieKey)
 	if err != nil {
@@ -87,4 +100,23 @@ func (h *SiteRenderer) getHomePageData(r *http.Request) *HomePageData {
 	d.Authenticated = tAuthed && sAuthed
 
 	return &d
+}
+
+func GenerateTwitchAuthorizeURL(config AuthConfig) string {
+	query := url.Values{
+		"client_id":     {config.ClientID},
+		"redirect_uri":  {config.RedirectURL},
+		"response_type": {"code"},
+		"state":         {config.State},
+		"scope":         {"channel-read-redemptions"},
+	}
+
+	u := url.URL{
+		Scheme:   "https",
+		Host:     "id.twitch.tv",
+		Path:     "oauth2/authorize",
+		RawQuery: query.Encode(),
+	}
+
+	return u.String()
 }

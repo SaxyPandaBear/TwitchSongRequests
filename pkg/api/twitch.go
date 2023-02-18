@@ -33,6 +33,10 @@ func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.User
 	}
 }
 
+func (h *TwitchAuthZHandler) LoginRedirect(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
 	// https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/
 	if r.URL.Query().Has("error") {
@@ -45,10 +49,20 @@ func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Req
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		log.Println("could not extract access code from redirect")
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "failed to authorize")
 		return
 	}
+
+	// validate state key matches
+	state := r.URL.Query().Get("state")
+	if state != h.state {
+		log.Println("could not verify request state")
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, "failed to verify state")
+		return
+	}
+
 	// https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#use-the-authorization-code-to-get-a-token
 	token, err := h.client.RequestUserAccessToken(code)
 	if err != nil {
@@ -94,6 +108,8 @@ func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Req
 		Value: base64.StdEncoding.EncodeToString([]byte(user.TwitchID)),
 	}
 	http.SetCookie(w, &twitchCookie)
+
+	// TODO: subscribe to the user's Twitch channel points
 
 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 }
