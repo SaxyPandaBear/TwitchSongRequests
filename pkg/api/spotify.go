@@ -28,7 +28,7 @@ func NewSpotifyAuthZHandler(url, state string, auth *spotifyauth.Authenticator, 
 }
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
-func (h *SpotifyAuthZHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
+func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(constants.TwitchIDCookieKey)
 	if err != nil {
 		// There is no point in authenticating with Spotify because

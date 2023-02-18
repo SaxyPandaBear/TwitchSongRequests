@@ -2,6 +2,7 @@ package site
 
 import (
 	"encoding/base64"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -25,17 +26,23 @@ type AuthConfig struct {
 type SiteRenderer struct {
 	userStore db.UserStore
 	twitch    AuthConfig
+	spotify   AuthConfig
+	siteURL   string
 }
 
 type HomePageData struct {
-	TwitchAuthURL string
-	Authenticated bool
+	TwitchAuthURL     string
+	TwitchEventSubURL string
+	SpotifyAuthURL    string
+	Authenticated     bool
 }
 
-func NewSiteRenderer(u db.UserStore, twitch AuthConfig) *SiteRenderer {
+func NewSiteRenderer(siteURL string, u db.UserStore, twitch, spotify AuthConfig) *SiteRenderer {
 	return &SiteRenderer{
+		siteURL:   siteURL,
 		userStore: u,
 		twitch:    twitch,
+		spotify:   spotify,
 	}
 }
 
@@ -63,8 +70,10 @@ func NotAllowed(w http.ResponseWriter, r *http.Request) {
 
 func (h *SiteRenderer) getHomePageData(r *http.Request) *HomePageData {
 	d := HomePageData{
-		TwitchAuthURL: GenerateTwitchAuthorizeURL(h.twitch),
-		Authenticated: false,
+		TwitchEventSubURL: fmt.Sprintf("%s/subscribe", h.siteURL),
+		TwitchAuthURL:     GenerateAuthURL("id.twitch.tv", "oauth2/authorize", "channel:read:redemptions", h.twitch),
+		SpotifyAuthURL:    GenerateAuthURL("accounts.spotify.com", "authorize", "user-modify-playback-state user-read-playback-state", h.spotify),
+		Authenticated:     false,
 	}
 
 	c, err := r.Cookie(constants.TwitchIDCookieKey)
@@ -102,19 +111,38 @@ func (h *SiteRenderer) getHomePageData(r *http.Request) *HomePageData {
 	return &d
 }
 
-func GenerateTwitchAuthorizeURL(config AuthConfig) string {
+func GenerateTwitchAuthURL(config AuthConfig) string {
 	query := url.Values{
 		"client_id":     {config.ClientID},
 		"redirect_uri":  {config.RedirectURL},
 		"response_type": {"code"},
 		"state":         {config.State},
-		"scope":         {"channel:read:redemptions"},
+		"scope":         {},
 	}
 
 	u := url.URL{
 		Scheme:   "https",
 		Host:     "id.twitch.tv",
 		Path:     "oauth2/authorize",
+		RawQuery: query.Encode(),
+	}
+
+	return u.String()
+}
+
+func GenerateAuthURL(host, path, scope string, config AuthConfig) string {
+	query := url.Values{
+		"client_id":     {config.ClientID},
+		"redirect_uri":  {config.RedirectURL},
+		"response_type": {"code"},
+		"state":         {config.State},
+		"scope":         {scope},
+	}
+
+	u := url.URL{
+		Scheme:   "https",
+		Host:     host,
+		Path:     path,
 		RawQuery: query.Encode(),
 	}
 

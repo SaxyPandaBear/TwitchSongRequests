@@ -37,7 +37,7 @@ func (h *TwitchAuthZHandler) LoginRedirect(w http.ResponseWriter, r *http.Reques
 
 }
 
-func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
+func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	// https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/
 	if r.URL.Query().Has("error") {
 		log.Printf("failed to authorize: %s\n", r.URL.Query().Get("error_description"))
@@ -108,8 +108,6 @@ func (h *TwitchAuthZHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Req
 		Value: base64.StdEncoding.EncodeToString([]byte(user.TwitchID)),
 	}
 	http.SetCookie(w, &twitchCookie)
-
-	// TODO: subscribe to the user's Twitch channel points
 
 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 }

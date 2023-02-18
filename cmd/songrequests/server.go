@@ -87,10 +87,13 @@ func StartServer(port int) error {
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 
+	eventSub := api.NewEventSubHandler(twitch, redirectURL, s)
+	r.Post("/subscribe", eventSub.SubscribeToTopic)
+
 	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore)
 	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions, userStore)
-	r.Get("/oauth/twitch", twitchRedirect.SubscribeToTopic)
-	r.Get("/oauth/spotify", spotifyRedirect.Authenticate)
+	r.Get("/oauth/twitch", twitchRedirect.Authorize)
+	r.Get("/oauth/spotify", spotifyRedirect.Authorize)
 
 	twitchConfig := site.AuthConfig{
 		ClientID:    twitchOptions.ClientID,
@@ -98,7 +101,15 @@ func StartServer(port int) error {
 		State:       twitchState,
 	}
 
-	pageHandler := site.NewSiteRenderer(userStore, twitchConfig)
+	spotifyClientID, _ := util.GetFromEnv(constants.SpotifyClientIDKey)
+	spotifyRedirectURI, _ := util.GetFromEnv(constants.SpotifyRedirectURL)
+	spotifyConfig := site.AuthConfig{
+		ClientID:    spotifyClientID,
+		RedirectURL: spotifyRedirectURI,
+		State:       spotifyState,
+	}
+
+	pageHandler := site.NewSiteRenderer(redirectURL, userStore, twitchConfig, spotifyConfig)
 	r.Get("/", pageHandler.HomePage)
 
 	http.Handle("/", r)

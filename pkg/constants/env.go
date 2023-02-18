@@ -15,7 +15,6 @@ const (
 	SiteRedirectURL    = "SITE_REDIRECT_URL"
 	SpotifyStateKey    = "SPOTIFY_STATE"
 	TwitchStateKey     = "TWITCH_STATE"
-	CipherKey          = "CIPHER_KEY"
 
 	// Shared cookie
 	TwitchIDCookieKey = "TwitchSongRequests-Twitch-ID"
