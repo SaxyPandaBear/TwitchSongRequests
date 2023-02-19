@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	SongRequestsTitle = "TwitchSongRequests"
 	verificationType  = "webhook_callback_verification"
 	messageTypeHeader = "Twitch-Eventsub-Message-Type"
 )
@@ -82,6 +83,12 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
+		if !IsValidSongRequest(&redeemEvent) {
+			log.Println("not a valid song request, so dropping")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 		// TODO: get access token for Spotify and create Spotify client
 		if err = h.publisher.Publish(nil, redeemEvent.UserInput); err != nil {
@@ -99,4 +106,8 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 
 func IsVerificationRequest(r *http.Request) bool {
 	return verificationType == r.Header.Get(strings.ToLower(messageTypeHeader))
+}
+
+func IsValidSongRequest(e *helix.EventSubChannelPointsCustomRewardRedemptionEvent) bool {
+	return e != nil && strings.Contains(e.Reward.Title, SongRequestsTitle)
 }

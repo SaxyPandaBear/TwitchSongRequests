@@ -15,12 +15,20 @@
         "created_at": "2019-11-16T10:11:12.123Z"
     },
     "event": {
+        "id": "abc-123",
         "user_id": "1337",
-        "user_input": "REPLACEME",
+        "user_input": "TESTUSERINPUT",
+        "status": "unfulfilled",
         "user_login": "awesome_user",
         "user_name": "Awesome_User",
         "broadcaster_user_id": "12826",
         "broadcaster_user_login": "twitch",
-        "broadcaster_user_name": "Twitch"
+        "broadcaster_user_name": "Twitch",
+        "reward": {
+            "id": "bcd-234",
+            "title": "TESTREWARDTITLE",
+            "cost": 1,
+            "prompt": "some description"
+        }
     }
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/zmb3/spotify/v2"
 
+	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	handler "github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 
@@ -51,15 +52,17 @@ var (
 		messages:   nil,
 		shouldFail: false,
 	}
-	dummySecret         = "dummy"
-	eventSubMsgID       = "foo"
-	size                = 20
-	letters             = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	replace             = "REPLACEME"
-	msgIDHeader         = "Twitch-Eventsub-Message-Id"
-	msgTimestampHeader  = "Twitch-Eventsub-Message-Timestamp"
-	msgSignatureHeader  = "Twitch-Eventsub-Message-Signature"
-	testResponseTimeout = time.Millisecond * 50
+	dummySecret            = "dummy"
+	eventSubMsgID          = "foo"
+	size                   = 20
+	letters                = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	userInputPlaceholder   = "TESTUSERINPUT"
+	challengePlaceholder   = "CHALLENGEINPUT"
+	rewardTitlePlaceholder = "TESTREWARDTITLE"
+	msgIDHeader            = "Twitch-Eventsub-Message-Id"
+	msgTimestampHeader     = "Twitch-Eventsub-Message-Timestamp"
+	msgSignatureHeader     = "Twitch-Eventsub-Message-Signature"
+	testResponseTimeout    = time.Millisecond * 50
 )
 
 //go:embed testdata/redeem.json
@@ -88,9 +91,10 @@ func TestPublishRedeem(t *testing.T) {
 	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
-	payload := strings.Replace(redeemPayload, replace, userInput, 1)
+	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
+	payload = strings.Replace(payload, rewardTitlePlaceholder, api.SongRequestsTitle, 1)
 	assert.NotEmpty(t, payload)
-	assert.False(t, strings.Contains(payload, replace))
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
 	var payloadMap handler.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
@@ -139,9 +143,9 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
-	payload := strings.Replace(redeemPayload, replace, userInput, 1)
+	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
 	assert.NotEmpty(t, payload)
-	assert.False(t, strings.Contains(payload, replace))
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
 	var payloadMap handler.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
@@ -176,6 +180,54 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
+func TestPublishIncorrectRewardTitle(t *testing.T) {
+	m := make(chan string)
+	p := dummyPublisher{
+		messages:   m,
+		shouldFail: true,
+	}
+	u := db.InMemoryUserStore{}
+
+	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+
+	userInput := generateUserInput(t)
+	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
+	assert.NotEmpty(t, payload)
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
+	assert.False(t, strings.Contains(payload, api.SongRequestsTitle))
+
+	var payloadMap handler.EventSubNotification
+	err := json.Unmarshal([]byte(payload), &payloadMap)
+	assert.NoError(t, err)
+	assert.NotNil(t, payloadMap)
+
+	req, err := http.NewRequest("POST", "/callback", strings.NewReader(payload))
+	assert.NoError(t, err)
+
+	// spoof signature header
+	ts := time.Now().Format(time.RFC3339)
+	sig := deriveEventsubSignature(t, payload, eventSubMsgID, ts, dummySecret)
+	req.Header.Add(msgIDHeader, eventSubMsgID)
+	req.Header.Add(msgTimestampHeader, ts)
+	req.Header.Add(msgSignatureHeader, sig)
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+
+	go func() {
+		handler.ServeHTTP(rr, req)
+	}()
+
+	select {
+	case <-m:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
 func TestPublishRedeemFails(t *testing.T) {
 	m := make(chan string)
 	p := dummyPublisher{
@@ -187,9 +239,10 @@ func TestPublishRedeemFails(t *testing.T) {
 	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
-	payload := strings.Replace(redeemPayload, replace, userInput, 1)
+	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
+	payload = strings.Replace(payload, rewardTitlePlaceholder, api.SongRequestsTitle, 1)
 	assert.NotEmpty(t, payload)
-	assert.False(t, strings.Contains(payload, replace))
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
 	var payloadMap handler.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
@@ -234,9 +287,9 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
-	payload := strings.Replace(redeemPayload, replace, userInput, 1)
+	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
 	assert.NotEmpty(t, payload)
-	assert.False(t, strings.Contains(payload, replace))
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
 	req, err := http.NewRequest("POST", "/callback", strings.NewReader(payload))
 	assert.NoError(t, err)
@@ -276,10 +329,10 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
-	payload := strings.Replace(redeemPayload, replace, userInput, 1)
+	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
 	payload = strings.Replace(payload, "}", "foo", -1) // should be invalid json now
 	assert.NotEmpty(t, payload)
-	assert.False(t, strings.Contains(payload, replace))
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
 	var payloadMap handler.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
@@ -323,10 +376,10 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	userInput := generateUserInput(t)
-	payload := strings.Replace(redeemPayload, replace, userInput, 1)
+	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
 	payload = strings.Replace(payload, "\"broadcaster_user_id\": \"12826\"", "\"broadcaster_user_id\": 12826", 1)
 	assert.NotEmpty(t, payload)
-	assert.False(t, strings.Contains(payload, replace))
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
 	var payloadMap handler.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
@@ -376,9 +429,9 @@ func TestVerifyWebhookCallback(t *testing.T) {
 	rh := handler.NewRewardHandler(dummySecret, &p, &u)
 
 	challenge := generateUserInput(t)
-	payload := strings.Replace(verificationPayload, replace, challenge, 1)
+	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
 	assert.NotEmpty(t, payload)
-	assert.False(t, strings.Contains(payload, replace))
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
 	var payloadMap handler.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
@@ -447,6 +500,20 @@ func TestIsVerificationRequest(t *testing.T) {
 			assert.Equal(t, test.shouldPass, handler.IsVerificationRequest(req))
 		})
 	}
+}
+
+func TestIsValidSongRequest(t *testing.T) {
+	assert.False(t, api.IsValidSongRequest(nil))
+
+	e := helix.EventSubChannelPointsCustomRewardRedemptionEvent{
+		Reward: helix.EventSubReward{
+			Title: "something",
+		},
+	}
+	assert.False(t, api.IsValidSongRequest(&e))
+
+	e.Reward.Title = fmt.Sprintf("Middle of %s the title", api.SongRequestsTitle)
+	assert.True(t, api.IsValidSongRequest(&e))
 }
 
 func generateUserInput(t *testing.T) string {

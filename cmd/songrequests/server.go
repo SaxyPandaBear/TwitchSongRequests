@@ -42,7 +42,7 @@ func StartServer(port int) error {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.CleanPath)
-	r.Use(httprate.LimitByIP(100, time.Minute))
+	r.Use(httprate.LimitByIP(10000, time.Minute))
 	r.Use(middleware.Recoverer)
 
 	// Set a timeout value on the request context (ctx), that will signal
