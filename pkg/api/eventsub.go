@@ -1,12 +1,13 @@
 package api
 
 import (
-	"encoding/json"
-	"io"
+	"encoding/base64"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/nicklaw5/helix"
+	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 )
 
 const (
@@ -34,27 +35,35 @@ func NewEventSubHandler(c *helix.Client, callbackURL, secret string) *EventSubHa
 
 // SubscribeToTopic
 func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
-	var req SubscribeRequest
-	b, err := io.ReadAll(r.Body)
-
-	if err != nil || len(b) < 1 {
-		log.Println("failed to read request body ", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	err = json.Unmarshal(b, &req)
+	c, err := r.Cookie(constants.TwitchIDCookieKey)
 	if err != nil {
-		log.Println("failed to unmarshal request ", err)
-		w.WriteHeader(http.StatusBadRequest)
+		log.Println("could not extract cookie", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, "cookie not found")
 		return
 	}
+
+	if err = c.Valid(); err != nil {
+		log.Println("cookie expired", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, "cookie expired")
+		return
+	}
+
+	idBytes, err := base64.StdEncoding.DecodeString(c.Value)
+	if err != nil {
+		log.Println("failed to decode cookie", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "failed to decode cookie")
+	}
+
+	id := string(idBytes)
 
 	createSub := helix.EventSubSubscription{
 		Type:    helix.EventSubTypeChannelPointsCustomRewardRedemptionAdd,
 		Version: topicVersion,
 		Condition: helix.EventSubCondition{
-			BroadcasterUserID: req.UserID,
+			BroadcasterUserID: id,
 		},
 		Transport: helix.EventSubTransport{
 			Method:   subMethod,
