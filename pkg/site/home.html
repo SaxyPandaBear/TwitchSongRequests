@@ -62,10 +62,6 @@
             text-decoration: none;
         }
 
-        a:hover {
-            text-decoration: underline;
-        }
-
         .login {
             max-width: 350px;
             padding: 20px;
@@ -79,23 +75,6 @@
             padding: 30px 0;
             text-align: center;
             text-transform: uppercase;
-        }
-
-        .or-continue {
-            margin: 30px 0;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            font-size: 14px;
-            color: var(--gray);
-        }
-
-        .or-continue:before,
-        .or-continue:after {
-            content: "";
-            flex: 1 1;
-            border-bottom: 1px solid;
-            margin: 0 10px;
         }
 
         .oauth-options>*:not(:last-child) {
@@ -151,6 +130,10 @@
         .oauth-provider[data-provider^="spotify"] {
             --provider-bg-color: #2bde6a;
             --provider-bg-color-hover: #1db954;
+        }
+
+        .about:hover {
+            background-color: #98d49b;
         }
 
         .footer {
@@ -213,7 +196,7 @@
         {{end}}
         <div>
             <h2 class="logo">About</h2>
-            <p>
+            <p class="about">
                 Have you ever wanted to let your Twitch viewers directly control
                 your Spotify playlist? With TwitchSongRequests, your viewers can
                 redeem channel points to submit songs to queue into your active
