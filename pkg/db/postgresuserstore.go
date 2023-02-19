@@ -51,7 +51,17 @@ func (db *PostgresUserStore) AddUser(user *users.User) error {
 }
 
 func (db *PostgresUserStore) UpdateUser(user *users.User) error {
-	return nil // TODO: this needs to handle Twitch and Spotify. Maybe need to split table?
+	if _, err := db.pool.Exec(context.Background(),
+		"update users set twitch_access=$1, twitch_refresh=$2, spotify_access=$3, spotify_refresh=$4, last_updated=$5",
+		user.TwitchAccessToken,
+		user.TwitchRefreshToken,
+		user.SpotifyAccessToken,
+		user.SpotifyRefreshToken,
+		time.Now().Format(time.RFC3339)); err != nil {
+		log.Printf("failed to update user %s: %v\n", user.TwitchID, err)
+		return err
+	}
+	return nil
 }
 
 func (db *PostgresUserStore) DeleteUser(id string) error {
