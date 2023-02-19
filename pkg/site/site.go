@@ -111,25 +111,6 @@ func (h *SiteRenderer) getHomePageData(r *http.Request) *HomePageData {
 	return &d
 }
 
-func GenerateTwitchAuthURL(config AuthConfig) string {
-	query := url.Values{
-		"client_id":     {config.ClientID},
-		"redirect_uri":  {config.RedirectURL},
-		"response_type": {"code"},
-		"state":         {config.State},
-		"scope":         {},
-	}
-
-	u := url.URL{
-		Scheme:   "https",
-		Host:     "id.twitch.tv",
-		Path:     "oauth2/authorize",
-		RawQuery: query.Encode(),
-	}
-
-	return u.String()
-}
-
 func GenerateAuthURL(host, path, scope string, config AuthConfig) string {
 	query := url.Values{
 		"client_id":     {config.ClientID},
