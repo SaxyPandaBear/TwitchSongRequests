@@ -5,6 +5,8 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="og:title" content="TwitchSongRequests"/>
+    <meta name="og:description" content="Integrate your Spotify player with Twitch channel points" />
     <title>TwitchSongRequests</title>
 
     <style>
@@ -65,7 +67,7 @@
         }
 
         .login {
-            max-width: 75%;
+            max-width: 350px;
             padding: 20px;
             background-color: var(--white);
             border-radius: 10px;
@@ -155,11 +157,12 @@
             justify-content: end;
             align-content: end;
             text-align: end;
-            display: flex;
+            display: flexbox;
         }
 
         .footer-text {
             padding-right: 1%;
+            display: flex;
         }
     </style>
 </head>
@@ -216,7 +219,7 @@
                 your Spotify playlist? With TwitchSongRequests, your viewers can
                 redeem channel points to submit songs to queue into your active
                 Spotify player.
-                <br>
+                <br><br>
                 Authorize your Twitch and Spotify accounts with TwitchSongRequests,
                 create a custom channel point reward with "TwitchSongRequests" in the
                 title, and your users can start submitting Spotify URLs to queue into
@@ -225,7 +228,7 @@
         </div>
         <div class="footer">
             <div class="footer-text">Find it on </div>
-            <a href="https://github.com/SaxyPandaBear/TwitchSongRequests" target="_blank" rel="noopener noreferrer">
+            <a style="display: flex;" href="https://github.com/SaxyPandaBear/TwitchSongRequests" target="_blank" rel="noopener noreferrer">
                 <div class="oauth-icon">
                     <!-- https://fontawesome.com/icons/github?f=brands -->
                     <svg xmlns="http://www.w3.org/2000/svg"
