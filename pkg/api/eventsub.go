@@ -78,6 +78,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	log.Println("successfully subscribed to Channel Point topic for user ")
-	w.WriteHeader(http.StatusCreated)
+	log.Println("successfully subscribed to Channel Point topic for user", id)
+
+	http.Redirect(w, r, e.callbackURL, http.StatusFound)
 }
