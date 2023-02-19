@@ -62,7 +62,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := h.authenticator.Token(r.Context(), "", r)
+	token, err := h.authenticator.Token(r.Context(), h.state, r)
 	if err != nil {
 		log.Println("failed to get spotify auth token for user", userID)
 		w.WriteHeader(http.StatusUnauthorized)
