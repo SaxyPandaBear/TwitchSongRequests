@@ -111,17 +111,6 @@
             text-transform: uppercase;
         }
 
-        .sign-up {
-            text-align: center;
-            margin: 50px 0 0;
-            font-size: 14px;
-            color: var(--gray);
-        }
-
-        .sign-up a {
-            color: var(--red);
-        }
-
         .oauth-provider[data-provider^="twitch"] {
             --provider-bg-color: #9147ff;
             --provider-bg-color-hover: #772ce8;
@@ -130,6 +119,13 @@
         .oauth-provider[data-provider^="spotify"] {
             --provider-bg-color: #2bde6a;
             --provider-bg-color-hover: #1db954;
+        }
+
+        .about-header {
+            margin: 0;
+            padding: 10px 0;
+            text-align: center;
+            text-transform: uppercase;
         }
 
         .about:hover {
@@ -144,7 +140,8 @@
         }
 
         .footer-text {
-            padding-right: 1% 2%;
+            margin-right: 5px;
+            padding: 1% 0;
         }
     </style>
 </head>
@@ -195,7 +192,7 @@
         </div>
         {{end}}
         <div>
-            <h2 class="logo">About</h2>
+            <h2 class="about-header">About</h2>
             <p class="about">
                 Have you ever wanted to let your Twitch viewers directly control
                 your Spotify playlist? With TwitchSongRequests, your viewers can
