@@ -28,7 +28,7 @@ func (db *PostgresUserStore) GetUser(id string) (*users.User, error) {
 
 	err := db.pool.QueryRow(context.Background(),
 		"SELECT COALESCE(twitch_access, ''), COALESCE(twitch_refresh, ''), COALESCE(spotify_access, ''), COALESCE(spotify_refresh, ''), spotify_expiry FROM users WHERE id=$1", id).
-		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken, u.SpotifyExpiry)
+		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken, &u.SpotifyExpiry)
 
 	if err != nil {
 		log.Printf("failed to get user %s: %v\n", id, err)
