@@ -252,7 +252,7 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 		t.Log("no event expected")
 	}
 
-	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
 func TestPublishRedeemFails(t *testing.T) {
@@ -307,7 +307,7 @@ func TestPublishRedeemFails(t *testing.T) {
 		t.Log("no event expected")
 	}
 
-	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
 func TestPublishRedeemInvalidSignature(t *testing.T) {
@@ -453,7 +453,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 		t.Log("no event expected")
 	}
 
-	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
 // The endpoint used for webhook callbacks must also verify itself:

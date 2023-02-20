@@ -88,7 +88,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		var redeemEvent helix.EventSubChannelPointsCustomRewardRedemptionEvent
 		if err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&redeemEvent); err != nil {
 			log.Println("failed to unmarshal payload", err)
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusAccepted)
 			return
 		}
 
@@ -101,7 +101,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		c, err := GetSpotifyClient(h.userStore, h.auth, redeemEvent.BroadcasterUserID)
 		if err != nil {
 			log.Printf("failed to verify user %s for spotify access: %v\n", redeemEvent.BroadcasterUserID, err)
-			w.WriteHeader(http.StatusUnauthorized)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
@@ -109,7 +109,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 
 		if err = h.publisher.Publish(c, redeemEvent.UserInput); err != nil {
 			log.Println("failed to publish", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusAccepted)
 			return
 		}
 	}
