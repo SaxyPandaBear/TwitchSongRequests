@@ -129,6 +129,7 @@ func GetSpotifyClient(userStore db.UserStore, auth IAuthenticator, id string) (*
 	tok := oauth2.Token{
 		AccessToken:  u.SpotifyAccessToken,
 		RefreshToken: u.SpotifyRefreshToken,
+		Expiry:       *u.SpotifyExpiry,
 	}
 
 	return spotify.New(auth.Client(context.Background(), &tok)), nil

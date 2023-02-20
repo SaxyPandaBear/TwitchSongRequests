@@ -74,6 +74,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 
 	u.SpotifyAccessToken = token.AccessToken
 	u.SpotifyRefreshToken = token.RefreshToken
+	u.SpotifyExpiry = &token.Expiry
 
 	err = h.userStore.UpdateUser(u)
 	if err != nil {

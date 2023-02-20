@@ -58,6 +58,7 @@ func TestPublishRedeem(t *testing.T) {
 		TwitchID:            "12826",
 		SpotifyAccessToken:  "foo",
 		SpotifyRefreshToken: "bar",
+		SpotifyExpiry:       &time.Time{},
 	})
 
 	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
@@ -268,6 +269,7 @@ func TestPublishRedeemFails(t *testing.T) {
 		TwitchID:            "12826",
 		SpotifyAccessToken:  "foo",
 		SpotifyRefreshToken: "bar",
+		SpotifyExpiry:       &time.Time{},
 	})
 
 	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
