@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -11,6 +12,8 @@ import (
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
+	"github.com/zmb3/spotify/v2"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -18,6 +21,10 @@ const (
 	verificationType  = "webhook_callback_verification"
 	messageTypeHeader = "Twitch-Eventsub-Message-Type"
 )
+
+type IAuthenticator interface {
+	Client(ctx context.Context, token *oauth2.Token) *http.Client
+}
 
 type EventSubNotification struct {
 	Subscription helix.EventSubSubscription `json:"subscription"`
@@ -29,13 +36,15 @@ type RewardHandler struct {
 	secret    string
 	publisher queue.Publisher
 	userStore db.UserStore
+	auth      IAuthenticator
 }
 
-func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore) *RewardHandler {
+func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, auth IAuthenticator) *RewardHandler {
 	return &RewardHandler{
 		secret:    twitchSecret,
 		publisher: publisher,
 		userStore: userStore,
+		auth:      auth,
 	}
 }
 
@@ -83,15 +92,22 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		if !IsValidSongRequest(&redeemEvent) {
+		if !IsValidReward(&redeemEvent) {
 			log.Println("not a valid song request, so dropping")
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
+		c, err := GetSpotifyClient(h.userStore, h.auth, redeemEvent.BroadcasterUserID)
+		if err != nil {
+			log.Printf("failed to verify user %s for spotify access: %v\n", redeemEvent.BroadcasterUserID, err)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
 		log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
-		// TODO: get access token for Spotify and create Spotify client
-		if err = h.publisher.Publish(nil, redeemEvent.UserInput); err != nil {
+
+		if err = h.publisher.Publish(c, redeemEvent.UserInput); err != nil {
 			log.Println("failed to publish")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -104,10 +120,26 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func GetSpotifyClient(userStore db.UserStore, auth IAuthenticator, id string) (*spotify.Client, error) {
+	u, err := userStore.GetUser(id)
+	if err != nil {
+		return nil, err
+	}
+
+	tok := oauth2.Token{
+		AccessToken:  u.SpotifyAccessToken,
+		RefreshToken: u.SpotifyRefreshToken,
+	}
+
+	return spotify.New(auth.Client(context.Background(), &tok)), nil
+}
+
 func IsVerificationRequest(r *http.Request) bool {
 	return verificationType == r.Header.Get(strings.ToLower(messageTypeHeader))
 }
 
-func IsValidSongRequest(e *helix.EventSubChannelPointsCustomRewardRedemptionEvent) bool {
+// IsValidReward ensures that the redemption event has a title which contains the
+// named keyword. This is a naive approach for dropping unwanted events.
+func IsValidReward(e *helix.EventSubChannelPointsCustomRewardRedemptionEvent) bool {
 	return e != nil && strings.Contains(e.Reward.Title, SongRequestsTitle)
 }

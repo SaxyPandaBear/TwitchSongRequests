@@ -7,7 +7,6 @@ import (
 	_ "embed"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -18,40 +17,15 @@ import (
 
 	"github.com/nicklaw5/helix"
 	"github.com/stretchr/testify/assert"
-	"github.com/zmb3/spotify/v2"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	handler "github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
-
-	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
+	"github.com/saxypandabear/twitchsongrequests/pkg/testutil"
+	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 )
 
-type dummyPublisher struct {
-	messages   chan string
-	shouldFail bool
-}
-
-type mockReadCloser struct{}
-
-func (m mockReadCloser) Read(p []byte) (int, error) {
-	return 0, errors.New("expected to fail")
-}
-func (m mockReadCloser) Close() error {
-	return nil
-}
-
-type headerTestCase struct {
-	header       string
-	verification string
-	shouldPass   bool
-}
-
 var (
-	_ queue.Publisher = dummyPublisher{
-		messages:   nil,
-		shouldFail: false,
-	}
 	dummySecret            = "dummy"
 	eventSubMsgID          = "foo"
 	size                   = 20
@@ -71,24 +45,22 @@ var redeemPayload string
 //go:embed testdata/verification.json
 var verificationPayload string
 
-func (p dummyPublisher) Publish(client *spotify.Client, url string) error {
-	if p.shouldFail {
-		return errors.New("oops")
-	}
-
-	p.messages <- url
-	return nil
-}
-
 func TestPublishRedeem(t *testing.T) {
 	m := make(chan string)
-	p := dummyPublisher{
-		messages:   m,
-		shouldFail: false,
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{}
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
+	u.AddUser(&users.User{ // spoof a user so the test doesen't fail
+		TwitchID:            "12826",
+		SpotifyAccessToken:  "foo",
+		SpotifyRefreshToken: "bar",
+	})
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -134,13 +106,15 @@ func TestPublishRedeem(t *testing.T) {
 
 func TestPublishRedeemEmptyBody(t *testing.T) {
 	m := make(chan string)
-	p := dummyPublisher{
-		messages:   m,
-		shouldFail: false,
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{}
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -152,8 +126,8 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, payloadMap)
 
-	// pass in a mockReadCloser that always fails on read
-	req, err := http.NewRequest("POST", "/callback", &mockReadCloser{})
+	// pass in a testutil.MockReadCloser that always fails on read
+	req, err := http.NewRequest("POST", "/callback", &testutil.MockReadCloser{})
 	assert.NoError(t, err)
 
 	// spoof signature header
@@ -182,13 +156,15 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 
 func TestPublishIncorrectRewardTitle(t *testing.T) {
 	m := make(chan string)
-	p := dummyPublisher{
-		messages:   m,
-		shouldFail: true,
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: true,
 	}
-	u := db.InMemoryUserStore{}
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -228,15 +204,73 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
+func TestPublishNoAuthenticatedUser(t *testing.T) {
+	m := make(chan string)
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: true,
+	}
+	// the user lookup will fail
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
+
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
+
+	userInput := generateUserInput(t)
+	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
+	payload = strings.Replace(payload, rewardTitlePlaceholder, api.SongRequestsTitle, 1)
+	assert.NotEmpty(t, payload)
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
+
+	var payloadMap handler.EventSubNotification
+	err := json.Unmarshal([]byte(payload), &payloadMap)
+	assert.NoError(t, err)
+	assert.NotNil(t, payloadMap)
+
+	req, err := http.NewRequest("POST", "/callback", strings.NewReader(payload))
+	assert.NoError(t, err)
+
+	// spoof signature header
+	ts := time.Now().Format(time.RFC3339)
+	sig := deriveEventsubSignature(t, payload, eventSubMsgID, ts, dummySecret)
+	req.Header.Add(msgIDHeader, eventSubMsgID)
+	req.Header.Add(msgTimestampHeader, ts)
+	req.Header.Add(msgSignatureHeader, sig)
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+
+	go func() {
+		handler.ServeHTTP(rr, req)
+	}()
+
+	select {
+	case <-m:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+}
+
 func TestPublishRedeemFails(t *testing.T) {
 	m := make(chan string)
-	p := dummyPublisher{
-		messages:   m,
-		shouldFail: true,
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: true,
 	}
-	u := db.InMemoryUserStore{}
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
+	u.AddUser(&users.User{
+		TwitchID:            "12826",
+		SpotifyAccessToken:  "foo",
+		SpotifyRefreshToken: "bar",
+	})
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -278,13 +312,15 @@ func TestPublishRedeemFails(t *testing.T) {
 
 func TestPublishRedeemInvalidSignature(t *testing.T) {
 	m := make(chan string)
-	p := dummyPublisher{
-		messages:   m,
-		shouldFail: false,
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{}
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -320,13 +356,15 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 
 func TestPublishRedeemInvalidJSON(t *testing.T) {
 	m := make(chan string)
-	p := dummyPublisher{
-		messages:   m,
-		shouldFail: false,
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{}
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -367,13 +405,15 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 
 func TestPublishRedeemInvalidPayload(t *testing.T) {
 	m := make(chan string)
-	p := dummyPublisher{
-		messages:   m,
-		shouldFail: false,
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{}
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -420,13 +460,15 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 // https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#responding-to-a-challenge-request
 func TestVerifyWebhookCallback(t *testing.T) {
 	m := make(chan string)
-	p := dummyPublisher{
-		messages:   m,
-		shouldFail: false,
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{}
+	u := db.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, testutil.MockAuthenticator{})
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
@@ -471,7 +513,11 @@ func TestVerifyWebhookCallback(t *testing.T) {
 }
 
 func TestIsVerificationRequest(t *testing.T) {
-	tests := []headerTestCase{
+	tests := []struct {
+		header       string
+		verification string
+		shouldPass   bool
+	}{
 		{
 			header:       "foo",
 			verification: "bar",
@@ -503,17 +549,17 @@ func TestIsVerificationRequest(t *testing.T) {
 }
 
 func TestIsValidSongRequest(t *testing.T) {
-	assert.False(t, api.IsValidSongRequest(nil))
+	assert.False(t, api.IsValidReward(nil))
 
 	e := helix.EventSubChannelPointsCustomRewardRedemptionEvent{
 		Reward: helix.EventSubReward{
 			Title: "something",
 		},
 	}
-	assert.False(t, api.IsValidSongRequest(&e))
+	assert.False(t, api.IsValidReward(&e))
 
 	e.Reward.Title = fmt.Sprintf("Middle of %s the title", api.SongRequestsTitle)
-	assert.True(t, api.IsValidSongRequest(&e))
+	assert.True(t, api.IsValidReward(&e))
 }
 
 func generateUserInput(t *testing.T) string {

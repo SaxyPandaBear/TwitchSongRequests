@@ -64,6 +64,7 @@ func LoadSpotifyClientOptions() (*spotifyauth.Authenticator, error) {
 	}
 
 	return spotifyauth.New(
+		spotifyauth.WithScopes(spotifyauth.ScopeUserModifyPlaybackState, spotifyauth.ScopeUserReadPlaybackState),
 		spotifyauth.WithClientID(clientID),
 		spotifyauth.WithClientSecret(clientSecret),
 		spotifyauth.WithRedirectURL(redirect)), nil
