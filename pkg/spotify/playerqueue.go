@@ -22,7 +22,7 @@ type SpotifyPlayerQueue struct {
 
 // Publish will validate that the input matches a valid Spotify URL scheme,
 // and then attempt to queue it in the user's Spotify player.
-func (s *SpotifyPlayerQueue) Publish(client *spotify.Client, url string) error {
+func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, url string) error {
 	id := parseSpotifyTrackID(url)
 	if len(id) < 1 {
 		return ErrInvalidInput

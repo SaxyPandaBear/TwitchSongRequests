@@ -108,7 +108,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
 		if err = h.publisher.Publish(c, redeemEvent.UserInput); err != nil {
-			log.Println("failed to publish")
+			log.Println("failed to publish", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
