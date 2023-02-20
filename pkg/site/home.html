@@ -81,7 +81,7 @@
             margin-bottom: 5px;
         }
 
-        .oauth-provider {
+        .styled-button {
             height: 40px;
             width: 100%;
             padding: 0;
@@ -97,7 +97,7 @@
             background-color: var(--provider-bg-color);
         }
 
-        .oauth-provider:hover {
+        .styled-button:hover {
             background-color: var(--provider-bg-color-hover);
         }
 
@@ -111,12 +111,17 @@
             text-transform: uppercase;
         }
 
-        .oauth-provider[data-provider^="twitch"] {
+        .styled-button[data-provider^="twitch"] {
             --provider-bg-color: #9147ff;
             --provider-bg-color-hover: #772ce8;
         }
 
-        .oauth-provider[data-provider^="spotify"] {
+        .styled-button[data-provider^="spotify"] {
+            --provider-bg-color: #2bde6a;
+            --provider-bg-color-hover: #1db954;
+        }
+
+        .styled-button[data-provideer^="subscribe"] {
             --provider-bg-color: #2bde6a;
             --provider-bg-color-hover: #1db954;
         }
@@ -129,12 +134,8 @@
         }
 
         .about {
-            margin: 0;
+            margin: 0 5px;
             padding: 5px 0;
-        }
-
-        .about:hover {
-            background-color: #98d49b;
         }
 
         .footer {
@@ -156,8 +157,8 @@
         <h1 class="logo">Twitch Song Requests</h1>
 
         {{if .Authenticated}}
-        <div class="oauth-provider">
-            <form action="{{.TwitchEventSubURL}}" method="post">
+        <div class="oauth-options">
+            <form action="{{.TwitchEventSubURL}}" method="post" class="styled-button" data-provider="subscribe">
                 <button type="submit">
                     Subscribe to events
                 </button>
@@ -166,7 +167,7 @@
         {{else}}
         <div class="oauth-options">
             <a href="{{.TwitchAuthURL}}">
-                <button class="oauth-provider" data-provider="twitch">
+                <button class="styled-button" data-provider="twitch">
                     <div class="oauth-icon">
                         <!-- Twitch logo https://fontawesome.com/icons/twitch?f=brands -->
                         <svg xmlns="http://www.w3.org/2000/svg"
@@ -182,7 +183,7 @@
 
         <div class="oauth-options">
             <a href="{{.SpotifyAuthURL}}">
-                <button class="oauth-provider" data-provider="spotify">
+                <button class="styled-button" data-provider="spotify">
                     <div class="oauth-icon">
                         <!-- Spotify logo https://fontawesome.com/icons/spotify?f=brands -->
                         <svg xmlns="http://www.w3.org/2000/svg"
