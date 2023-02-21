@@ -2,12 +2,13 @@ package api
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
@@ -22,9 +23,7 @@ const (
 	messageTypeHeader = "Twitch-Eventsub-Message-Type"
 )
 
-type IAuthenticator interface {
-	Client(ctx context.Context, token *oauth2.Token) *http.Client
-}
+var spotifyRefreshMutex sync.Mutex
 
 type EventSubNotification struct {
 	Subscription helix.EventSubSubscription `json:"subscription"`
@@ -36,15 +35,26 @@ type RewardHandler struct {
 	secret    string
 	publisher queue.Publisher
 	userStore db.UserStore
-	auth      IAuthenticator
+	auth      *oauth2.Config
+	refresher func(*oauth2.Token) (*oauth2.Token, error)
 }
 
-func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, auth IAuthenticator) *RewardHandler {
+func defaultOAuthTokenRefresh(t *oauth2.Token) (*oauth2.Token, error) {
+	source := oauth2.ReuseTokenSource(t, nil)
+	return source.Token()
+}
+
+func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, auth *oauth2.Config, refresh func(*oauth2.Token) (*oauth2.Token, error)) *RewardHandler {
+	if refresh == nil {
+		refresh = defaultOAuthTokenRefresh
+	}
+
 	return &RewardHandler{
 		secret:    twitchSecret,
 		publisher: publisher,
 		userStore: userStore,
 		auth:      auth,
+		refresher: refresh,
 	}
 }
 
@@ -98,19 +108,46 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		c, err := GetSpotifyClient(h.userStore, h.auth, redeemEvent.BroadcasterUserID)
+		// c, err := GetSpotifyClient(h.userStore, h.auth, redeemEvent.BroadcasterUserID)
+		tok, err := GetOAuthToken(h.userStore, redeemEvent.BroadcasterUserID)
 		if err != nil {
 			log.Printf("failed to verify user %s for spotify access: %v\n", redeemEvent.BroadcasterUserID, err)
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
+		source := oauth2.ReuseTokenSource(tok, nil)
+		refreshed, err := source.Token()
+		if err != nil {
+			log.Println("failed to get valid token", err)
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, "failed to get refreshed token")
+			return
+		}
+
+		// store the refreshed token
+		spotifyRefreshMutex.Lock()
+		defer spotifyRefreshMutex.Unlock()
+		u, err := h.userStore.GetUser(redeemEvent.BroadcasterUserID)
+		if err == nil {
+			u.SpotifyAccessToken = refreshed.AccessToken
+			u.SpotifyRefreshToken = refreshed.RefreshToken
+			u.SpotifyExpiry = &refreshed.Expiry
+
+			if err = h.userStore.UpdateUser(u); err != nil {
+				// if we got a valid token but failed to update the DB this is not necessarily fatal.
+				log.Println("failed to update user's spotify token", err)
+			}
+		}
+
+		c := spotify.New(h.auth.Client(r.Context(), refreshed))
+
 		log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
 		if err = h.publisher.Publish(c, redeemEvent.UserInput); err != nil {
-			log.Println("failed to publish", err)
+			log.Println("failed to publish:", err)
 			w.WriteHeader(http.StatusOK)
-			return
+			fmt.Fprintln(w, "failed to publish")
 		}
 	}
 
@@ -120,7 +157,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func GetSpotifyClient(userStore db.UserStore, auth IAuthenticator, id string) (*spotify.Client, error) {
+func GetOAuthToken(userStore db.UserStore, id string) (*oauth2.Token, error) {
 	u, err := userStore.GetUser(id)
 	if err != nil {
 		return nil, err
@@ -132,7 +169,7 @@ func GetSpotifyClient(userStore db.UserStore, auth IAuthenticator, id string) (*
 		Expiry:       *u.SpotifyExpiry,
 	}
 
-	return spotify.New(auth.Client(context.Background(), &tok)), nil
+	return &tok, nil
 }
 
 func IsVerificationRequest(r *http.Request) bool {

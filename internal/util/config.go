@@ -8,6 +8,15 @@ import (
 	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"golang.org/x/oauth2"
+)
+
+const (
+	// SpotifyAuthURL is the URL to Spotify Accounts Service's OAuth2 endpoint.
+	SpotifyAuthURL = "https://accounts.spotify.com/authorize"
+	// SpotifyTokenURL is the URL to the Spotify Accounts Service's OAuth2
+	// token endpoint.
+	SpotifyTokenURL = "https://accounts.spotify.com/api/token"
 )
 
 // LoadTwitchClientOptions reads from environment variables in order to populate
@@ -47,7 +56,7 @@ func LoadTwitchClientOptions() (*helix.Options, error) {
 
 // LoadSpotifyClientOptions reads from environment variables in order to populate
 // configuration options for the Spotify authenticator
-func LoadSpotifyClientOptions() (*spotifyauth.Authenticator, error) {
+func LoadSpotifyClientOptions() (*oauth2.Config, error) {
 	clientID, err := GetFromEnv(constants.SpotifyClientIDKey)
 	if err != nil {
 		return nil, err
@@ -63,11 +72,16 @@ func LoadSpotifyClientOptions() (*spotifyauth.Authenticator, error) {
 		return nil, err
 	}
 
-	return spotifyauth.New(
-		spotifyauth.WithScopes(spotifyauth.ScopeUserModifyPlaybackState, spotifyauth.ScopeUserReadPlaybackState),
-		spotifyauth.WithClientID(clientID),
-		spotifyauth.WithClientSecret(clientSecret),
-		spotifyauth.WithRedirectURL(redirect)), nil
+	return &oauth2.Config{
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  SpotifyAuthURL,
+			TokenURL: SpotifyTokenURL,
+		},
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirect,
+		Scopes:       []string{spotifyauth.ScopeUserModifyPlaybackState, spotifyauth.ScopeUserReadPlaybackState},
+	}, nil
 }
 
 // GetFromEnv tries to read an environment variable by key, and if:

@@ -76,14 +76,14 @@ func StartServer(port int) error {
 		return err
 	}
 
-	spotifyOptions, err := util.LoadSpotifyClientOptions()
+	spotifyOAuthConfig, err := util.LoadSpotifyClientOptions()
 	if err != nil {
 		log.Println("failed to load Spotify configurations ", err)
 		return err
 	}
 
 	p := spotify.SpotifyPlayerQueue{}
-	reward := api.NewRewardHandler(s, &p, userStore, spotifyOptions)
+	reward := api.NewRewardHandler(s, &p, userStore, spotifyOAuthConfig, nil)
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 
@@ -91,7 +91,7 @@ func StartServer(port int) error {
 	r.Post("/subscribe", eventSub.SubscribeToTopic)
 
 	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore)
-	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOptions, userStore)
+	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOAuthConfig, userStore)
 	r.Get("/oauth/twitch", twitchRedirect.Authorize)
 	r.Get("/oauth/spotify", spotifyRedirect.Authorize)
 
@@ -101,11 +101,9 @@ func StartServer(port int) error {
 		State:       twitchState,
 	}
 
-	spotifyClientID, _ := util.GetFromEnv(constants.SpotifyClientIDKey)
-	spotifyRedirectURI, _ := util.GetFromEnv(constants.SpotifyRedirectURL)
 	spotifyConfig := site.AuthConfig{
-		ClientID:    spotifyClientID,
-		RedirectURL: spotifyRedirectURI,
+		ClientID:    spotifyOAuthConfig.ClientID,
+		RedirectURL: spotifyOAuthConfig.RedirectURL,
 		State:       spotifyState,
 	}
 

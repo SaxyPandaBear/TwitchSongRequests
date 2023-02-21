@@ -3,12 +3,9 @@ package testutil
 import (
 	"context"
 	"errors"
-	"net/http"
 
-	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 	"github.com/zmb3/spotify/v2"
-	"golang.org/x/oauth2"
 )
 
 type DummyPublisher struct {
@@ -34,14 +31,6 @@ func (m MockReadCloser) Read(p []byte) (int, error) {
 }
 func (m MockReadCloser) Close() error {
 	return nil
-}
-
-type MockAuthenticator struct{}
-
-var _ api.IAuthenticator = (*MockAuthenticator)(nil)
-
-func (m MockAuthenticator) Client(ctx context.Context, token *oauth2.Token) *http.Client {
-	return http.DefaultClient
 }
 
 type MockQueuer struct {

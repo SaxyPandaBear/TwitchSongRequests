@@ -8,17 +8,17 @@ import (
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
-	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"golang.org/x/oauth2"
 )
 
 type SpotifyAuthZHandler struct {
 	redirectURL   string
 	state         string
-	authenticator *spotifyauth.Authenticator
+	authenticator *oauth2.Config
 	userStore     db.UserStore
 }
 
-func NewSpotifyAuthZHandler(url, state string, auth *spotifyauth.Authenticator, userStore db.UserStore) *SpotifyAuthZHandler {
+func NewSpotifyAuthZHandler(url, state string, auth *oauth2.Config, userStore db.UserStore) *SpotifyAuthZHandler {
 	return &SpotifyAuthZHandler{
 		redirectURL:   url,
 		state:         state,
@@ -62,7 +62,17 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := h.authenticator.Token(r.Context(), h.state, r)
+	state := r.Form.Get("state")
+	if state != h.state {
+		log.Println("failed to validate auth state")
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, "failed to validate auth state")
+		return
+	}
+
+	code := r.Form.Get("code")
+	token, err := h.authenticator.Exchange(r.Context(), code)
+
 	if err != nil {
 		log.Println("failed to get spotify auth token for user", userID)
 		w.WriteHeader(http.StatusUnauthorized)
