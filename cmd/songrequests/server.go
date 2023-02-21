@@ -83,7 +83,7 @@ func StartServer(port int) error {
 	}
 
 	p := spotify.SpotifyPlayerQueue{}
-	reward := api.NewRewardHandler(s, &p, userStore, spotifyOAuthConfig, nil)
+	reward := api.NewRewardHandler(s, &p, userStore, spotifyOAuthConfig)
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 

@@ -62,7 +62,7 @@ func TestPublishRedeem(t *testing.T) {
 		SpotifyExpiry:       &time.Time{},
 	})
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -116,7 +116,7 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -166,7 +166,7 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -217,7 +217,7 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -273,7 +273,7 @@ func TestPublishRedeemFails(t *testing.T) {
 		SpotifyExpiry:       &time.Time{},
 	})
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -323,7 +323,7 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -367,7 +367,7 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -416,7 +416,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -471,7 +471,7 @@ func TestVerifyWebhookCallback(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{}, noopOAuthToken)
+	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
@@ -581,8 +581,4 @@ func deriveEventsubSignature(t *testing.T, payload, messageID, timestamp, secret
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(hmacMessage)
 	return fmt.Sprintf("sha256=%s", hex.EncodeToString(mac.Sum(nil)))
-}
-
-func noopOAuthToken(t *oauth2.Token) (*oauth2.Token, error) {
-	return t, nil
 }

@@ -36,25 +36,14 @@ type RewardHandler struct {
 	publisher queue.Publisher
 	userStore db.UserStore
 	auth      *oauth2.Config
-	refresher func(*oauth2.Token) (*oauth2.Token, error)
 }
 
-func defaultOAuthTokenRefresh(t *oauth2.Token) (*oauth2.Token, error) {
-	source := oauth2.ReuseTokenSource(t, nil)
-	return source.Token()
-}
-
-func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, auth *oauth2.Config, refresh func(*oauth2.Token) (*oauth2.Token, error)) *RewardHandler {
-	if refresh == nil {
-		refresh = defaultOAuthTokenRefresh
-	}
-
+func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, auth *oauth2.Config) *RewardHandler {
 	return &RewardHandler{
 		secret:    twitchSecret,
 		publisher: publisher,
 		userStore: userStore,
 		auth:      auth,
-		refresher: refresh,
 	}
 }
 
@@ -134,6 +123,8 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 			u.SpotifyRefreshToken = refreshed.RefreshToken
 			u.SpotifyExpiry = &refreshed.Expiry
 
+			log.Println("saving updated Spotify credentials for", u.TwitchID)
+
 			if err = h.userStore.UpdateUser(u); err != nil {
 				// if we got a valid token but failed to update the DB this is not necessarily fatal.
 				log.Println("failed to update user's spotify token", err)
@@ -148,6 +139,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 			log.Println("failed to publish:", err)
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, "failed to publish")
+			return
 		}
 	}
 
