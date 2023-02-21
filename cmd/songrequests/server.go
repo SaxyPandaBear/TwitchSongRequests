@@ -40,8 +40,8 @@ func StartServer(port int) error {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
 	r.Use(middleware.CleanPath)
+	r.Use(middleware.Logger)
 	r.Use(httprate.LimitByIP(10000, time.Minute))
 	r.Use(middleware.Recoverer)
 
