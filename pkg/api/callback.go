@@ -116,7 +116,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		source := oauth2.ReuseTokenSource(tok, nil)
+		source := h.auth.TokenSource(r.Context(), tok)
 		refreshed, err := source.Token()
 		if err != nil {
 			log.Println("failed to get valid token", err)
