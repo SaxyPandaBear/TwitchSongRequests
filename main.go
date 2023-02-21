@@ -8,12 +8,17 @@ import (
 	"sync"
 
 	"github.com/saxypandabear/twitchsongrequests/cmd/songrequests"
+	"github.com/saxypandabear/twitchsongrequests/internal/logger"
+	"go.uber.org/zap"
 )
 
 const defaultPort = 8000
 
 func main() {
 	flag.Parse()
+
+	zap.RedirectStdLog(logger.L())
+	defer logger.L().Sync()
 
 	var port = defaultPort
 	portEnv, ok := os.LookupEnv("PORT")
