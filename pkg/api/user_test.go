@@ -30,9 +30,10 @@ func TestRevokeUserAccess(t *testing.T) {
 	// TODO: until setup-go GitHub action supports Go 1.20,
 	//       need to include a cookie expiry
 	req.AddCookie(&http.Cookie{
-		Name:   constants.TwitchIDCookieKey,
-		Value:  base64.StdEncoding.EncodeToString([]byte("123")),
-		MaxAge: 60,
+		Name:    constants.TwitchIDCookieKey,
+		Value:   base64.StdEncoding.EncodeToString([]byte("123")),
+		MaxAge:  60,
+		Expires: time.Now().AddDate(1, 2, 3),
 	})
 
 	rr := httptest.NewRecorder()
