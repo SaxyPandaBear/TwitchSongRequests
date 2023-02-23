@@ -110,9 +110,8 @@ func StartServer(port int) error {
 	pageHandler := site.NewSiteRenderer(redirectURL, userStore, twitchConfig, spotifyConfig)
 	r.Get("/", pageHandler.HomePage)
 
-	// TODO: try out CORS?
-	userHandler := api.NewUserHandler(userStore)
-	r.Get("/user", userHandler.GetUser)
+	userHandler := api.NewUserHandler(userStore, redirectURL)
+	r.Delete("/user", userHandler.RevokeUserAccesses)
 
 	http.Handle("/", r)
 

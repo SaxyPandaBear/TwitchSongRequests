@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,21 +11,22 @@ import (
 )
 
 type UserHandler struct {
-	data db.UserStore
+	data        db.UserStore
+	redirectURL string
 }
 
 type userResponse struct {
 	TwitchID string `json:"twitch_id"`
 }
 
-func NewUserHandler(d db.UserStore) *UserHandler {
+func NewUserHandler(d db.UserStore, redirectURL string) *UserHandler {
 	return &UserHandler{
-		data: d,
+		data:        d,
+		redirectURL: redirectURL,
 	}
 }
 
-// TODO: this is just to try to test CORS
-func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(constants.TwitchIDCookieKey)
 	if err != nil {
 		// There is no point in authenticating with Spotify because
@@ -49,29 +49,29 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		log.Println("failed to decode cookie value", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, "failed to decode cookie value")
+		return
 	}
 
 	userID := string(bytes)
-	u, err := h.data.GetUser(userID)
+	err = h.data.DeleteUser(userID)
 	if err != nil {
-		log.Println("failed to get user", err)
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintln(w, "failed to get user")
-		return
-	}
-
-	resp := userResponse{TwitchID: u.TwitchID}
-
-	bytes, err = json.Marshal(resp)
-	if err != nil {
-		log.Println("failed to marshal response", err)
+		log.Println("failed to delete user", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "failed to marshal response")
+		fmt.Fprintln(w, "failed to delete user")
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if _, err = fmt.Fprintln(w, string(bytes)); err != nil {
-		log.Println("failed to write response", err)
+	log.Println("successfully deleted user", userID)
+
+	twitchCookie := http.Cookie{
+		Name:     constants.TwitchIDCookieKey,
+		Path:     "/",
+		Value:    "",
+		MaxAge:   -1, // delete the cookie
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 	}
+	http.SetCookie(w, &twitchCookie)
+	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 }
