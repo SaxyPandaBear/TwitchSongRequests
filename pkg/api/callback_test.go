@@ -20,7 +20,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
-	handler "github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/testutil"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
@@ -55,14 +54,15 @@ func TestPublishRedeem(t *testing.T) {
 	u := db.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
-	u.AddUser(&users.User{ // spoof a user so the test doesen't fail
+	err := u.AddUser(&users.User{ // spoof a user so the test doesen't fail
 		TwitchID:            "12826",
 		SpotifyAccessToken:  "foo",
 		SpotifyRefreshToken: "bar",
 		SpotifyExpiry:       &time.Time{},
 	})
+	assert.NoError(t, err)
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -70,8 +70,8 @@ func TestPublishRedeem(t *testing.T) {
 	assert.NotEmpty(t, payload)
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
-	var payloadMap handler.EventSubNotification
-	err := json.Unmarshal([]byte(payload), &payloadMap)
+	var payloadMap api.EventSubNotification
+	err = json.Unmarshal([]byte(payload), &payloadMap)
 	assert.NoError(t, err)
 	assert.NotNil(t, payloadMap)
 
@@ -86,10 +86,10 @@ func TestPublishRedeem(t *testing.T) {
 	req.Header.Add(msgSignatureHeader, sig)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	var event string
@@ -116,14 +116,14 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
 	assert.NotEmpty(t, payload)
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
-	var payloadMap handler.EventSubNotification
+	var payloadMap api.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
 	assert.NoError(t, err)
 	assert.NotNil(t, payloadMap)
@@ -140,10 +140,10 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 	req.Header.Add(msgSignatureHeader, sig)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	select {
@@ -166,7 +166,7 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -174,7 +174,7 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 	assert.False(t, strings.Contains(payload, api.SongRequestsTitle))
 
-	var payloadMap handler.EventSubNotification
+	var payloadMap api.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
 	assert.NoError(t, err)
 	assert.NotNil(t, payloadMap)
@@ -190,10 +190,10 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 	req.Header.Add(msgSignatureHeader, sig)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	select {
@@ -217,7 +217,7 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -225,7 +225,7 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 	assert.NotEmpty(t, payload)
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
-	var payloadMap handler.EventSubNotification
+	var payloadMap api.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
 	assert.NoError(t, err)
 	assert.NotNil(t, payloadMap)
@@ -241,10 +241,10 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 	req.Header.Add(msgSignatureHeader, sig)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	select {
@@ -266,14 +266,15 @@ func TestPublishRedeemFails(t *testing.T) {
 	u := db.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
-	u.AddUser(&users.User{
+	err := u.AddUser(&users.User{
 		TwitchID:            "12826",
 		SpotifyAccessToken:  "foo",
 		SpotifyRefreshToken: "bar",
 		SpotifyExpiry:       &time.Time{},
 	})
+	assert.NoError(t, err)
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -281,8 +282,8 @@ func TestPublishRedeemFails(t *testing.T) {
 	assert.NotEmpty(t, payload)
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
-	var payloadMap handler.EventSubNotification
-	err := json.Unmarshal([]byte(payload), &payloadMap)
+	var payloadMap api.EventSubNotification
+	err = json.Unmarshal([]byte(payload), &payloadMap)
 	assert.NoError(t, err)
 	assert.NotNil(t, payloadMap)
 
@@ -297,10 +298,10 @@ func TestPublishRedeemFails(t *testing.T) {
 	req.Header.Add(msgSignatureHeader, sig)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	select {
@@ -323,7 +324,7 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -341,10 +342,10 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 	req.Header.Add(msgSignatureHeader, sig+"abc123") // signature header exists, but invalid
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	select {
@@ -367,7 +368,7 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -375,7 +376,7 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 	assert.NotEmpty(t, payload)
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
-	var payloadMap handler.EventSubNotification
+	var payloadMap api.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
 	assert.Error(t, err)
 
@@ -390,10 +391,10 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 	req.Header.Add(msgSignatureHeader, sig)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	select {
@@ -416,7 +417,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -424,7 +425,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 	assert.NotEmpty(t, payload)
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
-	var payloadMap handler.EventSubNotification
+	var payloadMap api.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
 	assert.NoError(t, err)
 	assert.NotNil(t, payloadMap)
@@ -443,10 +444,10 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 	req.Header.Add(msgSignatureHeader, sig)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	select {
@@ -471,14 +472,14 @@ func TestVerifyWebhookCallback(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := handler.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
 	assert.NotEmpty(t, payload)
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 
-	var payloadMap handler.EventSubNotification
+	var payloadMap api.EventSubNotification
 	err := json.Unmarshal([]byte(payload), &payloadMap)
 	assert.NoError(t, err)
 	assert.NotNil(t, payloadMap)
@@ -496,13 +497,13 @@ func TestVerifyWebhookCallback(t *testing.T) {
 	// add header so that the service knows that Twitch is trying to verify the callback
 	req.Header.Add("Twitch-Eventsub-Message-Type", "webhook_callback_verification")
 
-	assert.True(t, handler.IsVerificationRequest(req))
+	assert.True(t, api.IsVerificationRequest(req))
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(rh.ChannelPointRedeem)
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
 
 	go func() {
-		handler.ServeHTTP(rr, req)
+		api.ServeHTTP(rr, req)
 	}()
 
 	select {
@@ -546,7 +547,7 @@ func TestIsVerificationRequest(t *testing.T) {
 
 			req.Header.Add(test.header, test.verification)
 
-			assert.Equal(t, test.shouldPass, handler.IsVerificationRequest(req))
+			assert.Equal(t, test.shouldPass, api.IsVerificationRequest(req))
 		})
 	}
 }

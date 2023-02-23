@@ -81,66 +81,63 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		}
 		return // short-circuit here because of the request type
 	}
+	log.Printf("Found event to consume: %s", string(vals.Event))
+	var redeemEvent helix.EventSubChannelPointsCustomRewardRedemptionEvent
+	if err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&redeemEvent); err != nil {
+		log.Println("failed to unmarshal payload", err)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
-	if vals.Event != nil {
-		log.Printf("Found event to consume: %s", string(vals.Event))
-		var redeemEvent helix.EventSubChannelPointsCustomRewardRedemptionEvent
-		if err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&redeemEvent); err != nil {
-			log.Println("failed to unmarshal payload", err)
-			w.WriteHeader(http.StatusOK)
-			return
+	if !IsValidReward(&redeemEvent) {
+		log.Println("not a valid song request, so dropping")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// c, err := GetSpotifyClient(h.userStore, h.auth, redeemEvent.BroadcasterUserID)
+	tok, err := GetOAuthToken(h.userStore, redeemEvent.BroadcasterUserID)
+	if err != nil {
+		log.Printf("failed to verify user %s for spotify access: %v\n", redeemEvent.BroadcasterUserID, err)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	source := h.auth.TokenSource(r.Context(), tok)
+	refreshed, err := source.Token()
+	if err != nil {
+		log.Println("failed to get valid token", err)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "failed to get refreshed token")
+		return
+	}
+
+	// store the refreshed token
+	spotifyRefreshMutex.Lock()
+	defer spotifyRefreshMutex.Unlock()
+	u, err := h.userStore.GetUser(redeemEvent.BroadcasterUserID)
+	if err == nil {
+		u.SpotifyAccessToken = refreshed.AccessToken
+		u.SpotifyRefreshToken = refreshed.RefreshToken
+		u.SpotifyExpiry = &refreshed.Expiry
+
+		log.Println("saving updated Spotify credentials for", u.TwitchID)
+
+		if err = h.userStore.UpdateUser(u); err != nil {
+			// if we got a valid token but failed to update the DB this is not necessarily fatal.
+			log.Println("failed to update user's spotify token", err)
 		}
+	}
 
-		if !IsValidReward(&redeemEvent) {
-			log.Println("not a valid song request, so dropping")
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+	c := spotify.New(h.auth.Client(r.Context(), refreshed))
 
-		// c, err := GetSpotifyClient(h.userStore, h.auth, redeemEvent.BroadcasterUserID)
-		tok, err := GetOAuthToken(h.userStore, redeemEvent.BroadcasterUserID)
-		if err != nil {
-			log.Printf("failed to verify user %s for spotify access: %v\n", redeemEvent.BroadcasterUserID, err)
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
-		source := h.auth.TokenSource(r.Context(), tok)
-		refreshed, err := source.Token()
-		if err != nil {
-			log.Println("failed to get valid token", err)
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintln(w, "failed to get refreshed token")
-			return
-		}
-
-		// store the refreshed token
-		spotifyRefreshMutex.Lock()
-		defer spotifyRefreshMutex.Unlock()
-		u, err := h.userStore.GetUser(redeemEvent.BroadcasterUserID)
-		if err == nil {
-			u.SpotifyAccessToken = refreshed.AccessToken
-			u.SpotifyRefreshToken = refreshed.RefreshToken
-			u.SpotifyExpiry = &refreshed.Expiry
-
-			log.Println("saving updated Spotify credentials for", u.TwitchID)
-
-			if err = h.userStore.UpdateUser(u); err != nil {
-				// if we got a valid token but failed to update the DB this is not necessarily fatal.
-				log.Println("failed to update user's spotify token", err)
-			}
-		}
-
-		c := spotify.New(h.auth.Client(r.Context(), refreshed))
-
-		log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
-
-		if err = h.publisher.Publish(c, redeemEvent.UserInput); err != nil {
-			log.Println("failed to publish:", err)
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintln(w, "failed to publish")
-			return
-		}
+	if err = h.publisher.Publish(c, redeemEvent.UserInput); err != nil {
+		log.Println("failed to publish:", err)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "failed to publish")
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
