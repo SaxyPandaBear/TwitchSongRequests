@@ -29,8 +29,9 @@ func TestRevokeUserAccess(t *testing.T) {
 
 	req := httptest.NewRequest("DELETE", "/", nil)
 	req.AddCookie(&http.Cookie{
-		Name:  constants.TwitchIDCookieKey,
-		Value: base64.StdEncoding.EncodeToString([]byte("123")),
+		Name:    constants.TwitchIDCookieKey,
+		Value:   base64.StdEncoding.EncodeToString([]byte("123")),
+		Expires: time.Now().AddDate(1, 0, 0),
 	})
 
 	rr := httptest.NewRecorder()
