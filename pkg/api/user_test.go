@@ -23,15 +23,16 @@ func TestRevokeUserAccess(t *testing.T) {
 		},
 	}
 
-	re := ""
-
-	h := api.NewUserHandler(&u, re)
+	h := api.NewUserHandler(&u, "")
 
 	req := httptest.NewRequest("DELETE", "/", nil)
+
+	// TODO: until setup-go GitHub action supports Go 1.20,
+	//       need to include a cookie expiry value.
 	req.AddCookie(&http.Cookie{
 		Name:    constants.TwitchIDCookieKey,
 		Value:   base64.StdEncoding.EncodeToString([]byte("123")),
-		Expires: time.Now().AddDate(1, 0, 0),
+		Expires: time.Date(2099, time.April, 1, 2, 3, 4, 5, time.UTC),
 	})
 
 	rr := httptest.NewRecorder()
