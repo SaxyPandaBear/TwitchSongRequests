@@ -62,7 +62,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	state := r.Form.Get("state")
+	state := r.URL.Query().Get("state")
 	if state != h.state {
 		log.Println("failed to validate auth state")
 		w.WriteHeader(http.StatusUnauthorized)
