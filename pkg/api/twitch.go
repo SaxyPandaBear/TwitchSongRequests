@@ -107,12 +107,12 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 
 	// add a cookie in the response
 	twitchCookie := http.Cookie{
-		Name:     constants.TwitchIDCookieKey,
-		Path:     "/",
-		Value:    base64.StdEncoding.EncodeToString([]byte(user.TwitchID)),
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+		Name:  constants.TwitchIDCookieKey,
+		Path:  "/",
+		Value: base64.StdEncoding.EncodeToString([]byte(user.TwitchID)),
+		// Secure:   true,
+		// HttpOnly: true,
+		// SameSite: http.SameSiteStrictMode,
 	}
 	http.SetCookie(w, &twitchCookie)
 

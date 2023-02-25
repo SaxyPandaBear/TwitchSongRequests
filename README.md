@@ -11,14 +11,23 @@ the song in the user's current playing session.
 
 # For Users
 ## How do I use it?
+1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
 1. Authorize the service with Twitch
 1. Authorize the service with Spotify
-1. Submit a request to allow the service to read Twitch channel point redeem events
+1. If it worked, you should see a `Subscribe` and `Unsubscribe` button
+1. Click `Subscribe`
 1. Open Spotify on your computer
 1. Navigate to your Twitch channel
 1. Create a channel point reward with `TwitchSongRequests` somewhere in the title, that accepts text input
-1. Find your favorite song on Spotify, copy the URI and use it as input when redeeming that reward
+1. Start playing music on Spotify (the service needs an "active" player to work)
+1. Find your favorite song on Spotify, copy the URI and use it as input when redeeming
 1. Check if your Spotify player has queued the song
+
+## How do I stop using it?
+1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
+1. If you are fully authenticated, you should see a `Unsubscribe` button
+1. Click it
+1. You're done!
 
 ### Example
 TDB
