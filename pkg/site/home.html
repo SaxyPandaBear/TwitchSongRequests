@@ -81,6 +81,12 @@
             margin-bottom: 5px;
         }
 
+        .authenticated {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .styled-button {
             height: 40px;
             width: 100%;
@@ -158,11 +164,18 @@
 
         {{if .Authenticated}}
         <div class="oauth-options">
-            <form action="{{.TwitchEventSubURL}}" method="post" class="styled-button" data-provider="subscribe">
-                <button type="submit">
-                    Subscribe to events
-                </button>
-            </form>
+            <div class="authenticated">
+                <form action="{{.SubscribeURL}}" method="post">
+                    <button type="submit" class="styled-button" data-provider="subscribe">
+                        Subscribe
+                    </button>
+                </form>
+                <form action="{{.UnsubscribeURL}}" method="post">
+                    <button type="submit" class="styled-button" data-provider="unsubscribe">
+                        Unsubscribe
+                    </button>
+                </form>
+            </div>
         </div>
         {{else}}
         <div class="oauth-options">

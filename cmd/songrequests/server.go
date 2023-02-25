@@ -111,7 +111,7 @@ func StartServer(port int) error {
 	r.Get("/", pageHandler.HomePage)
 
 	userHandler := api.NewUserHandler(userStore, redirectURL)
-	r.Delete("/user", userHandler.RevokeUserAccesses)
+	r.Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST cause forms don't support DELETE
 
 	http.Handle("/", r)
 

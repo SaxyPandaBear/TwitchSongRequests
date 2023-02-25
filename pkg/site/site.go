@@ -31,10 +31,11 @@ type SiteRenderer struct {
 }
 
 type HomePageData struct {
-	TwitchAuthURL     string
-	TwitchEventSubURL string
-	SpotifyAuthURL    string
-	Authenticated     bool
+	TwitchAuthURL  string
+	SubscribeURL   string
+	UnsubscribeURL string
+	SpotifyAuthURL string
+	Authenticated  bool
 }
 
 func NewSiteRenderer(siteURL string, u db.UserStore, twitch, spotify AuthConfig) *SiteRenderer {
@@ -70,10 +71,11 @@ func NotAllowed(w http.ResponseWriter, r *http.Request) {
 
 func (h *SiteRenderer) getHomePageData(r *http.Request) *HomePageData {
 	d := HomePageData{
-		TwitchEventSubURL: fmt.Sprintf("%s/subscribe", h.siteURL),
-		TwitchAuthURL:     GenerateAuthURL("id.twitch.tv", "oauth2/authorize", "channel:read:redemptions", h.twitch),
-		SpotifyAuthURL:    GenerateAuthURL("accounts.spotify.com", "authorize", "user-modify-playback-state user-read-playback-state", h.spotify),
-		Authenticated:     false,
+		SubscribeURL:   fmt.Sprintf("%s/subscribe", h.siteURL),
+		UnsubscribeURL: fmt.Sprintf("%s/revoke", h.siteURL),
+		TwitchAuthURL:  GenerateAuthURL("id.twitch.tv", "oauth2/authorize", "channel:read:redemptions", h.twitch),
+		SpotifyAuthURL: GenerateAuthURL("accounts.spotify.com", "authorize", "user-modify-playback-state user-read-playback-state", h.spotify),
+		Authenticated:  false,
 	}
 
 	c, err := r.Cookie(constants.TwitchIDCookieKey)
