@@ -16,8 +16,9 @@ const defaultPort = 8000
 func main() {
 	flag.Parse()
 
-	zap.RedirectStdLog(zap.L())
-	defer zap.L().Sync()
+	logger, _ := zap.NewProduction()
+	zap.RedirectStdLog(logger)
+	defer logger.Sync()
 
 	var port = defaultPort
 	portEnv, ok := os.LookupEnv("PORT")
