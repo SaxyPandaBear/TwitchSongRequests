@@ -70,7 +70,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	code := r.Form.Get("code")
+	code := r.URL.Query().Get("code")
 	token, err := h.authenticator.Exchange(r.Context(), code)
 
 	if err != nil {
