@@ -25,8 +25,8 @@ type AuthConfig struct {
 
 type SiteRenderer struct {
 	userStore db.UserStore
-	twitch    AuthConfig
-	spotify   AuthConfig
+	twitch    *AuthConfig
+	spotify   *AuthConfig
 	siteURL   string
 }
 
@@ -38,7 +38,7 @@ type HomePageData struct {
 	Authenticated  bool
 }
 
-func NewSiteRenderer(siteURL string, u db.UserStore, twitch, spotify AuthConfig) *SiteRenderer {
+func NewSiteRenderer(siteURL string, u db.UserStore, twitch, spotify *AuthConfig) *SiteRenderer {
 	return &SiteRenderer{
 		siteURL:   siteURL,
 		userStore: u,
@@ -113,7 +113,7 @@ func (h *SiteRenderer) getHomePageData(r *http.Request) *HomePageData {
 	return &d
 }
 
-func GenerateAuthURL(host, path, scope string, config AuthConfig) string {
+func GenerateAuthURL(host, path, scope string, config *AuthConfig) string {
 	query := url.Values{
 		"client_id":     {config.ClientID},
 		"redirect_uri":  {config.RedirectURL},

@@ -47,6 +47,8 @@ func TestMockServerUrlPresent(t *testing.T) {
 	assert.Equal(t, "foo", opts.ClientID)
 	assert.Equal(t, "bar", opts.ClientSecret)
 	assert.Equal(t, "baz", opts.APIBaseURL)
+	assert.Equal(t, "TwitchSongRequests", opts.UserAgent)
+	assert.Equal(t, "localhost:8000", opts.RedirectURI)
 }
 
 func TestSpotifyClientMissing(t *testing.T) {

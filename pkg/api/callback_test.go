@@ -20,7 +20,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
-	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/testutil"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 )
@@ -51,7 +50,7 @@ func TestPublishRedeem(t *testing.T) {
 		Messages:   m,
 		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 	err := u.AddUser(&users.User{ // spoof a user so the test doesen't fail
@@ -112,7 +111,7 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 		Messages:   m,
 		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 
@@ -162,7 +161,7 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 		Messages:   m,
 		ShouldFail: true,
 	}
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 
@@ -213,7 +212,7 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 		ShouldFail: true,
 	}
 	// the user lookup will fail
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 
@@ -263,7 +262,7 @@ func TestPublishRedeemFails(t *testing.T) {
 		Messages:   m,
 		ShouldFail: true,
 	}
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 	err := u.AddUser(&users.User{
@@ -320,7 +319,7 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 		Messages:   m,
 		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 
@@ -364,7 +363,7 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 		Messages:   m,
 		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 
@@ -413,7 +412,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 		Messages:   m,
 		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 
@@ -468,7 +467,7 @@ func TestVerifyWebhookCallback(t *testing.T) {
 		Messages:   m,
 		ShouldFail: false,
 	}
-	u := db.InMemoryUserStore{
+	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
 

@@ -31,7 +31,6 @@ func StartServer(port int) error {
 	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Println("failed to connect to Postgres database")
-
 	}
 	defer dbpool.Close()
 
@@ -107,7 +106,7 @@ func StartServer(port int) error {
 		State:       spotifyState,
 	}
 
-	pageHandler := site.NewSiteRenderer(redirectURL, userStore, twitchConfig, spotifyConfig)
+	pageHandler := site.NewSiteRenderer(redirectURL, userStore, &twitchConfig, &spotifyConfig)
 	r.Get("/", pageHandler.HomePage)
 
 	userHandler := api.NewUserHandler(userStore, redirectURL)

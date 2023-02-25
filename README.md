@@ -9,6 +9,14 @@ the song in the user's current playing session.
 
 ---
 
+# Inspiration
+This project was inspired by [Kaije](https://www.twitch.tv/kaije), because their 
+Twitch channel has a channel point reward for requesting a song on Spotify. On that 
+fateful day, I requested multiple songs in quick succession, and they told me to hold 
+off on requesting songs because they have to stop working on art in order to manually 
+copy the Spotify URIs I was sending, in order to queue the songs in their Spotify 
+player.
+
 # For Users
 ## How do I use it?
 1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
@@ -23,26 +31,32 @@ the song in the user's current playing session.
 1. Find your favorite song on Spotify, copy the URI and use it as input when redeeming
 1. Check if your Spotify player has queued the song
 
+## Who can use it?
+In order to use custom channel point rewards, you must be an affiliate or partner
+streamer.
+
+Last I checked, in order to queue songs into a player, the user must have Spotify
+Premium.
+
 ## How do I stop using it?
 1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
 1. If you are fully authenticated, you should see a `Unsubscribe` button
 1. Click it
 1. You're done!
 
-### Example
-TDB
-
 ## Troubleshooting
 TBD
 
 ## How does it work?
-The TwitchSongRequests service will authorize to your Twitch account so that the service can listen for
-channel point redemption events from your channel. Once the service receives an event, it will process that
-event in order to queue the given Spotify song into your connected Spotify player. 
+The TwitchSongRequests service will authorize to your Twitch account so that the 
+service can listen for channel point redemption events from your channel. Once the 
+service receives an event, it will process that event in order to queue the given 
+Spotify song into your connected Spotify player. 
 
-The service requires access to read Twitch channel point redemptions, and also needs access to modify a user's
-Spotify playback state. The Twitch access is needed in order to allow the service to subscribe to the events,
-and the Spotify access is required to queue the song in a user's active player.
+The service requires access to read Twitch channel point redemptions, and also needs 
+access to modify a user's Spotify playback state. The Twitch access is needed in order 
+to allow the service to subscribe to the events, and the Spotify access is required to 
+queue the song in a user's active player.
 
 ---
 # For Developers

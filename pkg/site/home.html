@@ -111,6 +111,26 @@
             background-color: var(--provider-bg-color-hover);
         }
 
+        .styled-sub-button {
+            height: 40px;
+            width: 100%;
+            padding: 0 5%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0 10px;
+            fill: var(--white);
+            color: var(--white);
+            border: none;
+            border-radius: 7px;
+            font-weight: bold;
+            background-color: var(--provider-bg-color);
+        }
+
+        .styled-sub-button:hover {
+            background-color: var(--provider-bg-color-hover);
+        }
+
         .oauth-icon {
             width: 25px;
             height: 25px;
@@ -131,12 +151,12 @@
             --provider-bg-color-hover: #1db954;
         }
 
-        .styled-button[data-provider^="subscribe"] {
+        .styled-sub-button[data-provider^="subscribe"] {
             --provider-bg-color: #2bde6a;
             --provider-bg-color-hover: #1db954;
         }
 
-        .styled-button[data-provider^="unsubscribe"] {
+        .styled-sub-button[data-provider^="unsubscribe"] {
             --provider-bg-color: #ff3c3c;
             --provider-bg-color-hover: #df1818;
         }
@@ -175,12 +195,12 @@
         <div class="oauth-options">
             <div class="authenticated">
                 <form action="{{.SubscribeURL}}" method="post" class="authenticated-form">
-                    <button type="submit" class="styled-button" data-provider="subscribe">
+                    <button type="submit" class="styled-sub-button" data-provider="subscribe">
                         Subscribe
                     </button>
                 </form>
                 <form action="{{.UnsubscribeURL}}" method="post" class="authenticated-form">
-                    <button type="submit" class="styled-button" data-provider="unsubscribe">
+                    <button type="submit" class="styled-sub-button" data-provider="unsubscribe">
                         Unsubscribe
                     </button>
                 </form>
