@@ -87,6 +87,10 @@
             align-items: center;
         }
 
+        .authenticated.form {
+            padding: 0% 2%;
+        }
+
         .styled-button {
             height: 40px;
             width: 100%;
@@ -127,9 +131,14 @@
             --provider-bg-color-hover: #1db954;
         }
 
-        .styled-button[data-provideer^="subscribe"] {
+        .styled-button[data-provider^="subscribe"] {
             --provider-bg-color: #2bde6a;
             --provider-bg-color-hover: #1db954;
+        }
+
+        .styled-button[data-provider^="unsubscribe"] {
+            --provider-bg-color: #ff3c3c;
+            --provider-bg-color-hover: #df1818;
         }
 
         .about-header {
