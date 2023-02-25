@@ -87,7 +87,7 @@
             align-items: center;
         }
 
-        .authenticated.form {
+        .authenticated-form {
             padding: 0% 2%;
         }
 
@@ -102,7 +102,7 @@
             fill: var(--white);
             color: var(--white);
             border: none;
-            border-radius: 5px;
+            border-radius: 7px;
             font-weight: bold;
             background-color: var(--provider-bg-color);
         }
@@ -174,12 +174,12 @@
         {{if .Authenticated}}
         <div class="oauth-options">
             <div class="authenticated">
-                <form action="{{.SubscribeURL}}" method="post">
+                <form action="{{.SubscribeURL}}" method="post" class="authenticated-form">
                     <button type="submit" class="styled-button" data-provider="subscribe">
                         Subscribe
                     </button>
                 </form>
-                <form action="{{.UnsubscribeURL}}" method="post">
+                <form action="{{.UnsubscribeURL}}" method="post" class="authenticated-form">
                     <button type="submit" class="styled-button" data-provider="unsubscribe">
                         Unsubscribe
                     </button>

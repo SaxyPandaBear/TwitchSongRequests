@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/nicklaw5/helix"
+	"github.com/saxypandabear/twitchsongrequests/internal/locking"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
@@ -20,8 +20,6 @@ type TwitchAuthZHandler struct {
 	userStore   db.UserStore
 }
 
-var twitchMu sync.Mutex
-
 func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.UserStore) *TwitchAuthZHandler {
 	return &TwitchAuthZHandler{
 		redirectURL: url,
@@ -29,10 +27,6 @@ func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.User
 		client:      c,
 		userStore:   userStore,
 	}
-}
-
-func (h *TwitchAuthZHandler) LoginRedirect(w http.ResponseWriter, r *http.Request) {
-
 }
 
 func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
@@ -72,8 +66,8 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	log.Printf("token response: HTTP %d; %s", token.StatusCode, token.ErrorMessage)
 
 	// authorize for this call
-	twitchMu.Lock()
-	defer twitchMu.Unlock()
+	locking.TwitchClientLock.Lock()
+	defer locking.TwitchClientLock.Unlock()
 	h.client.SetUserAccessToken(token.Data.AccessToken)
 
 	ok, data, err := h.client.ValidateToken(token.Data.AccessToken)

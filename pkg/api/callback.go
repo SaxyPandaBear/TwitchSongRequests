@@ -8,9 +8,9 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/nicklaw5/helix"
+	"github.com/saxypandabear/twitchsongrequests/internal/locking"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 	"github.com/zmb3/spotify/v2"
@@ -22,8 +22,6 @@ const (
 	verificationType  = "webhook_callback_verification"
 	messageTypeHeader = "Twitch-Eventsub-Message-Type"
 )
-
-var spotifyRefreshMutex sync.Mutex
 
 type EventSubNotification struct {
 	Subscription helix.EventSubSubscription `json:"subscription"`
@@ -113,8 +111,8 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 
 	// store the refreshed token
-	spotifyRefreshMutex.Lock()
-	defer spotifyRefreshMutex.Unlock()
+	locking.SpotifyClientLock.Lock()
+	defer locking.SpotifyClientLock.Unlock()
 	u, err := h.userStore.GetUser(redeemEvent.BroadcasterUserID)
 	if err == nil {
 		u.SpotifyAccessToken = refreshed.AccessToken

@@ -87,7 +87,7 @@ func StartServer(port int) error {
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 
-	eventSub := api.NewEventSubHandler(twitch, redirectURL, s)
+	eventSub := api.NewEventSubHandler(userStore, twitch, redirectURL, s)
 	r.Post("/subscribe", eventSub.SubscribeToTopic)
 
 	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore)
