@@ -6,7 +6,6 @@ the song in the user's current playing session.
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/SaxyPandaBear/TwitchSongRequests/ci.yml?style=for-the-badge) ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/SaxyPandaBear/TwitchSongRequests?style=for-the-badge)
 
-
 ---
 
 # Inspiration
@@ -57,6 +56,13 @@ The service requires access to read Twitch channel point redemptions, and also n
 access to modify a user's Spotify playback state. The Twitch access is needed in order 
 to allow the service to subscribe to the events, and the Spotify access is required to 
 queue the song in a user's active player.
+
+The site uses cookies to track whether a user is authenticated or not. 
+
+## Why not YouTube?
+Well, the YouTube API doesn't let you queue videos outside of an iframe player,
+which means I would need to embed the player inside my website. Which, I'm not
+necessariliy opposed to doing, but that wasn't the original point of this. 
 
 ---
 # For Developers
