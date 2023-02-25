@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
@@ -62,8 +63,8 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		Path:     "/",
 		Value:    "",
 		MaxAge:   -1, // delete the cookie
+		Expires:  time.Now().Add(-1 * time.Hour),
 		Secure:   true,
-		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	}
 	http.SetCookie(w, &twitchCookie)
