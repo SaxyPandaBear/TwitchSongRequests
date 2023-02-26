@@ -1,13 +1,11 @@
 package api
 
 import (
-	"encoding/base64"
 	"log"
 	"net/http"
 
 	"github.com/nicklaw5/helix"
-	"github.com/saxypandabear/twitchsongrequests/internal/locking"
-	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
+	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 )
 
@@ -21,16 +19,16 @@ type SubscribeRequest struct {
 }
 
 type EventSubHandler struct {
-	client      *helix.Client
+	auth        *util.AuthConfig
 	userStore   db.UserStore
 	callbackURL string
 	secret      string
 }
 
-func NewEventSubHandler(u db.UserStore, c *helix.Client, callbackURL, secret string) *EventSubHandler {
+func NewEventSubHandler(u db.UserStore, auth *util.AuthConfig, callbackURL, secret string) *EventSubHandler {
 	return &EventSubHandler{
 		userStore:   u,
-		client:      c,
+		auth:        auth,
 		callbackURL: callbackURL,
 		secret:      secret,
 	}
@@ -38,27 +36,12 @@ func NewEventSubHandler(u db.UserStore, c *helix.Client, callbackURL, secret str
 
 // SubscribeToTopic
 func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
-	c, err := r.Cookie(constants.TwitchIDCookieKey)
+	id, err := util.GetUserIDFromRequest(r)
 	if err != nil {
-		log.Println("could not extract cookie", err)
+		log.Println("failed to get Twitch ID from request", err)
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
-
-	if err = c.Valid(); err != nil {
-		log.Println("cookie expired", err)
-		http.Redirect(w, r, e.callbackURL, http.StatusFound)
-		return
-	}
-
-	idBytes, err := base64.StdEncoding.DecodeString(c.Value)
-	if err != nil {
-		log.Println("failed to decode cookie", err)
-		http.Redirect(w, r, e.callbackURL, http.StatusFound)
-		return
-	}
-
-	id := string(idBytes)
 
 	user, err := e.userStore.GetUser(id)
 	if err != nil {
@@ -81,20 +64,17 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	}
 
 	// get user access token
-	locking.TwitchClientLock.Lock()
-	defer locking.TwitchClientLock.Unlock()
-	e.client.SetUserAccessToken(user.TwitchAccessToken)
-	token, err := e.client.RefreshUserAccessToken(user.TwitchRefreshToken)
-
+	c, err := util.GetNewTwitchClient(e.auth)
 	if err != nil {
-		log.Println("failed to get user access token", err)
+		log.Println("failed to get Twitch client")
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
+	c.SetUserAccessToken(user.TwitchAccessToken)
+	token, err := c.RefreshUserAccessToken(user.TwitchRefreshToken)
+	c.SetUserAccessToken(token.Data.AccessToken)
 
-	e.client.SetUserAccessToken(token.Data.AccessToken)
-
-	_, err = e.client.CreateEventSubSubscription(&createSub)
+	_, err = c.CreateEventSubSubscription(&createSub)
 	if err != nil {
 		log.Println("failed to create EventSub subscription ", err)
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)

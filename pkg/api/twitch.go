@@ -6,8 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/nicklaw5/helix"
-	"github.com/saxypandabear/twitchsongrequests/internal/locking"
+	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
@@ -15,16 +14,14 @@ import (
 
 type TwitchAuthZHandler struct {
 	redirectURL string
-	state       string
-	client      *helix.Client
+	auth        *util.AuthConfig
 	userStore   db.UserStore
 }
 
-func NewTwitchAuthZHandler(url, state string, c *helix.Client, userStore db.UserStore) *TwitchAuthZHandler {
+func NewTwitchAuthZHandler(url string, auth *util.AuthConfig, userStore db.UserStore) *TwitchAuthZHandler {
 	return &TwitchAuthZHandler{
 		redirectURL: url,
-		state:       state,
-		client:      c,
+		auth:        auth,
 		userStore:   userStore,
 	}
 }
@@ -48,7 +45,7 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 
 	// validate state key matches
 	state := r.URL.Query().Get("state")
-	if state != h.state {
+	if state != h.auth.State {
 		log.Println("could not verify request state")
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "failed to verify state")
@@ -56,7 +53,15 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#use-the-authorization-code-to-get-a-token
-	token, err := h.client.RequestUserAccessToken(code)
+	client, err := util.GetNewTwitchClient(h.auth)
+	if err != nil {
+		log.Println("failed to get Twitch client", err)
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, "failed to authorize")
+		return
+	}
+
+	token, err := client.RequestUserAccessToken(code)
 	if err != nil {
 		log.Printf("failed to retrieve user access token: %v\n", err)
 		w.WriteHeader(http.StatusForbidden)
@@ -66,11 +71,9 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	log.Printf("token response: HTTP %d; %s", token.StatusCode, token.ErrorMessage)
 
 	// authorize for this call
-	locking.TwitchClientLock.Lock()
-	defer locking.TwitchClientLock.Unlock()
-	h.client.SetUserAccessToken(token.Data.AccessToken)
+	client.SetUserAccessToken(token.Data.AccessToken)
 
-	ok, data, err := h.client.ValidateToken(token.Data.AccessToken)
+	ok, data, err := client.ValidateToken(token.Data.AccessToken)
 	if err != nil {
 		log.Println("error occurred while validating Twitch OAuth token", err)
 		w.WriteHeader(http.StatusUnauthorized)

@@ -1,6 +1,7 @@
 package util_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
@@ -9,77 +10,118 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTwitchClientMissing(t *testing.T) {
-	opts, err := util.LoadTwitchClientOptions()
-	assert.Nil(t, opts)
-	assert.Error(t, err)
-	assert.ErrorContains(t, err, "not defined")
-}
-
-func TestTwitchClientEmpty(t *testing.T) {
-	t.Setenv(constants.TwitchClientIDKey, "")
-
-	opts, err := util.LoadTwitchClientOptions()
-	assert.Nil(t, opts)
-	assert.Error(t, err)
-	assert.ErrorContains(t, err, "empty")
-}
-
-func TestMockServerUrlMissing(t *testing.T) {
-	t.Setenv(constants.TwitchClientIDKey, "foo")
-	t.Setenv(constants.TwitchClientSecretKey, "bar")
-
-	opts, err := util.LoadTwitchClientOptions()
-	assert.NotNil(t, opts)
-	assert.NoError(t, err)
-	assert.Equal(t, "foo", opts.ClientID)
-	assert.Empty(t, opts.APIBaseURL)
-}
-
-func TestMockServerUrlPresent(t *testing.T) {
-	t.Setenv(constants.TwitchClientIDKey, "foo")
-	t.Setenv(constants.TwitchClientSecretKey, "bar")
-	t.Setenv(constants.MockServerURLKey, "baz")
-
-	opts, err := util.LoadTwitchClientOptions()
-	assert.NotNil(t, opts)
-	assert.NoError(t, err)
-	assert.Equal(t, "foo", opts.ClientID)
-	assert.Equal(t, "bar", opts.ClientSecret)
-	assert.Equal(t, "baz", opts.APIBaseURL)
-	assert.Equal(t, "TwitchSongRequests", opts.UserAgent)
-	assert.Equal(t, "localhost:8000", opts.RedirectURI)
-}
-
-func TestSpotifyClientMissing(t *testing.T) {
-	auth, err := util.LoadSpotifyClientOptions()
-	assert.Nil(t, auth)
-	assert.Error(t, err)
-	assert.ErrorContains(t, err, "not defined")
-}
-
-func TestSpotifyClientEmpty(t *testing.T) {
-	t.Setenv(constants.SpotifyClientIDKey, "")
-
-	auth, err := util.LoadSpotifyClientOptions()
-	assert.Nil(t, auth)
-	assert.Error(t, err)
-	assert.ErrorContains(t, err, "empty")
-}
-
-func TestSpotifyClientHappyPath(t *testing.T) {
-	t.Setenv(constants.SpotifyClientIDKey, "foo")
-	t.Setenv(constants.SpotifyClientSecretKey, "bar")
-	t.Setenv(constants.SpotifyRedirectURL, "baz")
-
-	auth, err := util.LoadSpotifyClientOptions()
-	assert.NotNil(t, auth)
-	assert.NoError(t, err)
-}
-
 func TestGetFromEnvOrDefault(t *testing.T) {
 	t.Setenv("foo", "bar")
 
 	assert.Equal(t, "bar", util.GetFromEnvOrDefault("foo", "baz"))
 	assert.Equal(t, "baz", util.GetFromEnvOrDefault("bar", "baz"))
+}
+
+func TestLoadTwitchConfigs(t *testing.T) {
+	t.Setenv(constants.TwitchClientIDKey, "foo")
+	t.Setenv(constants.TwitchClientSecretKey, "bar")
+	t.Setenv(constants.TwitchStateKey, "baz")
+	t.Setenv(constants.TwitchRedirectURL, "foo1")
+
+	c, err := util.LoadTwitchConfigs()
+	assert.NoError(t, err)
+	assert.Equal(t, "foo", c.ClientID)
+	assert.Equal(t, "bar", c.ClientSecret)
+	assert.Equal(t, "baz", c.State)
+	assert.Equal(t, util.TwitchUserScope, c.Scope)
+	assert.Equal(t, "foo1", c.RedirectURL)
+	assert.Empty(t, c.APIBaseURL)
+	assert.Nil(t, c.OAuth)
+}
+
+func TestLoadTwitchConfigsWithMockAPI(t *testing.T) {
+	t.Setenv(constants.TwitchClientIDKey, "foo")
+	t.Setenv(constants.TwitchClientSecretKey, "bar")
+	t.Setenv(constants.TwitchStateKey, "baz")
+	t.Setenv(constants.TwitchRedirectURL, "foo1")
+	t.Setenv(constants.MockServerURLKey, "bar2")
+
+	c, err := util.LoadTwitchConfigs()
+	assert.NoError(t, err)
+	assert.Equal(t, "bar2", c.APIBaseURL)
+}
+
+func TestLoadTwitchConfigsWithDefaultRedirect(t *testing.T) {
+	t.Setenv(constants.TwitchClientIDKey, "foo")
+	t.Setenv(constants.TwitchClientSecretKey, "bar")
+	t.Setenv(constants.TwitchStateKey, "baz")
+
+	c, err := util.LoadTwitchConfigs()
+	assert.NoError(t, err)
+	assert.Equal(t, "localhost:8000", c.RedirectURL)
+}
+
+func TestLoadTwitchConfigsErrors(t *testing.T) {
+	c, err := util.LoadTwitchConfigs()
+	assert.Nil(t, c)
+	assert.Error(t, err)
+
+	t.Setenv(constants.TwitchClientIDKey, "foo")
+	c, err = util.LoadTwitchConfigs()
+	assert.Nil(t, c)
+	assert.Error(t, err)
+
+	t.Setenv(constants.TwitchClientSecretKey, "bar")
+	c, err = util.LoadTwitchConfigs()
+	assert.Nil(t, c)
+	assert.Error(t, err)
+
+	t.Setenv(constants.TwitchStateKey, "baz")
+	c, err = util.LoadTwitchConfigs()
+	assert.NotNil(t, c)
+	assert.NoError(t, err)
+}
+
+func TestLoadSpotifyConfigs(t *testing.T) {
+	t.Setenv(constants.SpotifyClientIDKey, "foo")
+	t.Setenv(constants.SpotifyClientSecretKey, "bar")
+	t.Setenv(constants.SpotifyRedirectURL, "baz")
+	t.Setenv(constants.SpotifyStateKey, "foo1")
+
+	c, err := util.LoadSpotifyConfigs()
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+
+	assert.Equal(t, "foo", c.ClientID)
+	assert.Equal(t, "bar", c.ClientSecret)
+	assert.Equal(t, "baz", c.RedirectURL)
+	assert.Empty(t, c.APIBaseURL)
+	assert.Equal(t, "foo1", c.State)
+	assert.NotNil(t, c.OAuth)
+	assert.Equal(t, util.SpotifyAuthURL, c.OAuth.Endpoint.AuthURL)
+	assert.Equal(t, util.SpotifyTokenURL, c.OAuth.Endpoint.TokenURL)
+	assert.Equal(t, "foo", c.OAuth.ClientID)
+	assert.Equal(t, "bar", c.OAuth.ClientSecret)
+	assert.Equal(t, "baz", c.OAuth.RedirectURL)
+	assert.Equal(t, util.SpotifyUserScope, strings.Join(c.OAuth.Scopes, " "))
+}
+
+func TestLoadSpotifyConfigsErrors(t *testing.T) {
+	c, err := util.LoadSpotifyConfigs()
+	assert.Nil(t, c)
+	assert.Error(t, err)
+
+	t.Setenv(constants.SpotifyClientIDKey, "foo")
+	c, err = util.LoadSpotifyConfigs()
+	assert.Nil(t, c)
+	assert.Error(t, err)
+
+	t.Setenv(constants.SpotifyClientSecretKey, "bar")
+	c, err = util.LoadSpotifyConfigs()
+	assert.Nil(t, c)
+	assert.Error(t, err)
+	t.Setenv(constants.SpotifyRedirectURL, "baz")
+	c, err = util.LoadSpotifyConfigs()
+	assert.Nil(t, c)
+	assert.Error(t, err)
+
+	t.Setenv(constants.SpotifyStateKey, "foo1")
+	c, err = util.LoadSpotifyConfigs()
+	assert.NotNil(t, c)
+	assert.NoError(t, err)
 }

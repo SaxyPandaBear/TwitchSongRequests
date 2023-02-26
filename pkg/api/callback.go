@@ -10,11 +10,9 @@ import (
 	"strings"
 
 	"github.com/nicklaw5/helix"
-	"github.com/saxypandabear/twitchsongrequests/internal/locking"
+	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
-	"github.com/zmb3/spotify/v2"
-	"golang.org/x/oauth2"
 )
 
 const (
@@ -33,15 +31,15 @@ type RewardHandler struct {
 	secret    string
 	publisher queue.Publisher
 	userStore db.UserStore
-	auth      *oauth2.Config
+	spotify   *util.AuthConfig
 }
 
-func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, auth *oauth2.Config) *RewardHandler {
+func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, auth *util.AuthConfig) *RewardHandler {
 	return &RewardHandler{
 		secret:    twitchSecret,
 		publisher: publisher,
 		userStore: userStore,
-		auth:      auth,
+		spotify:   auth,
 	}
 }
 
@@ -93,16 +91,14 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// c, err := GetSpotifyClient(h.userStore, h.auth, redeemEvent.BroadcasterUserID)
-	tok, err := GetOAuthToken(h.userStore, redeemEvent.BroadcasterUserID)
+	tok, err := db.FetchSpotifyToken(h.userStore, redeemEvent.BroadcasterUserID)
 	if err != nil {
 		log.Printf("failed to verify user %s for spotify access: %v\n", redeemEvent.BroadcasterUserID, err)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
-	source := h.auth.TokenSource(r.Context(), tok)
-	refreshed, err := source.Token()
+	refreshed, err := util.RefreshSpotifyToken(h.spotify, tok)
 	if err != nil {
 		log.Println("failed to get valid token", err)
 		w.WriteHeader(http.StatusOK)
@@ -111,8 +107,6 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 
 	// store the refreshed token
-	locking.SpotifyClientLock.Lock()
-	defer locking.SpotifyClientLock.Unlock()
 	u, err := h.userStore.GetUser(redeemEvent.BroadcasterUserID)
 	if err == nil {
 		u.SpotifyAccessToken = refreshed.AccessToken
@@ -127,7 +121,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	c := spotify.New(h.auth.Client(r.Context(), refreshed))
+	c := util.GetNewSpotifyClient(h.spotify, refreshed)
 
 	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
@@ -142,21 +136,6 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	if _, err = w.Write([]byte("ok")); err != nil {
 		log.Println("failed to write response body", err)
 	}
-}
-
-func GetOAuthToken(userStore db.UserStore, id string) (*oauth2.Token, error) {
-	u, err := userStore.GetUser(id)
-	if err != nil {
-		return nil, err
-	}
-
-	tok := oauth2.Token{
-		AccessToken:  u.SpotifyAccessToken,
-		RefreshToken: u.SpotifyRefreshToken,
-		Expiry:       *u.SpotifyExpiry,
-	}
-
-	return &tok, nil
 }
 
 func IsVerificationRequest(r *http.Request) bool {

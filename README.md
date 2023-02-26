@@ -16,6 +16,11 @@ off on requesting songs because they have to stop working on art in order to man
 copy the Spotify URIs I was sending, in order to queue the songs in their Spotify 
 player.
 
+# Support
+I'm paying to host this service completely out of pocket. If you would like to help
+pitch in for the cost of hosting (it's not that much right now), please let me know
+and I'll set up a way to contribute in that way. 
+
 # For Users
 ## How do I use it?
 1. Navigate to the site: https://twitchsongrequests-production.up.railway.app

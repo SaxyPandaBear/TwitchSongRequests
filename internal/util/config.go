@@ -2,12 +2,10 @@ package util
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"strings"
 
-	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
-	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2"
 )
 
@@ -17,11 +15,17 @@ const (
 	// SpotifyTokenURL is the URL to the Spotify Accounts Service's OAuth2
 	// token endpoint.
 	SpotifyTokenURL = "https://accounts.spotify.com/api/token"
+	// SpotifyUserScope is the set of permissions required to access the necessary
+	// Spotify APIs
+	SpotifyUserScope = "user-modify-playback-state user-read-playback-state"
+	// TwitchUserScope is the set of permissions required to access the necessary
+	// Twitch APIs
+	TwitchUserScope = "channel:read:redemptions"
 )
 
-// LoadTwitchClientOptions reads from environment variables in order to populate
-// configuration options for the Twitch client.
-func LoadTwitchClientOptions() (*helix.Options, error) {
+// LoadTwitchConfigs reads from environment variables in order to
+// populate configurations for creating a Twitch SDK client
+func LoadTwitchConfigs() (*AuthConfig, error) {
 	clientID, err := GetFromEnv(constants.TwitchClientIDKey)
 	if err != nil {
 		return nil, err
@@ -32,31 +36,25 @@ func LoadTwitchClientOptions() (*helix.Options, error) {
 		return nil, err
 	}
 
-	redirectURL, err := GetFromEnv(constants.TwitchRedirectURL)
+	state, err := GetFromEnv(constants.TwitchStateKey)
 	if err != nil {
-		redirectURL = "localhost:8000"
+		return nil, err
 	}
 
-	opt := helix.Options{
+	redirectURL := GetFromEnvOrDefault(constants.TwitchRedirectURL, "localhost:8000")
+	apiURL := GetFromEnvOrDefault(constants.MockServerURLKey, "")
+
+	return &AuthConfig{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		RedirectURI:  redirectURL,
-		UserAgent:    "TwitchSongRequests",
-	}
-
-	// handle case where we are running locally with the Twitch CLI mock server
-	url, err := GetFromEnv(constants.MockServerURLKey)
-	if err == nil {
-		log.Printf("Using mocked Twitch API hosted at %s\n", url)
-		opt.APIBaseURL = url
-	}
-
-	return &opt, nil
+		RedirectURL:  redirectURL,
+		APIBaseURL:   apiURL,
+		Scope:        TwitchUserScope,
+		State:        state,
+	}, nil
 }
 
-// LoadSpotifyClientOptions reads from environment variables in order to populate
-// configuration options for the Spotify authenticator
-func LoadSpotifyClientOptions() (*oauth2.Config, error) {
+func LoadSpotifyConfigs() (*AuthConfig, error) {
 	clientID, err := GetFromEnv(constants.SpotifyClientIDKey)
 	if err != nil {
 		return nil, err
@@ -72,7 +70,12 @@ func LoadSpotifyClientOptions() (*oauth2.Config, error) {
 		return nil, err
 	}
 
-	return &oauth2.Config{
+	state, err := GetFromEnv(constants.SpotifyStateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	c := oauth2.Config{
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  SpotifyAuthURL,
 			TokenURL: SpotifyTokenURL,
@@ -80,7 +83,16 @@ func LoadSpotifyClientOptions() (*oauth2.Config, error) {
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		RedirectURL:  redirect,
-		Scopes:       []string{spotifyauth.ScopeUserModifyPlaybackState, spotifyauth.ScopeUserReadPlaybackState},
+		Scopes:       strings.Split(SpotifyUserScope, " "),
+	}
+
+	return &AuthConfig{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Scope:        SpotifyUserScope,
+		RedirectURL:  redirect,
+		State:        state,
+		OAuth:        &c,
 	}, nil
 }
 

@@ -17,8 +17,8 @@ import (
 
 	"github.com/nicklaw5/helix"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/oauth2"
 
+	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/testutil"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
@@ -61,7 +61,7 @@ func TestPublishRedeem(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -115,7 +115,7 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -165,7 +165,7 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -216,7 +216,7 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -273,7 +273,7 @@ func TestPublishRedeemFails(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -323,7 +323,7 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -367,7 +367,7 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -416,7 +416,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -471,7 +471,7 @@ func TestVerifyWebhookCallback(t *testing.T) {
 		Data: make(map[string]*users.User),
 	}
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &oauth2.Config{})
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)

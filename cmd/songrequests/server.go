@@ -12,7 +12,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nicklaw5/helix"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
@@ -50,9 +49,6 @@ func StartServer(port int) error {
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.Heartbeat("/ping"))
 
-	r.NotFound(site.NotFound)
-	r.MethodNotAllowed(site.NotAllowed)
-
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
@@ -61,56 +57,41 @@ func StartServer(port int) error {
 		return err
 	}
 
-	twitchState := util.GetFromEnvOrDefault(constants.TwitchStateKey, "foo123")
-	spotifyState := util.GetFromEnvOrDefault(constants.SpotifyStateKey, "bar789")
-
-	twitchOptions, err := util.LoadTwitchClientOptions()
+	twitchConfig, err := util.LoadTwitchConfigs()
 	if err != nil {
 		log.Println("failed to load Twitch configurations ", err)
 		return err
 	}
-	twitch, err := helix.NewClient(twitchOptions)
-	if err != nil {
-		log.Println("failed to create Twitch client ", err)
-		return err
-	}
 
-	spotifyOAuthConfig, err := util.LoadSpotifyClientOptions()
+	spotifyConfig, err := util.LoadSpotifyConfigs()
 	if err != nil {
 		log.Println("failed to load Spotify configurations ", err)
 		return err
 	}
 
+	// ===== APIs =====
 	p := spotify.SpotifyPlayerQueue{}
-	reward := api.NewRewardHandler(s, &p, userStore, spotifyOAuthConfig)
+	reward := api.NewRewardHandler(s, &p, userStore, spotifyConfig)
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 
-	eventSub := api.NewEventSubHandler(userStore, twitch, redirectURL, s)
+	eventSub := api.NewEventSubHandler(userStore, twitchConfig, redirectURL, s)
 	r.Post("/subscribe", eventSub.SubscribeToTopic)
 
-	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchState, twitch, userStore)
-	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyState, spotifyOAuthConfig, userStore)
+	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchConfig, userStore)
+	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyConfig, userStore)
 	r.Get("/oauth/twitch", twitchRedirect.Authorize)
 	r.Get("/oauth/spotify", spotifyRedirect.Authorize)
 
-	twitchConfig := site.AuthConfig{
-		ClientID:    twitchOptions.ClientID,
-		RedirectURL: twitchOptions.RedirectURI,
-		State:       twitchState,
-	}
-
-	spotifyConfig := site.AuthConfig{
-		ClientID:    spotifyOAuthConfig.ClientID,
-		RedirectURL: spotifyOAuthConfig.RedirectURL,
-		State:       spotifyState,
-	}
-
-	pageHandler := site.NewSiteRenderer(redirectURL, userStore, &twitchConfig, &spotifyConfig)
-	r.Get("/", pageHandler.HomePage)
-
 	userHandler := api.NewUserHandler(userStore, redirectURL)
-	r.Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST cause forms don't support DELETE
+	r.Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST because forms don't support DELETE
+
+	// ===== Website Pages =====
+
+	home := site.NewHomePageRenderer(redirectURL, userStore, twitchConfig, spotifyConfig)
+	preferences := site.NewPreferencesRenderer(redirectURL, userStore)
+	r.Get("/", home.HomePage)
+	r.Get("/preferences", preferences.PreferencesPage)
 
 	http.Handle("/", r)
 
