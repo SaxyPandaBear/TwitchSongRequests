@@ -26,6 +26,23 @@ func NewTwitchAuthZHandler(url string, auth *util.AuthConfig, userStore db.UserS
 	}
 }
 
+// Login handles initiating the OAuth flow
+func (h *TwitchAuthZHandler) Login(w http.ResponseWriter, r *http.Request) {
+	// add a cookie in the response
+	twitchCookie := http.Cookie{
+		Name:     constants.TwitchIDCookieKey,
+		Path:     "/",
+		Value:    "placeholder",
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	http.SetCookie(w, &twitchCookie)
+
+	redirect := util.GenerateAuthURL("id.twitch.tv", "oauth2/authorize", h.auth)
+	http.Redirect(w, r, redirect, http.StatusFound)
+}
+
+// Authorize handles the callback from the OAuth authorization
 func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	// https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/
 	if r.URL.Query().Has("error") {

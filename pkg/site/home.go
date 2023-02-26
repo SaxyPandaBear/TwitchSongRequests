@@ -48,7 +48,7 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 	d := HomePageData{
 		SubscribeURL:   fmt.Sprintf("%s/subscribe", h.siteURL),
 		UnsubscribeURL: fmt.Sprintf("%s/revoke", h.siteURL),
-		TwitchAuthURL:  util.GenerateAuthURL("id.twitch.tv", "oauth2/authorize", h.twitch),
+		TwitchAuthURL:  fmt.Sprintf("%s/login/twitch", h.siteURL),
 		SpotifyAuthURL: util.GenerateAuthURL("accounts.spotify.com", "authorize", h.spotify),
 		Authenticated:  false,
 	}
