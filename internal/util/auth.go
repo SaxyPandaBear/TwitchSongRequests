@@ -43,8 +43,8 @@ func GetUserIDFromRequest(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	if !c.Secure || c.SameSite != http.SameSiteStrictMode {
-		return "", errors.New("invalid cookie security settings")
+	if !c.Secure {
+		return "", errors.New("insecure cookie")
 	}
 
 	if err = c.Valid(); err != nil {
