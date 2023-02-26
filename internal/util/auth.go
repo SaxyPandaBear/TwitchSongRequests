@@ -2,7 +2,6 @@ package util
 
 import (
 	"encoding/base64"
-	"errors"
 	"log"
 	"net/http"
 	"net/url"
@@ -41,10 +40,6 @@ func GetUserIDFromRequest(r *http.Request) (string, error) {
 	c, err := r.Cookie(constants.TwitchIDCookieKey)
 	if err != nil {
 		return "", err
-	}
-
-	if !c.Secure {
-		return "", errors.New("insecure cookie")
 	}
 
 	if err = c.Valid(); err != nil {
