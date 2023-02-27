@@ -18,9 +18,9 @@ import (
 	"github.com/nicklaw5/helix"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/saxypandabear/twitchsongrequests/internal/testutil"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
-	"github.com/saxypandabear/twitchsongrequests/pkg/testutil"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 )
 
@@ -513,6 +513,58 @@ func TestVerifyWebhookCallback(t *testing.T) {
 	}
 
 	assert.Equal(t, challenge, rr.Body.String())
+}
+
+func TestSubscriptionRevoked(t *testing.T) {
+	m := make(chan string)
+	p := testutil.DummyPublisher{
+		Messages:   m,
+		ShouldFail: false,
+	}
+	u := testutil.InMemoryUserStore{
+		Data: make(map[string]*users.User),
+	}
+
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+
+	challenge := generateUserInput(t)
+	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
+	assert.NotEmpty(t, payload)
+	assert.False(t, strings.Contains(payload, userInputPlaceholder))
+
+	var payloadMap api.EventSubNotification
+	err := json.Unmarshal([]byte(payload), &payloadMap)
+	assert.NoError(t, err)
+	assert.NotNil(t, payloadMap)
+
+	req, err := http.NewRequest("POST", "/callback", strings.NewReader(payload))
+	assert.NoError(t, err)
+
+	// spoof signature header
+	ts := time.Now().Format(time.RFC3339)
+	sig := deriveEventsubSignature(t, payload, eventSubMsgID, ts, dummySecret)
+	req.Header.Add(msgIDHeader, eventSubMsgID)
+	req.Header.Add(msgTimestampHeader, ts)
+	req.Header.Add(msgSignatureHeader, sig)
+
+	// add header so that the service knows that Twitch is trying to verify the callback
+	req.Header.Add("Twitch-Eventsub-Message-Type", "revocation")
+
+	assert.True(t, api.IsRevocationRequest(req))
+
+	rr := httptest.NewRecorder()
+	api := http.HandlerFunc(rh.ChannelPointRedeem)
+
+	go func() {
+		api.ServeHTTP(rr, req)
+	}()
+
+	select {
+	case <-m:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
 }
 
 func TestIsVerificationRequest(t *testing.T) {

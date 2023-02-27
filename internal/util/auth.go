@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
+	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"golang.org/x/oauth2"
 )
 

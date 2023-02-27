@@ -3,7 +3,7 @@ package spotify
 import (
 	"testing"
 
-	"github.com/saxypandabear/twitchsongrequests/pkg/testutil"
+	"github.com/saxypandabear/twitchsongrequests/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/zmb3/spotify/v2"
 )

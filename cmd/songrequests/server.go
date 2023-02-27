@@ -12,9 +12,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
-	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/site"
 	"github.com/saxypandabear/twitchsongrequests/pkg/spotify"
@@ -89,9 +89,7 @@ func StartServer(port int) error {
 	// ===== Website Pages =====
 
 	home := site.NewHomePageRenderer(redirectURL, userStore, twitchConfig, spotifyConfig)
-	preferences := site.NewPreferencesRenderer(redirectURL, userStore)
 	r.Get("/", home.HomePage)
-	r.Get("/preferences", preferences.PreferencesPage)
 
 	http.Handle("/", r)
 

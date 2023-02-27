@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
-	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 )
 

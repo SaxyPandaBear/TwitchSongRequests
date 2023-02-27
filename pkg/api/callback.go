@@ -18,6 +18,7 @@ import (
 const (
 	SongRequestsTitle = "TwitchSongRequests"
 	verificationType  = "webhook_callback_verification"
+	revocationType    = "revocation"
 	messageTypeHeader = "Twitch-Eventsub-Message-Type"
 )
 
@@ -77,6 +78,15 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		}
 		return // short-circuit here because of the request type
 	}
+
+	// A request can come in to revoke the subscription. Drop the request
+	// https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#revoking-your-subscription
+	if IsRevocationRequest(r) {
+		log.Printf("Revoked access to %s: %s\n", vals.Subscription.ID, vals.Subscription.Status)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	log.Printf("Found event to consume: %s", string(vals.Event))
 	var redeemEvent helix.EventSubChannelPointsCustomRewardRedemptionEvent
 	if err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&redeemEvent); err != nil {
@@ -140,6 +150,10 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 
 func IsVerificationRequest(r *http.Request) bool {
 	return verificationType == r.Header.Get(strings.ToLower(messageTypeHeader))
+}
+
+func IsRevocationRequest(r *http.Request) bool {
+	return revocationType == r.Header.Get(strings.ToLower(messageTypeHeader))
 }
 
 // IsValidReward ensures that the redemption event has a title which contains the

@@ -200,7 +200,7 @@
                 </div>
                 {{end}}
                 <form action="{{.SubscribeURL}}" method="post" class="authenticated-form">
-                    <button type="submit" class="styled-sub-button" data-provider="subscribe">
+                    <button type="submit" disabled="{{.Subscribed}}" class="styled-sub-button" data-provider="subscribe">
                         Subscribe
                     </button>
                 </form>
