@@ -5,33 +5,8 @@ import (
 	"testing"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
-	"github.com/saxypandabear/twitchsongrequests/pkg/testutil"
-	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestIsUserAuthenticated(t *testing.T) {
-	u := testutil.InMemoryUserStore{
-		Data: map[string]*users.User{
-			"123": {
-				TwitchID:            "123",
-				TwitchAccessToken:   "foo",
-				TwitchRefreshToken:  "foo",
-				SpotifyAccessToken:  "bar",
-				SpotifyRefreshToken: "bar",
-			},
-			"234": { // missing spotify auth
-				TwitchID:           "234",
-				TwitchAccessToken:  "foo",
-				TwitchRefreshToken: "foo",
-			},
-		},
-	}
-
-	assert.True(t, util.IsUserAuthenticated(&u, "123"))
-	assert.False(t, util.IsUserAuthenticated(&u, "234"))
-	assert.False(t, util.IsUserAuthenticated(&u, "345"))
-}
 
 func TestGenerateAuthURL(t *testing.T) {
 	c := util.AuthConfig{

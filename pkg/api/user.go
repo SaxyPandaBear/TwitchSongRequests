@@ -13,12 +13,16 @@ import (
 type UserHandler struct {
 	data        db.UserStore
 	redirectURL string
+	twitch      *util.AuthConfig
+	spotify     *util.AuthConfig
 }
 
-func NewUserHandler(d db.UserStore, redirectURL string) *UserHandler {
+func NewUserHandler(d db.UserStore, redirectURL string, twitch, spotify *util.AuthConfig) *UserHandler {
 	return &UserHandler{
 		data:        d,
 		redirectURL: redirectURL,
+		twitch:      twitch,
+		spotify:     spotify,
 	}
 }
 
@@ -31,13 +35,41 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// TODO: revoke API access
 	// u, err := h.data.GetUser(userID)
 	// if err != nil {
 	// 	log.Println("failed to fetch user", err)
 	// 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 	// 	return
 	// }
+	c, err := util.GetNewTwitchClient(h.twitch)
+	if err != nil {
+		log.Println("failed to get Twitch client", err)
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	}
+
+	tok, err := db.FetchTwitchToken(h.data, userID)
+	if err != nil {
+		log.Println("failed to get user token", err)
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	}
+
+	c.SetUserAccessToken(tok.AccessToken)
+	tokenResp, err := c.RefreshUserAccessToken(tok.RefreshToken)
+	if err != nil {
+		log.Println("failed to refresh twitch token", err)
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	}
+
+	// make sure that the token is fresh before revoking
+	_, err = c.RevokeUserAccessToken(tokenResp.Data.AccessToken)
+	if err != nil {
+		log.Println("failed to revoke access", err)
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	}
 
 	err = h.data.DeleteUser(userID)
 	if err != nil {

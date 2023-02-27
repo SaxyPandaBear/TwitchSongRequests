@@ -27,8 +27,8 @@ func (db *PostgresUserStore) GetUser(id string) (*users.User, error) {
 	}
 
 	err := db.pool.QueryRow(context.Background(),
-		"SELECT COALESCE(twitch_access, ''), COALESCE(twitch_refresh, ''), COALESCE(spotify_access, ''), COALESCE(spotify_refresh, ''), spotify_expiry FROM users WHERE id=$1", id).
-		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken, &u.SpotifyExpiry)
+		"SELECT COALESCE(twitch_access, ''), COALESCE(twitch_refresh, ''), COALESCE(spotify_access, ''), COALESCE(spotify_refresh, ''), spotify_expiry, subscribed FROM users WHERE id=$1", id).
+		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken, &u.SpotifyExpiry, &u.Subscribed)
 
 	if err != nil {
 		log.Printf("failed to get user %s: %v\n", id, err)
@@ -52,13 +52,14 @@ func (db *PostgresUserStore) AddUser(user *users.User) error {
 
 func (db *PostgresUserStore) UpdateUser(user *users.User) error {
 	if _, err := db.pool.Exec(context.Background(),
-		"update users set twitch_access=$1, twitch_refresh=$2, spotify_access=$3, spotify_refresh=$4, spotify_expiry=$5, last_updated=$6 where id=$7",
+		"update users set twitch_access=$1, twitch_refresh=$2, spotify_access=$3, spotify_refresh=$4, spotify_expiry=$5, last_updated=$6, subscribed=$7 where id=$8",
 		user.TwitchAccessToken,
 		user.TwitchRefreshToken,
 		user.SpotifyAccessToken,
 		user.SpotifyRefreshToken,
 		user.SpotifyExpiry,
 		time.Now().Format(time.RFC3339),
+		user.Subscribed,
 		user.TwitchID); err != nil {
 		log.Printf("failed to update user %s: %v\n", user.TwitchID, err)
 		return err

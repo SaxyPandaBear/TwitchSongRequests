@@ -98,7 +98,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	refreshed, err := util.RefreshSpotifyToken(h.spotify, tok)
+	refreshed, err := util.RefreshSpotifyToken(r.Context(), h.spotify, tok)
 	if err != nil {
 		log.Println("failed to get valid token", err)
 		w.WriteHeader(http.StatusOK)
@@ -121,7 +121,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	c := util.GetNewSpotifyClient(h.spotify, refreshed)
+	c := util.GetNewSpotifyClient(r.Context(), h.spotify, refreshed)
 
 	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 

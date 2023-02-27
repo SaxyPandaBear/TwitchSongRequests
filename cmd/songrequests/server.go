@@ -83,7 +83,7 @@ func StartServer(port int) error {
 	r.Get("/oauth/twitch", twitchRedirect.Authorize)
 	r.Get("/oauth/spotify", spotifyRedirect.Authorize)
 
-	userHandler := api.NewUserHandler(userStore, redirectURL)
+	userHandler := api.NewUserHandler(userStore, redirectURL, twitchConfig, spotifyConfig)
 	r.Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST because forms don't support DELETE
 
 	// ===== Website Pages =====

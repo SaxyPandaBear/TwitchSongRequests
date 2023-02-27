@@ -194,6 +194,11 @@
         {{if .Authenticated}}
         <div class="oauth-options">
             <div class="authenticated">
+                {{if .Subscribed}}
+                <div class="authenticated-form">
+                    Subscribed successfully!
+                </div>
+                {{end}}
                 <form action="{{.SubscribeURL}}" method="post" class="authenticated-form">
                     <button type="submit" class="styled-sub-button" data-provider="subscribe">
                         Subscribe

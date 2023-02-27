@@ -44,8 +44,9 @@ Premium.
 
 ## How do I stop using it?
 1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
-1. If you are fully authenticated, you should see a `Unsubscribe` button
-1. Click it
+1. If you are fully authenticated, you should see a `Revoke Access` button
+1. Click it. This will revoke access to Twitch, which means the application won't receive new channel point redemptions
+1. Navigate to your [Spotify account](https://www.spotify.com/us/account/apps/) to revoke access for the service. This can't be done by the service, because they don't expose an API for it. See [here](https://github.com/spotify/web-api/issues/600) for why.
 1. You're done!
 
 ## Troubleshooting

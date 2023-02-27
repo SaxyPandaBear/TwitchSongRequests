@@ -25,6 +25,7 @@ type HomePageData struct {
 	UnsubscribeURL string
 	SpotifyAuthURL string
 	Authenticated  bool
+	Subscribed     bool
 }
 
 func NewHomePageRenderer(siteURL string, u db.UserStore, twitch, spotify *util.AuthConfig) *HomePageRenderer {
@@ -50,7 +51,6 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 		UnsubscribeURL: fmt.Sprintf("%s/revoke", h.siteURL),
 		TwitchAuthURL:  util.GenerateAuthURL("id.twitch.tv", "oauth2/authorize", h.twitch),
 		SpotifyAuthURL: util.GenerateAuthURL("accounts.spotify.com", "authorize", h.spotify),
-		Authenticated:  false,
 	}
 
 	id, err := util.GetUserIDFromRequest(r)
@@ -59,7 +59,14 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 		return &d
 	}
 
-	d.Authenticated = util.IsUserAuthenticated(h.userStore, id)
+	user, err := h.userStore.GetUser(id)
+	if err != nil {
+		log.Println("failed to get user", err)
+		return &d
+	}
+
+	d.Authenticated = user.IsAuthenticated()
+	d.Subscribed = user.Subscribed
 
 	return &d
 }

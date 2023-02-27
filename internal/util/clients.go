@@ -8,12 +8,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetNewSpotifyClient(a *AuthConfig, token *oauth2.Token) *spotify.Client {
-	return spotify.New(a.OAuth.Client(context.TODO(), token))
+func GetNewSpotifyClient(ctx context.Context, a *AuthConfig, token *oauth2.Token) *spotify.Client {
+	return spotify.New(a.OAuth.Client(ctx, token))
 }
 
-func RefreshSpotifyToken(a *AuthConfig, token *oauth2.Token) (*oauth2.Token, error) {
-	source := a.OAuth.TokenSource(context.TODO(), token)
+func RefreshSpotifyToken(ctx context.Context, a *AuthConfig, token *oauth2.Token) (*oauth2.Token, error) {
+	source := a.OAuth.TokenSource(ctx, token)
 	return source.Token()
 }
 

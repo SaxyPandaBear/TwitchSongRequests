@@ -66,12 +66,17 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	// get user access token
 	c, err := util.GetNewTwitchClient(e.auth)
 	if err != nil {
-		log.Println("failed to get Twitch client")
+		log.Println("failed to get Twitch client for", id)
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
 	c.SetUserAccessToken(user.TwitchAccessToken)
 	token, err := c.RefreshUserAccessToken(user.TwitchRefreshToken)
+	if err != nil {
+		log.Println("failed to get updated access token for", id)
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
+	}
 	c.SetUserAccessToken(token.Data.AccessToken)
 
 	_, err = c.CreateEventSubSubscription(&createSub)

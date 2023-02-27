@@ -2,12 +2,10 @@ package util
 
 import (
 	"encoding/base64"
-	"log"
 	"net/http"
 	"net/url"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/constants"
-	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"golang.org/x/oauth2"
 )
 
@@ -19,21 +17,6 @@ type AuthConfig struct {
 	State        string
 	APIBaseURL   string
 	OAuth        *oauth2.Config
-}
-
-func IsUserAuthenticated(userStore db.UserStore, id string) bool {
-	u, err := userStore.GetUser(id)
-	if err != nil {
-		log.Println("failed to look up user", err)
-		return false
-	} else if u == nil {
-		log.Println("nil user found")
-		return false
-	}
-
-	tAuthed := len(u.TwitchAccessToken) > 0 && len(u.TwitchRefreshToken) > 0
-	sAuthed := len(u.SpotifyAccessToken) > 0 && len(u.SpotifyRefreshToken) > 0
-	return tAuthed && sAuthed
 }
 
 func GetUserIDFromRequest(r *http.Request) (string, error) {

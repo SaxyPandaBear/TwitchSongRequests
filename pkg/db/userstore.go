@@ -26,3 +26,17 @@ func FetchSpotifyToken(userStore UserStore, id string) (*oauth2.Token, error) {
 
 	return &tok, nil
 }
+
+func FetchTwitchToken(userStore UserStore, id string) (*oauth2.Token, error) {
+	u, err := userStore.GetUser(id)
+	if err != nil {
+		return nil, err
+	}
+
+	tok := oauth2.Token{
+		AccessToken:  u.TwitchAccessToken,
+		RefreshToken: u.TwitchRefreshToken,
+	}
+
+	return &tok, nil
+}
