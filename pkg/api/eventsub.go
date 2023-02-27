@@ -89,6 +89,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	// refresh db with the updated token
 	user.TwitchAccessToken = token.Data.AccessToken
 	user.TwitchRefreshToken = token.Data.RefreshToken
+	user.Subscribed = true
 	err = e.userStore.UpdateUser(user)
 
 	if err != nil {
