@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="og:title" content="TwitchSongRequests"/>
+    <meta name="og:title" content="TwitchSongRequests" />
     <meta name="og:description" content="Integrate your Spotify player with Twitch channel points" />
     <title>TwitchSongRequests</title>
 
@@ -81,96 +81,10 @@
             margin-bottom: 5px;
         }
 
-        .authenticated {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .authenticated-form {
-            padding: 0% 2%;
-        }
-
-        .styled-button {
-            height: 40px;
-            width: 100%;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0 10px;
-            fill: var(--white);
-            color: var(--white);
-            border: none;
-            border-radius: 7px;
-            font-weight: bold;
-            background-color: var(--provider-bg-color);
-        }
-
-        .styled-button:hover {
-            background-color: var(--provider-bg-color-hover);
-        }
-
-        .styled-sub-button {
-            height: 40px;
-            width: 100%;
-            padding: 0 5%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0 10px;
-            fill: var(--white);
-            color: var(--white);
-            border: none;
-            border-radius: 7px;
-            font-weight: bold;
-            background-color: var(--provider-bg-color);
-        }
-
-        .styled-sub-button:hover {
-            background-color: var(--provider-bg-color-hover);
-        }
-
-        .oauth-icon {
+        .button-icon {
             width: 25px;
             height: 25px;
             display: flex;
-        }
-
-        .oauth-name {
-            text-transform: uppercase;
-        }
-
-        .styled-button[data-provider^="twitch"] {
-            --provider-bg-color: #9147ff;
-            --provider-bg-color-hover: #772ce8;
-        }
-
-        .styled-button[data-provider^="spotify"] {
-            --provider-bg-color: #2bde6a;
-            --provider-bg-color-hover: #1db954;
-        }
-
-        .styled-sub-button[data-provider^="subscribe"] {
-            --provider-bg-color: #2bde6a;
-            --provider-bg-color-hover: #1db954;
-        }
-
-        .styled-sub-button[data-provider^="unsubscribe"] {
-            --provider-bg-color: #ff3c3c;
-            --provider-bg-color-hover: #df1818;
-        }
-
-        .about-header {
-            margin: 0;
-            padding: 10px 0;
-            text-align: center;
-            text-transform: uppercase;
-        }
-
-        .about {
-            margin: 0 5px;
-            padding: 5px 0;
         }
 
         .footer {
@@ -192,12 +106,15 @@
         <h1 class="logo">Preferences</h1>
 
         <!-- stuff -->
-        Something goes here!
-        
+        <div class="oauth-options">
+            Something goes here!
+        </div>
+
         <div class="footer">
             <div class="footer-text">Find it on </div>
-            <a style="display: flex;" href="https://github.com/SaxyPandaBear/TwitchSongRequests" target="_blank" rel="noopener noreferrer">
-                <div class="oauth-icon">
+            <a style="display: flex;" href="https://github.com/SaxyPandaBear/TwitchSongRequests" target="_blank"
+                rel="noopener noreferrer">
+                <div class="button-icon">
                     <!-- https://fontawesome.com/icons/github?f=brands -->
                     <svg xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 496 512"><!--! Font Awesome Pro 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->

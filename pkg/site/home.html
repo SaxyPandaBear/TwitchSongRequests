@@ -88,7 +88,9 @@
         }
 
         .authenticated-form {
-            padding: 0% 2%;
+            padding: 0% 3%;
+            width: 100%;
+            text-align: center;
         }
 
         .styled-button {
@@ -125,6 +127,10 @@
             border-radius: 7px;
             font-weight: bold;
             background-color: var(--provider-bg-color);
+        }
+
+        .styled-sub-button:disabled {
+            background-color: #7e7e7e;
         }
 
         .styled-sub-button:hover:enabled {
@@ -218,6 +224,8 @@
                 <div class="authenticated-form">
                     Subscribed successfully!
                 </div>
+            </div>
+            <div class="oauth-options">
                 <a href="{{.PreferencesURL}}">
                     <button class="styled-button" data-provider="preferences">
                         <div class="oauth-icon">

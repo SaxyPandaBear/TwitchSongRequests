@@ -16,11 +16,6 @@ off on requesting songs because they have to stop working on art in order to man
 copy the Spotify URIs I was sending, in order to queue the songs in their Spotify 
 player. Between jobs, I coded up an initial proof of concept and the rest is history.
 
-# Support the Project
-I'm paying to host this service completely out of pocket. If you would like to help
-pitch in for the cost of hosting (it's not that much right now), please let me know
-and I'll set up a way to contribute in that way. 
-
 # For Users
 ## How do I sign up?
 1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
@@ -38,7 +33,7 @@ and I'll set up a way to contribute in that way.
 1. Find your favorite song on Spotify, copy the URI and use it as input when redeeming
 1. If your Spotify player has queued the song, you're good!
 1. If your player did not queue the song, make sure you copied the URL correctly, and use the right Channel Point reward
-1. If you are pretty sure you didn't mess anything up, make an issue [here](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new)
+1. If you are pretty sure you didn't mess anything up, make an issue [here](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new?assignees=&labels=bug&template=User-Bug-Report.yml&title=%5BBug%5D%3A+%5BDescribe+the+issue%5D)
 
 ## Who can use it?
 In order to use custom channel point rewards, you must be an affiliate or partner
@@ -74,6 +69,13 @@ The site uses cookies to track whether a user is authenticated or not.
 Well, the YouTube API doesn't let you queue videos outside of an iframe player,
 which means I would need to embed the player inside my website. Which, I'm not
 necessariliy opposed to doing, but that wasn't the original point of this. 
+
+---
+
+# Support the Project
+I'm paying to host this service completely out of pocket. If you would like to help
+pitch in for the cost of hosting (it's not that much right now), please let me know
+and I'll set up a way to contribute in that way. 
 
 ---
 # For Developers
