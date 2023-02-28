@@ -8,7 +8,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 )
 
-var preferencesPage = template.Must(template.ParseFiles("pkg/site/home.html"))
+var preferencesPage = template.Must(template.ParseFiles("pkg/site/preferences.html"))
 
 type PreferencesRenderer struct {
 	userStore db.UserStore

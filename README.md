@@ -14,26 +14,31 @@ Twitch channel has a channel point reward for requesting a song on Spotify. On t
 fateful day, I requested multiple songs in quick succession, and they told me to hold 
 off on requesting songs because they have to stop working on art in order to manually 
 copy the Spotify URIs I was sending, in order to queue the songs in their Spotify 
-player.
+player. Between jobs, I coded up an initial proof of concept and the rest is history.
 
-# Support
+# Support the Project
 I'm paying to host this service completely out of pocket. If you would like to help
 pitch in for the cost of hosting (it's not that much right now), please let me know
 and I'll set up a way to contribute in that way. 
 
 # For Users
-## How do I use it?
+## How do I sign up?
 1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
 1. Authorize the service with Twitch
 1. Authorize the service with Spotify
-1. If it worked, you should see a `Subscribe` and `Unsubscribe` button
-1. Click `Subscribe`
+1. If it worked, you should see a `Subscribe` and `Revoke Access` button
+1. Click `Subscribe`. If successful, you should see the UI update accordingly
+1. You're done! Now start using it!
+
+## How do I use it?
 1. Open Spotify on your computer
 1. Navigate to your Twitch channel
 1. Create a channel point reward with `TwitchSongRequests` somewhere in the title, that accepts text input
 1. Start playing music on Spotify (the service needs an "active" player to work)
 1. Find your favorite song on Spotify, copy the URI and use it as input when redeeming
-1. Check if your Spotify player has queued the song
+1. If your Spotify player has queued the song, you're good!
+1. If your player did not queue the song, make sure you copied the URL correctly, and use the right Channel Point reward
+1. If you are pretty sure you didn't mess anything up, make an issue [here](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new)
 
 ## Who can use it?
 In order to use custom channel point rewards, you must be an affiliate or partner

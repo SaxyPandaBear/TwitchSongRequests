@@ -1,0 +1,29 @@
+name: Bug Report
+description: File a bug report when something is wrong
+title: "[Bug]: [Describe the issue]"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting a report. I'll try to get to it ASAP.
+  - type: textarea
+    id: issue
+    attributes:
+      label: What happened?
+      description: Tell us what happened in detail
+      placeholder: Something bad happened.
+      value: "Something bad happened while using the service."
+    validations:
+      required: true
+  - type: dropdown
+    id: issue-area
+    attributes:
+      label: What part of the service is not working for you?
+      multiple: true
+      options:
+        - Twitch authorization
+        - Spotify authorization
+        - Subscribing to channel point rewards
+        - Revoking access
+        - Other (please describe above)

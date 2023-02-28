@@ -24,6 +24,7 @@ type HomePageData struct {
 	SubscribeURL   string
 	UnsubscribeURL string
 	SpotifyAuthURL string
+	PreferencesURL string
 	Authenticated  bool
 	Subscribed     bool
 }
@@ -49,6 +50,7 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 	d := HomePageData{
 		SubscribeURL:   fmt.Sprintf("%s/subscribe", h.siteURL),
 		UnsubscribeURL: fmt.Sprintf("%s/revoke", h.siteURL),
+		PreferencesURL: fmt.Sprintf("%s/preferences", h.siteURL),
 		TwitchAuthURL:  util.GenerateAuthURL("id.twitch.tv", "oauth2/authorize", h.twitch),
 		SpotifyAuthURL: util.GenerateAuthURL("accounts.spotify.com", "authorize", h.spotify),
 	}

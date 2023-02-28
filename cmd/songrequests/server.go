@@ -89,7 +89,9 @@ func StartServer(port int) error {
 	// ===== Website Pages =====
 
 	home := site.NewHomePageRenderer(redirectURL, userStore, twitchConfig, spotifyConfig)
+	preferences := site.NewPreferencesRenderer(redirectURL, userStore)
 	r.Get("/", home.HomePage)
+	r.Get("/preferences", preferences.PreferencesPage)
 
 	http.Handle("/", r)
 
