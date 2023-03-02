@@ -85,13 +85,9 @@ func (s *InMemoryUserStore) DeleteUser(id string) error {
 
 type DummyCallback struct {
 	CallbackExecuted chan bool
-	ShouldFail       bool
 }
 
 func (c *DummyCallback) Callback(a *util.AuthConfig, u db.UserStore, e *helix.EventSubChannelPointsCustomRewardRedemptionEvent, success bool) error {
-	if c.ShouldFail {
-		return errors.New("expected to fail")
-	}
 	c.CallbackExecuted <- success
 	return nil
 }

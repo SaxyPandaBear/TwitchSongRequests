@@ -211,7 +211,18 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	} else {
 		req.Status = "CANCELED"
 	}
-	if _, err := client.UpdateChannelCustomRewardsRedemptionStatus(&req); err != nil {
+	resp, err := client.UpdateChannelCustomRewardsRedemptionStatus(&req)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("successfully updated redemption status for %s to '%s'", resp.Data.Redemptions[0].ID, req.Status)
+
+	// update user details for Twitch auth
+	u.TwitchAccessToken = token.Data.AccessToken
+	u.TwitchRefreshToken = token.Data.RefreshToken
+	if err = userStore.UpdateUser(u); err != nil {
+		log.Println("failed to update Twitch credentials", err)
 		return err
 	}
 
