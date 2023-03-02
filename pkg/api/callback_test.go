@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nicklaw5/helix"
+	"github.com/nicklaw5/helix/v2"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/testutil"
@@ -35,7 +35,7 @@ var (
 	msgIDHeader            = "Twitch-Eventsub-Message-Id"
 	msgTimestampHeader     = "Twitch-Eventsub-Message-Timestamp"
 	msgSignatureHeader     = "Twitch-Eventsub-Message-Signature"
-	testResponseTimeout    = time.Millisecond * 50
+	testResponseTimeout    = time.Millisecond * 20
 )
 
 //go:embed testdata/redeem.json
@@ -44,15 +44,31 @@ var redeemPayload string
 //go:embed testdata/verification.json
 var verificationPayload string
 
-func TestPublishRedeem(t *testing.T) {
+func getTestRewardHandler(publishSuccess, statusSuccess bool) (*api.RewardHandler, testutil.InMemoryUserStore, chan string, chan bool) {
 	m := make(chan string)
 	p := testutil.DummyPublisher{
 		Messages:   m,
-		ShouldFail: false,
+		ShouldFail: !publishSuccess,
 	}
 	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
+
+	mc := make(chan bool)
+	c := testutil.DummyCallback{
+		CallbackExecuted: mc,
+		ShouldFail:       !statusSuccess,
+	}
+
+	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{}, &util.AuthConfig{})
+	rh.OnSuccess = c.Callback
+
+	return rh, u, m, mc
+}
+
+func TestPublishRedeem(t *testing.T) {
+	rh, u, m, callbacks := getTestRewardHandler(true, true)
+
 	err := u.AddUser(&users.User{ // spoof a user so the test doesen't fail
 		TwitchID:            "12826",
 		SpotifyAccessToken:  "foo",
@@ -60,8 +76,6 @@ func TestPublishRedeem(t *testing.T) {
 		SpotifyExpiry:       &time.Time{},
 	})
 	assert.NoError(t, err)
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -103,19 +117,19 @@ func TestPublishRedeem(t *testing.T) {
 	assert.NotEmpty(t, event)
 
 	assert.Equal(t, userInput, event)
+
+	var status bool
+	select {
+	case status = <-callbacks:
+		t.Log("found expected event")
+	case <-time.After(testResponseTimeout):
+		t.Error("did not receive message in time")
+	}
+	assert.True(t, status)
 }
 
 func TestPublishRedeemEmptyBody(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: false,
-	}
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+	rh, _, m, callbacks := getTestRewardHandler(true, true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -153,19 +167,17 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+	select {
+	case <-callbacks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
 }
 
 func TestPublishIncorrectRewardTitle(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: true,
-	}
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+	rh, _, m, callbacks := getTestRewardHandler(false, true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -203,20 +215,17 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+
+	select {
+	case <-callbacks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
 }
 
 func TestPublishNoAuthenticatedUser(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: true,
-	}
-	// the user lookup will fail
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+	rh, _, m, callbacks := getTestRewardHandler(false, true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -254,17 +263,18 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+
+	select {
+	case <-callbacks:
+		t.Error("no message expected")
+	case <-time.After(testResponseTimeout):
+		t.Log("did not expect to receive message")
+	}
 }
 
 func TestPublishRedeemFails(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: true,
-	}
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
+	rh, u, m, callbacks := getTestRewardHandler(false, true)
+
 	err := u.AddUser(&users.User{
 		TwitchID:            "12826",
 		SpotifyAccessToken:  "foo",
@@ -272,8 +282,6 @@ func TestPublishRedeemFails(t *testing.T) {
 		SpotifyExpiry:       &time.Time{},
 	})
 	assert.NoError(t, err)
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -311,19 +319,19 @@ func TestPublishRedeemFails(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var status bool
+	select {
+	case status = <-callbacks:
+		t.Log("found expected event")
+	case <-time.After(testResponseTimeout):
+		t.Error("did not receive message in time")
+	}
+	assert.False(t, status)
 }
 
 func TestPublishRedeemInvalidSignature(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: false,
-	}
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+	rh, _, m, callbacks := getTestRewardHandler(true, true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -355,19 +363,17 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+
+	select {
+	case <-callbacks:
+		t.Error("should not have received message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no message expected")
+	}
 }
 
 func TestPublishRedeemInvalidJSON(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: false,
-	}
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+	rh, _, m, callbacks := getTestRewardHandler(true, true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -404,19 +410,17 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+	select {
+	case <-callbacks:
+		t.Error("should not have received event")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
 }
 
 func TestPublishRedeemInvalidPayload(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: false,
-	}
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+	rh, _, m, callbacks := getTestRewardHandler(true, true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -457,21 +461,19 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+
+	select {
+	case <-callbacks:
+		t.Error("should not have received event")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
 }
 
 // The endpoint used for webhook callbacks must also verify itself:
 // https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#responding-to-a-challenge-request
 func TestVerifyWebhookCallback(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: false,
-	}
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+	rh, _, m, callbacks := getTestRewardHandler(true, true)
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
@@ -513,19 +515,17 @@ func TestVerifyWebhookCallback(t *testing.T) {
 	}
 
 	assert.Equal(t, challenge, rr.Body.String())
+
+	select {
+	case <-callbacks:
+		t.Error("should not have received event")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
 }
 
 func TestSubscriptionRevoked(t *testing.T) {
-	m := make(chan string)
-	p := testutil.DummyPublisher{
-		Messages:   m,
-		ShouldFail: false,
-	}
-	u := testutil.InMemoryUserStore{
-		Data: make(map[string]*users.User),
-	}
-
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &util.AuthConfig{})
+	rh, _, m, callbacks := getTestRewardHandler(true, true)
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
@@ -561,6 +561,13 @@ func TestSubscriptionRevoked(t *testing.T) {
 
 	select {
 	case <-m:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
+	case <-callbacks:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")

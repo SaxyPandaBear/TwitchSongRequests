@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/nicklaw5/helix"
+	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
@@ -32,15 +32,22 @@ type RewardHandler struct {
 	secret    string
 	publisher queue.Publisher
 	userStore db.UserStore
+	twitch    *util.AuthConfig
 	spotify   *util.AuthConfig
+
+	// OnSuccess is a callback function that executes after successfully
+	// publishing to the queue
+	OnSuccess func(*util.AuthConfig, db.UserStore, *helix.EventSubChannelPointsCustomRewardRedemptionEvent, bool) error
 }
 
-func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, auth *util.AuthConfig) *RewardHandler {
+func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, twitch, spotify *util.AuthConfig) *RewardHandler {
 	return &RewardHandler{
 		secret:    twitchSecret,
 		publisher: publisher,
 		userStore: userStore,
-		spotify:   auth,
+		twitch:    twitch,
+		spotify:   spotify,
+		OnSuccess: UpdateRedemptionStatus,
 	}
 }
 
@@ -135,11 +142,18 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 
 	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
-	if err = h.publisher.Publish(c, redeemEvent.UserInput); err != nil {
+	err = h.publisher.Publish(c, redeemEvent.UserInput)
+	if err != nil {
 		log.Println("failed to publish:", err)
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "failed to publish")
-		return
+	} else {
+		log.Println("successfully published")
+	}
+
+	// after publishing successfully, attempt to update the status of the
+	// redemption
+	if err = h.OnSuccess(h.twitch, h.userStore, &redeemEvent, err == nil); err != nil {
+		// don't need to fail fast here because this is housekeeping
+		log.Println("failed to update Twitch reward redemption status", err)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -160,4 +174,46 @@ func IsRevocationRequest(r *http.Request) bool {
 // named keyword. This is a naive approach for dropping unwanted events.
 func IsValidReward(e *helix.EventSubChannelPointsCustomRewardRedemptionEvent) bool {
 	return e != nil && strings.Contains(e.Reward.Title, SongRequestsTitle)
+}
+
+func UpdateRedemptionStatus(auth *util.AuthConfig,
+	userStore db.UserStore,
+	event *helix.EventSubChannelPointsCustomRewardRedemptionEvent,
+	success bool) error {
+	client, err := util.GetNewTwitchClient(auth)
+	if err != nil {
+		log.Println("failed to create Twitch client", err)
+		return err
+	}
+
+	u, err := userStore.GetUser(event.BroadcasterUserID)
+	if err != nil {
+		log.Println("failed to get user", err)
+		return err
+	}
+
+	client.SetUserAccessToken(u.TwitchAccessToken)
+	token, err := client.RefreshUserAccessToken(u.TwitchRefreshToken)
+	if err != nil {
+		log.Println("failed to refresh Twitch token", err)
+		return err
+	}
+	client.SetUserAccessToken(token.Data.AccessToken)
+
+	req := helix.UpdateChannelCustomRewardsRedemptionStatusParams{
+		ID:            event.ID,
+		BroadcasterID: event.BroadcasterUserID,
+		RewardID:      event.Reward.ID,
+	}
+
+	if success {
+		req.Status = "FULFILLED"
+	} else {
+		req.Status = "CANCELED"
+	}
+	if _, err := client.UpdateChannelCustomRewardsRedemptionStatus(&req); err != nil {
+		return err
+	}
+
+	return nil
 }

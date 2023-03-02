@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nicklaw5/helix/v2"
+	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
@@ -78,5 +80,18 @@ func (s *InMemoryUserStore) UpdateUser(user *users.User) error {
 
 func (s *InMemoryUserStore) DeleteUser(id string) error {
 	delete(s.Data, id)
+	return nil
+}
+
+type DummyCallback struct {
+	CallbackExecuted chan bool
+	ShouldFail       bool
+}
+
+func (c *DummyCallback) Callback(a *util.AuthConfig, u db.UserStore, e *helix.EventSubChannelPointsCustomRewardRedemptionEvent, success bool) error {
+	if c.ShouldFail {
+		return errors.New("expected to fail")
+	}
+	c.CallbackExecuted <- success
 	return nil
 }

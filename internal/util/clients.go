@@ -3,7 +3,7 @@ package util
 import (
 	"context"
 
-	"github.com/nicklaw5/helix"
+	"github.com/nicklaw5/helix/v2"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )
