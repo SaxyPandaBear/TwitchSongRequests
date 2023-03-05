@@ -216,7 +216,9 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 		return err
 	}
 
-	log.Printf("successfully updated redemption status for %s to '%s'", resp.Data.Redemptions[0].ID, req.Status)
+	log.Printf("responded with HTTP: %d | '%s' for %d redemptions\n", resp.StatusCode, resp.ErrorMessage, len(resp.Data.Redemptions))
+
+	log.Printf("successfully updated redemption status for %s to '%s'\n", resp.Data.Redemptions[0].ID, req.Status)
 
 	// update user details for Twitch auth
 	u.TwitchAccessToken = token.Data.AccessToken

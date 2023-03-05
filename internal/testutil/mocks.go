@@ -8,6 +8,7 @@ import (
 	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 	"github.com/zmb3/spotify/v2"
@@ -70,7 +71,7 @@ func (s *InMemoryUserStore) GetUser(id string) (*users.User, error) {
 
 func (s *InMemoryUserStore) AddUser(user *users.User) error {
 	s.Data[user.TwitchID] = user
-	return nil // TODO: not sure if it's worth testing negative case
+	return nil
 }
 
 func (s *InMemoryUserStore) UpdateUser(user *users.User) error {
@@ -89,5 +90,35 @@ type DummyCallback struct {
 
 func (c *DummyCallback) Callback(a *util.AuthConfig, u db.UserStore, e *helix.EventSubChannelPointsCustomRewardRedemptionEvent, success bool) error {
 	c.CallbackExecuted <- success
+	return nil
+}
+
+var _ db.PreferenceStore = (*InMemoryPreferenceStore)(nil)
+
+type InMemoryPreferenceStore struct {
+	Data map[string]*preferences.Preference
+}
+
+func (s *InMemoryPreferenceStore) GetPreference(id string) (*preferences.Preference, error) {
+	p, ok := s.Data[id]
+	if !ok {
+		return nil, fmt.Errorf("user %s not found", id)
+	}
+
+	return p, nil
+}
+
+func (s *InMemoryPreferenceStore) AddPreference(p *preferences.Preference) error {
+	s.Data[p.TwitchID] = p
+	return nil
+}
+
+func (s *InMemoryPreferenceStore) UpdatePreference(p *preferences.Preference) error {
+	s.Data[p.TwitchID] = p
+	return nil
+}
+
+func (s *InMemoryPreferenceStore) DeletePreference(id string) error {
+	delete(s.Data, id)
 	return nil
 }
