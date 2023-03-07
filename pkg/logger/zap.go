@@ -38,7 +38,7 @@ func (z *ZapLogEntry) Write(status, bytes int, header http.Header, elapsed time.
 		zap.Int("status", status),
 		zap.String("from", z.Request.RemoteAddr),
 		zap.Int("size", bytes),
-		zap.Duration("elapsed", elapsed))
+		zap.Int64("elapsedNs", elapsed.Nanoseconds()))
 }
 
 func (z *ZapLogEntry) Panic(v interface{}, stack []byte) {
