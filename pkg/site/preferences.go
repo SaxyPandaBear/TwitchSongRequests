@@ -5,32 +5,50 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 )
 
 var preferencesPage = template.Must(template.ParseFiles("pkg/site/preferences.html"))
 
 type PreferencesRenderer struct {
-	userStore db.UserStore
-	siteURL   string
+	pref    db.PreferenceStore
+	siteURL string
 }
 
-func NewPreferencesRenderer(siteURL string, u db.UserStore) *PreferencesRenderer {
+type PreferencePageData struct {
+	Authenticated bool
+	RewardID      string
+	Explicit      bool
+}
+
+func NewPreferencesRenderer(siteURL string, p db.PreferenceStore) *PreferencesRenderer {
 	return &PreferencesRenderer{
-		userStore: u,
-		siteURL:   siteURL,
+		pref:    p,
+		siteURL: siteURL,
 	}
 }
 
 func (p *PreferencesRenderer) PreferencesPage(w http.ResponseWriter, r *http.Request) {
-	// id, err := util.GetUserIDFromRequest(r)
-	// if err != nil {
-	// 	log.Println("failed to get Twitch ID from request", err)
-	// 	http.Redirect(w, r, p.siteURL, http.StatusFound)
-	// 	return
-	// }
+	d := PreferencePageData{
+		Authenticated: true,
+	}
 
-	if err := preferencesPage.Execute(w, nil); err != nil {
+	id, err := util.GetUserIDFromRequest(r)
+	if err != nil {
+		log.Println("failed to get Twitch ID from request", err)
+		d.Authenticated = false
+	}
+
+	pref, err := p.pref.GetPreference(id)
+	if err != nil {
+		log.Println("failed to get user preferences", err)
+	} else {
+		d.Explicit = pref.ExplicitSongs
+		d.RewardID = pref.CustomRewardID
+	}
+
+	if err := preferencesPage.Execute(w, &d); err != nil {
 		log.Println("error occurred while executing template:", err)
 	}
 }

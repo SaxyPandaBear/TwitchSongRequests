@@ -1,7 +1,7 @@
 package preferences
 
 type Preference struct {
-	TwitchID       string
-	ExplicitSongs  bool
-	CustomRewardID string
+	TwitchID       string `column:"id"`
+	ExplicitSongs  bool   `column:"explicit"`
+	CustomRewardID string `column:"reward_id"`
 }

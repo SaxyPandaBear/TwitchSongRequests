@@ -36,6 +36,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	defer dbpool.Close()
 
 	userStore := db.NewPostgresUserStore(dbpool)
+	preferenceStore := db.NewPostgresPreferenceStore(dbpool)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -80,18 +81,18 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	eventSub := api.NewEventSubHandler(userStore, twitchConfig, redirectURL, s)
 	r.Post("/subscribe", eventSub.SubscribeToTopic)
 
-	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchConfig, userStore)
+	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchConfig, userStore, preferenceStore)
 	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyConfig, userStore)
 	r.Get("/oauth/twitch", twitchRedirect.Authorize)
 	r.Get("/oauth/spotify", spotifyRedirect.Authorize)
 
-	userHandler := api.NewUserHandler(userStore, redirectURL, twitchConfig, spotifyConfig)
+	userHandler := api.NewUserHandler(userStore, preferenceStore, redirectURL, twitchConfig, spotifyConfig)
 	r.Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST because forms don't support DELETE
 
 	// ===== Website Pages =====
 
 	home := site.NewHomePageRenderer(redirectURL, userStore, twitchConfig, spotifyConfig)
-	preferences := site.NewPreferencesRenderer(redirectURL, userStore)
+	preferences := site.NewPreferencesRenderer(redirectURL, preferenceStore)
 	r.Get("/", home.HomePage)
 	r.Get("/preferences", preferences.PreferencesPage)
 

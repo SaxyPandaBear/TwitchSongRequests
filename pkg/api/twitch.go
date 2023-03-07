@@ -9,6 +9,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 )
 
@@ -16,13 +17,15 @@ type TwitchAuthZHandler struct {
 	redirectURL string
 	auth        *util.AuthConfig
 	userStore   db.UserStore
+	prefStore   db.PreferenceStore
 }
 
-func NewTwitchAuthZHandler(url string, auth *util.AuthConfig, userStore db.UserStore) *TwitchAuthZHandler {
+func NewTwitchAuthZHandler(url string, auth *util.AuthConfig, userStore db.UserStore, prefStore db.PreferenceStore) *TwitchAuthZHandler {
 	return &TwitchAuthZHandler{
 		redirectURL: url,
 		auth:        auth,
 		userStore:   userStore,
+		prefStore:   prefStore,
 	}
 }
 
@@ -97,9 +100,21 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 
 	err = h.userStore.AddUser(&user)
 	if err != nil {
-		log.Printf("failed to store auth details for %s\n", user.TwitchID)
+		log.Println("failed to store auth details for", user.TwitchID)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, "failed to save details on user")
+		return // don't set a cookie on the client
+	}
+
+	// store preference for the new user
+	pref := preferences.Preference{
+		TwitchID: data.Data.UserID,
+	}
+	err = h.prefStore.AddPreference(&pref)
+	if err != nil {
+		log.Println("failed to store preference details for", pref.TwitchID)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "failed to save preferences for user")
 		return // don't set a cookie on the client
 	}
 

@@ -11,15 +11,17 @@ import (
 )
 
 type UserHandler struct {
-	data        db.UserStore
+	users       db.UserStore
+	prefs       db.PreferenceStore
 	redirectURL string
 	twitch      *util.AuthConfig
 	spotify     *util.AuthConfig
 }
 
-func NewUserHandler(d db.UserStore, redirectURL string, twitch, spotify *util.AuthConfig) *UserHandler {
+func NewUserHandler(d db.UserStore, p db.PreferenceStore, redirectURL string, twitch, spotify *util.AuthConfig) *UserHandler {
 	return &UserHandler{
-		data:        d,
+		users:       d,
+		prefs:       p,
 		redirectURL: redirectURL,
 		twitch:      twitch,
 		spotify:     spotify,
@@ -35,12 +37,6 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// u, err := h.data.GetUser(userID)
-	// if err != nil {
-	// 	log.Println("failed to fetch user", err)
-	// 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
-	// 	return
-	// }
 	c, err := util.GetNewTwitchClient(h.twitch)
 	if err != nil {
 		log.Println("failed to get Twitch client", err)
@@ -48,7 +44,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tok, err := db.FetchTwitchToken(h.data, userID)
+	tok, err := db.FetchTwitchToken(h.users, userID)
 	if err != nil {
 		log.Println("failed to get user token", err)
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
@@ -71,7 +67,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.data.DeleteUser(userID)
+	err = h.users.DeleteUser(userID)
 	if err != nil {
 		log.Println("failed to delete user", err)
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
@@ -79,6 +75,12 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	}
 
 	log.Println("successfully deleted user", userID)
+
+	err = h.prefs.DeletePreference(userID)
+	if err != nil {
+		// I'm not sure if this is fatal or not.
+		log.Println("failed to delete user", err)
+	}
 
 	twitchCookie := http.Cookie{
 		Name:     constants.TwitchIDCookieKey,
