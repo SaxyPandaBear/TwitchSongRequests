@@ -41,7 +41,6 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.CleanPath)
-	r.Use(middleware.Logger) // TODO: remove after verifying
 	r.Use(middleware.RequestLogger(&logger.ZapFormatter{L: zaplogger}))
 	r.Use(httprate.LimitByIP(10000, time.Minute))
 	r.Use(middleware.Recoverer)
