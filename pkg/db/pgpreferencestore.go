@@ -43,6 +43,7 @@ func (s *PostgresPreferenceStore) UpdatePreference(*preferences.Preference) erro
 	// TODO: implement
 	return nil
 }
+
 func (s *PostgresPreferenceStore) DeletePreference(id string) error {
 	if _, err := s.pool.Exec(context.Background(), "delete from preferences where id=$1", id); err != nil {
 		log.Printf("failed to delete user %s: %v\n", id, err)

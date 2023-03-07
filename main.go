@@ -36,7 +36,7 @@ func main() {
 
 	wg.Add(1)
 	go func() {
-		err := songrequests.StartServer(port)
+		err := songrequests.StartServer(logger, port)
 		log.Println("server stopped ", err)
 		wg.Done()
 	}()

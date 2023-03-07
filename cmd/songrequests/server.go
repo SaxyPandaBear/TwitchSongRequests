@@ -16,11 +16,13 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"github.com/saxypandabear/twitchsongrequests/pkg/logger"
 	"github.com/saxypandabear/twitchsongrequests/pkg/site"
 	"github.com/saxypandabear/twitchsongrequests/pkg/spotify"
+	"go.uber.org/zap"
 )
 
-func StartServer(port int) error {
+func StartServer(zaplogger *zap.Logger, port int) error {
 	if port < 1 {
 		return fmt.Errorf("invalid port %d", port)
 	}
@@ -39,7 +41,8 @@ func StartServer(port int) error {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.CleanPath)
-	r.Use(middleware.Logger)
+	r.Use(middleware.Logger) // TODO: remove after verifying
+	r.Use(middleware.RequestLogger(&logger.ZapFormatter{L: zaplogger}))
 	r.Use(httprate.LimitByIP(10000, time.Minute))
 	r.Use(middleware.Recoverer)
 
