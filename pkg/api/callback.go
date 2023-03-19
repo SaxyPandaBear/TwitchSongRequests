@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -226,8 +227,13 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	}
 
 	log.Printf("responded with HTTP: %d | '%s' for %d redemptions\n", resp.StatusCode, resp.ErrorMessage, len(resp.Data.Redemptions))
+	if resp.StatusCode >= 400 {
+		return errors.New(resp.ErrorMessage)
+	}
 
-	log.Printf("successfully updated redemption status for %s to '%s'\n", resp.Data.Redemptions[0].ID, req.Status)
+	for _, redemption := range resp.Data.Redemptions {
+		log.Printf("successfully updated redemption status for %s to '%s'\n", redemption.ID, req.Status)
+	}
 
 	// update user details for Twitch auth
 	u.TwitchAccessToken = token.Data.AccessToken
