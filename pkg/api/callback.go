@@ -12,6 +12,7 @@ import (
 	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"github.com/saxypandabear/twitchsongrequests/pkg/o11y/metrics"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 )
 
@@ -32,6 +33,7 @@ type RewardHandler struct {
 	secret    string
 	publisher queue.Publisher
 	userStore db.UserStore
+	msgCount  db.MessageCounter
 	twitch    *util.AuthConfig
 	spotify   *util.AuthConfig
 
@@ -40,11 +42,12 @@ type RewardHandler struct {
 	OnSuccess func(*util.AuthConfig, db.UserStore, *helix.EventSubChannelPointsCustomRewardRedemptionEvent, bool) error
 }
 
-func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, twitch, spotify *util.AuthConfig) *RewardHandler {
+func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, msgCount db.MessageCounter, twitch, spotify *util.AuthConfig) *RewardHandler {
 	return &RewardHandler{
 		secret:    twitchSecret,
 		publisher: publisher,
 		userStore: userStore,
+		msgCount:  msgCount,
 		twitch:    twitch,
 		spotify:   spotify,
 		OnSuccess: UpdateRedemptionStatus,
@@ -143,11 +146,17 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
 	err = h.publisher.Publish(c, redeemEvent.UserInput)
+	msg := metrics.Message{
+		CreatedAt: &redeemEvent.RedeemedAt.Time,
+	}
 	if err != nil {
 		log.Println("failed to publish:", err)
 	} else {
 		log.Println("successfully published")
+		msg.Success = 1
 	}
+
+	h.msgCount.AddMessage(&msg)
 
 	// after publishing successfully, attempt to update the status of the
 	// redemption

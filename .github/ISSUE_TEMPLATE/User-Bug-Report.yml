@@ -1,5 +1,5 @@
-name: Bug Report
-description: File a bug report when something is wrong
+name: Customer Support
+description: File a report if you are stuck with trying to use the service
 title: "[Bug]: [Describe the issue]"
 labels: ["bug"]
 body:

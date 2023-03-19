@@ -17,6 +17,7 @@ var (
 // ensure struct implements queue.Publisher
 var _ queue.Publisher = (*SpotifyPlayerQueue)(nil)
 
+// TODO: Publisher is an unnecessary abstraction layer. Delete this
 type SpotifyPlayerQueue struct {
 }
 

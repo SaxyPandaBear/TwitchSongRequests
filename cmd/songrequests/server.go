@@ -16,7 +16,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
-	"github.com/saxypandabear/twitchsongrequests/pkg/logger"
+	"github.com/saxypandabear/twitchsongrequests/pkg/o11y/logger"
 	"github.com/saxypandabear/twitchsongrequests/pkg/site"
 	"github.com/saxypandabear/twitchsongrequests/pkg/spotify"
 	"go.uber.org/zap"
@@ -37,6 +37,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 
 	userStore := db.NewPostgresUserStore(dbpool)
 	preferenceStore := db.NewPostgresPreferenceStore(dbpool)
+	messageCounter := db.NewPostgresMessageCounter(dbpool)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -74,7 +75,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 
 	// ===== APIs =====
 	p := spotify.SpotifyPlayerQueue{}
-	reward := api.NewRewardHandler(s, &p, userStore, twitchConfig, spotifyConfig)
+	reward := api.NewRewardHandler(s, &p, userStore, messageCounter, twitchConfig, spotifyConfig)
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 

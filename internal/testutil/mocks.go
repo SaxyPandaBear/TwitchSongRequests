@@ -8,6 +8,7 @@ import (
 	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"github.com/saxypandabear/twitchsongrequests/pkg/o11y/metrics"
 	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
@@ -121,4 +122,14 @@ func (s *InMemoryPreferenceStore) UpdatePreference(p *preferences.Preference) er
 func (s *InMemoryPreferenceStore) DeletePreference(id string) error {
 	delete(s.Data, id)
 	return nil
+}
+
+var _ db.MessageCounter = (*InMemoryMessageCounter)(nil)
+
+type InMemoryMessageCounter struct {
+	Msgs []*metrics.Message
+}
+
+func (c *InMemoryMessageCounter) AddMessage(m *metrics.Message) {
+	c.Msgs = append(c.Msgs, m)
 }
