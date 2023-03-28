@@ -77,8 +77,12 @@
             text-transform: uppercase;
         }
 
-        .oauth-options>*:not(:last-child) {
-            margin-bottom: 5px;
+        .oauth-options {
+            margin-bottom: 2%;
+        }
+
+        .option>*:not(:last-child) {
+            margin-bottom: 2%;
         }
 
         .button-icon {
@@ -105,15 +109,13 @@
     <div class="preferences">
         <h1 class="logo">Preferences</h1>
 
-        Something goes here eventually
-
         <div class="oauth-options">
             <form method="post" action="{{.SaveURL}}">
-                <div>
+                <div class="option">
                     <span>Allow explicit songs?</span>
                     <input type="checkbox" id="explicit" name="explicit" value="true" {{if .Explicit}}checked{{end}}>
                 </div>
-                <div>
+                <div class="option">
                     <button type="submit">
                         Save
                     </button>

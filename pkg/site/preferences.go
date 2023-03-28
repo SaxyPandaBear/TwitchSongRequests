@@ -51,8 +51,6 @@ func (p *PreferencesRenderer) PreferencesPage(w http.ResponseWriter, r *http.Req
 		d.RewardID = pref.CustomRewardID
 	}
 
-	log.Printf("DEBUG: %t", d.Explicit)
-
 	if err := preferencesPage.Execute(w, &d); err != nil {
 		log.Println("error occurred while executing template:", err)
 	}
