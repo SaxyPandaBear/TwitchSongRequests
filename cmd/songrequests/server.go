@@ -90,10 +90,13 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	userHandler := api.NewUserHandler(userStore, preferenceStore, redirectURL, twitchConfig, spotifyConfig)
 	r.Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST because forms don't support DELETE
 
+	preferenceHandler := api.NewPreferenceHandler(preferenceStore, redirectURL)
+	r.Post("/preference", preferenceHandler.SavePreferences) // this is a POST because forms don't support DELETE
+
 	// ===== Website Pages =====
 
 	home := site.NewHomePageRenderer(redirectURL, userStore, twitchConfig, spotifyConfig)
-	preferences := site.NewPreferencesRenderer(redirectURL, preferenceStore)
+	preferences := site.NewPreferencesRenderer(preferenceStore, redirectURL)
 	r.Get("/", home.HomePage)
 	r.Get("/preferences", preferences.PreferencesPage)
 

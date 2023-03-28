@@ -1,6 +1,7 @@
 package site
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -12,17 +13,18 @@ import (
 var preferencesPage = template.Must(template.ParseFiles("pkg/site/preferences.html"))
 
 type PreferencesRenderer struct {
-	pref    db.PreferenceStore
 	siteURL string
+	pref    db.PreferenceStore
 }
 
 type PreferencePageData struct {
+	SaveURL       string
 	Authenticated bool
 	RewardID      string
 	Explicit      bool
 }
 
-func NewPreferencesRenderer(siteURL string, p db.PreferenceStore) *PreferencesRenderer {
+func NewPreferencesRenderer(p db.PreferenceStore, siteURL string) *PreferencesRenderer {
 	return &PreferencesRenderer{
 		pref:    p,
 		siteURL: siteURL,
@@ -31,6 +33,7 @@ func NewPreferencesRenderer(siteURL string, p db.PreferenceStore) *PreferencesRe
 
 func (p *PreferencesRenderer) PreferencesPage(w http.ResponseWriter, r *http.Request) {
 	d := PreferencePageData{
+		SaveURL:       fmt.Sprintf("%s/preference", p.siteURL),
 		Authenticated: true,
 	}
 

@@ -107,13 +107,11 @@
 
         Something goes here eventually
 
-        <!-- <div class="oauth-options">
-            <form method="post" >
+        <div class="oauth-options">
+            <form method="post" action="{{.SaveURL}}">
                 <div>
-                    <div>Allow explicit songs?</div>
-                    <div>
-                        <input type="checkbox" value="{{.Explicit}}" name="explicit">
-                    </div>
+                    <span>Allow explicit songs?</span>
+                    <input type="checkbox" value="{{.Explicit}}" name="explicit">
                 </div>
                 <div>
                     <button type="submit">
@@ -121,7 +119,7 @@
                     </button>
                 </div>
             </form>
-        </div> -->
+        </div>
 
         <div class="footer">
             <div class="footer-text">Find it on </div>

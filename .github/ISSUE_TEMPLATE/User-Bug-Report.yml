@@ -1,4 +1,4 @@
-name: Customer Support
+name: User Support
 description: File a report if you are stuck with trying to use the service
 title: "[Bug]: [Describe the issue]"
 labels: ["bug"]
