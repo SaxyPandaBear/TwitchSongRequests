@@ -39,6 +39,13 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	err = r.ParseForm()
+	if err != nil {
+		log.Println("failed to parse HTML form", err)
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	}
+
 	log.Println("DEBUG: Form")
 	for k, v := range r.Form {
 		log.Printf("%s: %v\n", k, v)
