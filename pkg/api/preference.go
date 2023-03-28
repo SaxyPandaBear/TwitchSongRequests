@@ -39,7 +39,14 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	log.Println("DEBUG: Form")
+	for k, v := range r.Form {
+		log.Printf("%s: %v\n", k, v)
+	}
+
 	e := r.Form.Get(PrefFormExplicitKey)
+	// TODO: debugging
+	log.Printf("DEBUG: found [%s] for key %s\n", e, PrefFormExplicitKey)
 	if e != "" && e != fmt.Sprintf("%t", p.ExplicitSongs) {
 		p.ExplicitSongs = e == "true"
 	}
@@ -52,5 +59,6 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 	}
 
 	log.Println("successfully saved user preferences for", userID)
+	// redirect this back to the home page.
 	http.Redirect(w, r, h.redirectURL, http.StatusFound)
 }

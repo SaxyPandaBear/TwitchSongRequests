@@ -70,6 +70,8 @@ Well, the YouTube API doesn't let you queue videos outside of an iframe player,
 which means I would need to embed the player inside my website. Which, I'm not
 necessariliy opposed to doing, but that wasn't the original point of this. 
 
+If you want this feature, react and comment on [this issue](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/131)
+
 ---
 
 # Support the Project
