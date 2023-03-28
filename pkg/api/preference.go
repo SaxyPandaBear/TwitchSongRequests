@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -46,10 +45,9 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	e := r.Form.Get(PrefFormExplicitKey)
-	if e != "" && e != fmt.Sprintf("%t", p.ExplicitSongs) {
-		p.ExplicitSongs = e == "true"
-	}
+	// leaving the checkbox unchecked omits it from the form,
+	// so need to always compare the value from the checkbox
+	p.ExplicitSongs = r.Form.Get(PrefFormExplicitKey) == "true"
 
 	err = h.prefs.UpdatePreference(p)
 	if err != nil {
