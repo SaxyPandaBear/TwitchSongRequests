@@ -111,7 +111,7 @@
             <form method="post" action="{{.SaveURL}}">
                 <div>
                     <span>Allow explicit songs?</span>
-                    <input type="checkbox" checked="{{.Explicit}}" id="explicit" name="explicit" value="true">
+                    <input type="checkbox" id="explicit" name="explicit" value="true" {{if .Explicit}}checked{{end}}>
                 </div>
                 <div>
                     <button type="submit">
