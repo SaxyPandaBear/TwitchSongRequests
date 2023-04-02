@@ -64,9 +64,7 @@ func (m *MockQueuer) QueueSong(ctx context.Context, trackID spotify.ID) error {
 }
 
 func (m *MockQueuer) GetTrack(ctx context.Context, id spotify.ID, opts ...spotify.RequestOption) (*spotify.FullTrack, error) {
-	track := &spotify.FullTrack{}
-	track.Explicit = m.Explicit
-	return track, nil
+	return m.GetTrackFunc(id)
 }
 
 func DefaultMockQueuerGetTrackFunc(id spotify.ID) (*spotify.FullTrack, error) {

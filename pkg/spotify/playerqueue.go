@@ -13,6 +13,7 @@ import (
 var (
 	openSpotifyURLPattern = regexp.MustCompile(`^https://open.spotify.com/track/([A-Za-z0-9]+)`)
 	ErrInvalidInput       = errors.New("invalid user input for Spotify URI")
+	ErrExplicitSong       = errors.New("user does nto allow adding explicit songs to the queue")
 )
 
 // ensure struct implements queue.Publisher
@@ -30,7 +31,13 @@ func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, url string, allowExpli
 		return ErrInvalidInput
 	}
 
-	return client.QueueSong(context.Background(), spotify.ID(id))
+	sID := spotify.ID(id)
+
+	if !ShouldQueue(client, sID, allowExplicit) {
+		return ErrExplicitSong
+	}
+
+	return client.QueueSong(context.Background(), sID)
 }
 
 // TODO: this should be in the queuer
@@ -40,6 +47,9 @@ func ShouldQueue(client queue.Queuer, id spotify.ID, allowExplicit bool) bool {
 		log.Println("failed to get track", id.String(), err)
 		return false
 	}
+
+	log.Printf("%v\n", track.Explicit)
+	log.Printf("%v\n", allowExplicit)
 
 	if !allowExplicit && track.Explicit {
 		return false

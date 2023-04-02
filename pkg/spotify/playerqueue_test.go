@@ -74,8 +74,9 @@ func TestPublishExplicitSongNotAllowed(t *testing.T) {
 		},
 	}
 
-	err := s.Publish(&q, "abc123", false)
+	err := s.Publish(&q, testSpotifyTrackURL, false)
 	assert.Error(t, err)
+	assert.ErrorIs(t, err, ErrExplicitSong)
 	assert.Empty(t, q.Messages)
 }
 
@@ -88,7 +89,7 @@ func TestPublishExplicitSongAllowed(t *testing.T) {
 	}
 
 	// not explicit songs should work
-	err := s.Publish(&q, testSpotifyTrackURL, false)
+	err := s.Publish(&q, testSpotifyTrackURL, true)
 	assert.NoError(t, err)
 	assert.Len(t, q.Messages, 1)
 	assert.Equal(t, "3cfOd4CMv2snFaKAnMdnvK", q.Messages[0].String())
@@ -99,10 +100,28 @@ func TestPublishExplicitSongAllowed(t *testing.T) {
 		return &track, nil
 	}
 
-	err = s.Publish(&q, testSpotifyTrackURL, false)
+	err = s.Publish(&q, testSpotifyTrackURL, true)
 	assert.NoError(t, err)
 	assert.Len(t, q.Messages, 2)
 	for _, id := range q.Messages {
 		assert.Equal(t, "3cfOd4CMv2snFaKAnMdnvK", id.String())
 	}
+}
+
+func TestShouldQueue(t *testing.T) {
+	q := testutil.MockQueuer{
+		Messages: make([]spotify.ID, 0, 1),
+		GetTrackFunc: func(i spotify.ID) (*spotify.FullTrack, error) {
+			track := spotify.FullTrack{}
+			track.Explicit = true
+			return &track, nil
+		},
+	}
+
+	assert.True(t, ShouldQueue(&q, spotify.ID("abc123"), true))
+	assert.False(t, ShouldQueue(&q, spotify.ID("bcd234"), false))
+
+	q.GetTrackFunc = testutil.DefaultMockQueuerGetTrackFunc
+	assert.True(t, ShouldQueue(&q, spotify.ID("abc123"), true))
+	assert.True(t, ShouldQueue(&q, spotify.ID("bcd234"), false))
 }
