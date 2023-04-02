@@ -75,7 +75,16 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 
 	// ===== APIs =====
 	p := spotify.SpotifyPlayerQueue{}
-	reward := api.NewRewardHandler(s, &p, userStore, messageCounter, twitchConfig, spotifyConfig)
+	rhconfig := api.RewardHandlerConfig{
+		Secret:    s,
+		Publisher: &p,
+		UserStore: userStore,
+		PrefStore: preferenceStore,
+		MsgCount:  messageCounter,
+		Twitch:    twitchConfig,
+		Spotify:   spotifyConfig,
+	}
+	reward := api.NewRewardHandler(&rhconfig)
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 

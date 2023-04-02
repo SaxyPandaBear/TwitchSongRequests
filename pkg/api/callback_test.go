@@ -22,6 +22,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/api"
 	"github.com/saxypandabear/twitchsongrequests/pkg/o11y/metrics"
+	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 )
 
@@ -54,6 +55,9 @@ func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.In
 	u := testutil.InMemoryUserStore{
 		Data: make(map[string]*users.User),
 	}
+	prefs := testutil.InMemoryPreferenceStore{
+		Data: make(map[string]*preferences.Preference),
+	}
 
 	messages := testutil.InMemoryMessageCounter{
 		Msgs: make([]*metrics.Message, 0),
@@ -64,7 +68,10 @@ func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.In
 		CallbackExecuted: mc,
 	}
 
-	rh := api.NewRewardHandler(dummySecret, &p, &u, &messages, &util.AuthConfig{}, &util.AuthConfig{})
+	rhc := api.RewardHandlerConfig{
+		dummySecret, &p, &u, &prefs, &messages, &util.AuthConfig{}, &util.AuthConfig{},
+	}
+	rh := api.NewRewardHandler(&rhc)
 	rh.OnSuccess = c.Callback
 
 	return rh, &u, &messages, m, mc

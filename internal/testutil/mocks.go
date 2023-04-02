@@ -16,15 +16,20 @@ import (
 )
 
 type DummyPublisher struct {
-	Messages   chan string
-	ShouldFail bool
+	Messages          chan string
+	ShouldFail        bool
+	IsMessageExplicit bool
 }
 
 var _ queue.Publisher = (*DummyPublisher)(nil)
 
-func (p DummyPublisher) Publish(client queue.Queuer, url string) error {
+func (p DummyPublisher) Publish(client queue.Queuer, url string, allow bool) error {
 	if p.ShouldFail {
 		return errors.New("oops")
+	}
+
+	if allow && !p.IsMessageExplicit {
+		return errors.New("not allowed")
 	}
 
 	p.Messages <- url
@@ -40,9 +45,13 @@ func (m MockReadCloser) Close() error {
 	return nil
 }
 
+var _ queue.Queuer = (*MockQueuer)(nil)
+
 type MockQueuer struct {
-	ShouldFail bool
-	Messages   []spotify.ID
+	ShouldFail   bool
+	Messages     []spotify.ID
+	Explicit     bool
+	GetTrackFunc func(spotify.ID) (*spotify.FullTrack, error)
 }
 
 func (m *MockQueuer) QueueSong(ctx context.Context, trackID spotify.ID) error {
@@ -52,6 +61,16 @@ func (m *MockQueuer) QueueSong(ctx context.Context, trackID spotify.ID) error {
 
 	m.Messages = append(m.Messages, trackID)
 	return nil
+}
+
+func (m *MockQueuer) GetTrack(ctx context.Context, id spotify.ID, opts ...spotify.RequestOption) (*spotify.FullTrack, error) {
+	track := &spotify.FullTrack{}
+	track.Explicit = m.Explicit
+	return track, nil
+}
+
+func DefaultMockQueuerGetTrackFunc(id spotify.ID) (*spotify.FullTrack, error) {
+	return &spotify.FullTrack{}, nil
 }
 
 // InMemoryUserStore is used for mocking and unit testing

@@ -31,26 +31,26 @@ type EventSubNotification struct {
 }
 
 type RewardHandler struct {
-	secret    string
-	publisher queue.Publisher
-	userStore db.UserStore
-	msgCount  db.MessageCounter
-	twitch    *util.AuthConfig
-	spotify   *util.AuthConfig
+	config *RewardHandlerConfig
 
 	// OnSuccess is a callback function that executes after successfully
 	// publishing to the queue
 	OnSuccess func(*util.AuthConfig, db.UserStore, *helix.EventSubChannelPointsCustomRewardRedemptionEvent, bool) error
 }
 
-func NewRewardHandler(twitchSecret string, publisher queue.Publisher, userStore db.UserStore, msgCount db.MessageCounter, twitch, spotify *util.AuthConfig) *RewardHandler {
+type RewardHandlerConfig struct {
+	Secret    string
+	Publisher queue.Publisher
+	UserStore db.UserStore
+	PrefStore db.PreferenceStore
+	MsgCount  db.MessageCounter
+	Twitch    *util.AuthConfig
+	Spotify   *util.AuthConfig
+}
+
+func NewRewardHandler(config *RewardHandlerConfig) *RewardHandler {
 	return &RewardHandler{
-		secret:    twitchSecret,
-		publisher: publisher,
-		userStore: userStore,
-		msgCount:  msgCount,
-		twitch:    twitch,
-		spotify:   spotify,
+		config:    config,
 		OnSuccess: UpdateRedemptionStatus,
 	}
 }
@@ -64,7 +64,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 	defer r.Body.Close()
 	// verify that the notification came from twitch using the secret.
-	if !helix.VerifyEventSubNotification(h.secret, r.Header, string(body)) {
+	if !helix.VerifyEventSubNotification(h.config.Secret, r.Header, string(body)) {
 		log.Println("no valid signature on subscription")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -112,14 +112,14 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	tok, err := db.FetchSpotifyToken(h.userStore, redeemEvent.BroadcasterUserID)
+	tok, err := db.FetchSpotifyToken(h.config.UserStore, redeemEvent.BroadcasterUserID)
 	if err != nil {
 		log.Printf("failed to verify user %s for spotify access: %v\n", redeemEvent.BroadcasterUserID, err)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
-	refreshed, err := util.RefreshSpotifyToken(r.Context(), h.spotify, tok)
+	refreshed, err := util.RefreshSpotifyToken(r.Context(), h.config.Spotify, tok)
 	if err != nil {
 		log.Println("failed to get valid token", err)
 		w.WriteHeader(http.StatusOK)
@@ -128,7 +128,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 
 	// store the refreshed token
-	u, err := h.userStore.GetUser(redeemEvent.BroadcasterUserID)
+	u, err := h.config.UserStore.GetUser(redeemEvent.BroadcasterUserID)
 	if err == nil {
 		u.SpotifyAccessToken = refreshed.AccessToken
 		u.SpotifyRefreshToken = refreshed.RefreshToken
@@ -136,17 +136,25 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 
 		log.Println("saving updated Spotify credentials for", u.TwitchID)
 
-		if err = h.userStore.UpdateUser(u); err != nil {
+		if err = h.config.UserStore.UpdateUser(u); err != nil {
 			// if we got a valid token but failed to update the DB this is not necessarily fatal.
 			log.Println("failed to update user's spotify token", err)
 		}
 	}
 
-	c := util.GetNewSpotifyClient(r.Context(), h.spotify, refreshed)
+	var allowExplicit bool
+	preferences, err := h.config.PrefStore.GetPreference(redeemEvent.BroadcasterUserID)
+	if err != nil {
+		log.Println("failed to get user preferences, defaulting to false for explicit songs", err)
+	} else {
+		allowExplicit = preferences.ExplicitSongs
+	}
+
+	c := util.GetNewSpotifyClient(r.Context(), h.config.Spotify, refreshed)
 
 	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
-	err = h.publisher.Publish(c, redeemEvent.UserInput)
+	err = h.config.Publisher.Publish(c, redeemEvent.UserInput, allowExplicit)
 	msg := metrics.Message{
 		CreatedAt: &redeemEvent.RedeemedAt.Time,
 	}
@@ -157,11 +165,11 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		msg.Success = 1
 	}
 
-	h.msgCount.AddMessage(&msg)
+	h.config.MsgCount.AddMessage(&msg)
 
 	// after publishing successfully, attempt to update the status of the
 	// redemption
-	if err = h.OnSuccess(h.twitch, h.userStore, &redeemEvent, err == nil); err != nil {
+	if err = h.OnSuccess(h.config.Twitch, h.config.UserStore, &redeemEvent, err == nil); err != nil {
 		// don't need to fail fast here because this is housekeeping
 		log.Println("failed to update Twitch reward redemption status", err)
 	}
