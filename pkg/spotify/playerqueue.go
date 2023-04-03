@@ -48,9 +48,6 @@ func ShouldQueue(client queue.Queuer, id spotify.ID, allowExplicit bool) bool {
 		return false
 	}
 
-	log.Printf("%v\n", track.Explicit)
-	log.Printf("%v\n", allowExplicit)
-
 	if !allowExplicit && track.Explicit {
 		return false
 	}
