@@ -80,6 +80,7 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 	} else {
 		if len(body) > 0 {
 			d.Error = string(body)
+			log.Println("found error in request body", d.Error)
 		}
 	}
 
