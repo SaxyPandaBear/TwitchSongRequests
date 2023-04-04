@@ -27,6 +27,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 	userID, err := util.GetUserIDFromRequest(r)
 	if err != nil {
 		log.Println("failed to get Twitch ID from request", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -34,6 +35,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 	u, err := h.userStore.GetUser(userID)
 	if err != nil {
 		log.Println("failed to get user", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -41,6 +43,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 	state := r.URL.Query().Get("state")
 	if state != h.auth.State {
 		log.Println("failed to validate auth state")
+		w.Write([]byte("failed to validate auth statee"))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -50,6 +53,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		log.Println("failed to get spotify auth token for user", userID)
+		w.Write([]byte("failed to get spotify auth token for user"))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}

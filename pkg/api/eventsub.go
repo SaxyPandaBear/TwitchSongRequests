@@ -46,6 +46,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	user, err := e.userStore.GetUser(id)
 	if err != nil {
 		log.Println("failed to get user", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -66,14 +67,16 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	// get user access token
 	c, err := util.GetNewTwitchClient(e.auth)
 	if err != nil {
-		log.Println("failed to get Twitch client for", id)
+		log.Println("failed to get Twitch client for", id, err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
 	c.SetUserAccessToken(user.TwitchAccessToken)
 	token, err := c.RefreshUserAccessToken(user.TwitchRefreshToken)
 	if err != nil {
-		log.Println("failed to get updated access token for", id)
+		log.Println("failed to get updated access token for", id, err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -82,6 +85,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	_, err = c.CreateEventSubSubscription(&createSub)
 	if err != nil {
 		log.Println("failed to create EventSub subscription ", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -94,6 +98,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 
 	if err != nil {
 		log.Println("failed to update twitch credentials", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}

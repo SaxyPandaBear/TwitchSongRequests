@@ -33,6 +33,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		log.Println("failed to get Twitch ID from request", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -40,6 +41,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	c, err := util.GetNewTwitchClient(h.twitch)
 	if err != nil {
 		log.Println("failed to get Twitch client", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -55,6 +57,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	tokenResp, err := c.RefreshUserAccessToken(tok.RefreshToken)
 	if err != nil {
 		log.Println("failed to refresh twitch token", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -63,6 +66,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	_, err = c.RevokeUserAccessToken(tokenResp.Data.AccessToken)
 	if err != nil {
 		log.Println("failed to revoke access", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -70,6 +74,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	err = h.users.DeleteUser(userID)
 	if err != nil {
 		log.Println("failed to delete user", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}

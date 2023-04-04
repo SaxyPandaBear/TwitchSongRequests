@@ -27,6 +27,7 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 
 	if err != nil {
 		log.Println("failed to get Twitch ID from request", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -34,6 +35,7 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 	p, err := h.prefs.GetPreference(userID)
 	if err != nil {
 		log.Println("failed to get user preferences for", userID, err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -41,6 +43,7 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 	err = r.ParseForm()
 	if err != nil {
 		log.Println("failed to parse HTML form", err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -52,6 +55,7 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 	err = h.prefs.UpdatePreference(p)
 	if err != nil {
 		log.Println("failed to update user preferences for", userID, err)
+		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
