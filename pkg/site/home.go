@@ -3,6 +3,7 @@ package site
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 
@@ -27,6 +28,7 @@ type HomePageData struct {
 	PreferencesURL string
 	Authenticated  bool
 	Subscribed     bool
+	Error          string
 }
 
 func NewHomePageRenderer(siteURL string, u db.UserStore, twitch, spotify *util.AuthConfig) *HomePageRenderer {
@@ -69,6 +71,17 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 
 	d.Authenticated = user.IsAuthenticated()
 	d.Subscribed = user.Subscribed
+
+	// check if there is an error in the request body
+	defer r.Body.Close()
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Println("failed to read request body", err)
+	} else {
+		if len(body) > 0 {
+			d.Error = string(body)
+		}
+	}
 
 	return &d
 }

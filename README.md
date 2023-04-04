@@ -36,7 +36,7 @@ player. Between jobs, I coded up an initial proof of concept and the rest is his
 1. If you are pretty sure you didn't mess anything up, make an issue [here](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new?assignees=&labels=bug&template=User-Bug-Report.yml&title=%5BBug%5D%3A+%5BDescribe+the+issue%5D)
 
 ## Demo
-![Demo](https://youtu.be/Oz5Zs8mVDRY)
+[![Demo](https://img.youtube.com/vi/Oz5Zs8mVDRY/hqdefault.jpg)](https://youtu.be/Oz5Zs8mVDRY)
 
 ## Who can use it?
 In order to use custom channel point rewards, you must be an affiliate or partner

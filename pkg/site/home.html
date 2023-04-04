@@ -167,6 +167,10 @@
             --provider-bg-color: #ff3c3c;
             --provider-bg-color-hover: #df1818;
         }
+        .styled-sub-button[data-provider^="error"] {
+            --provider-bg-color:var(--light-gray)
+            --provider-bg-color-hover:var(--gray)
+        }
 
         .about-header {
             margin: 0;
@@ -198,6 +202,57 @@
         .footer-text {
             margin-right: 5px;
             padding: 1% 0;
+        }
+
+        #toast {
+            visibility: hidden; /* Hidden by default. Visible on click */
+            min-width: 250px; /* Set a default minimum width */
+            margin-left: -125px; /* Divide value of min-width by 2 */
+            background-color: MediumVioletRed; /* Background color */
+            color: #fff; /* White text color */
+            text-align: center; /* Centered text */
+            border-radius: 2px; /* Rounded borders */
+            padding: 16px; /* Padding */
+            position: fixed; /* Sit on top of the screen */
+            z-index: 1; /* Add a z-index if needed */
+            left: 50%; /* Center the snackbar */
+            bottom: 30px; /* 30px from the bottom */
+            font-family: monospace;
+            display: inline-flex;
+            line-height: 12px
+        }
+
+        #toast span {
+            margin-left: 12px;
+            margin-top: 2px;
+        }
+
+        #toast.show {
+            visibility: visible; /* Show the SIMPLE-TOAST */
+            /* Add animation: Take 0.5 seconds to fade in and out the SIMPLE-TOAST.
+            However, delay the fade out process for 2.5 seconds */
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @-webkit-keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+
+        @-webkit-keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
         }
     </style>
 </head>
@@ -300,6 +355,9 @@
                 <br><br>
                 File a <a href="https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new/choose" target="_blank">bug report</a> and I'll get to it when I have time.
             </p>
+            <p class="about">
+                <button class="styled-sub-button" data-provider="error" onclick="showError()">Check for errors</button>
+            </p>
             <div class="cookie-disclaimer">
                 <h2 class="about-header">Use of cookies</h2>
                 <p class="about">
@@ -323,6 +381,20 @@
             </a>
         </div>
     </div>
+
+    <div id="toast">
+        <span>{{.Error}}</span>
+    </div>
+    <script>
+        function showError() {
+            // Get the SIMPLE-TOAST DIV
+            var x = document.getElementById("toast");
+            // Add the "show" class to DIV
+            x.className = "show";
+            // After 3 seconds, remove the show class from DIV
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+    </script>
 </body>
 
 </html>
