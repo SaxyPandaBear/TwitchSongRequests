@@ -4,11 +4,12 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/signal"
 	"strconv"
-	"sync"
 
 	"github.com/saxypandabear/twitchsongrequests/cmd/songrequests"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const defaultPort = 8000
@@ -16,7 +17,12 @@ const defaultPort = 8000
 func main() {
 	flag.Parse()
 
-	logger, _ := zap.NewProduction()
+	config := zap.NewProductionConfig()
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder // human readable timestamps for logs
+	config.EncoderConfig = encoderConfig
+	logger := zap.Must(config.Build())
+
 	zap.RedirectStdLog(logger)
 	defer logger.Sync()
 
@@ -32,15 +38,13 @@ func main() {
 		port = p
 	}
 
-	var wg sync.WaitGroup
-
-	wg.Add(1)
 	go func() {
-		err := songrequests.StartServer(logger, port)
-		log.Println("server stopped ", err)
-		wg.Done()
+		if err := songrequests.StartServer(logger, port); err != nil {
+			log.Println("server terminated unexpectedly", err)
+			os.Exit(1)
+		}
 	}()
-
-	wg.Wait()
-	log.Println("Shutting down")
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
 }
