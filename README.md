@@ -23,6 +23,7 @@ player. Between jobs, I coded up an initial proof of concept and the rest is his
 1. Authorize the service with Spotify
 1. If it worked, you should see a `Subscribe` and `Revoke Access` button
 1. Click `Subscribe`. If successful, you should see the UI update accordingly
+1. Submit an onboarding request on this GitHub project (template TBD), and I will manually allowlist your Spotify account to let you access the service (this is a limitation on Spotify, not on me)
 1. You're done! Now start using it!
 
 ## How do I use it?
@@ -217,7 +218,7 @@ twitch event trigger add-redemption -s $SUB_SECRET -F http://localhost:8080/call
 ### Cleanup
 After testing, clean up the EventSub subscription:
 ```bash
-twitch api get /eventsub/subscriptions -q user_id=$USER_ID
+twitch api get /eventsub/subscriptions
 
 # jot down the relevant EventSub subscription ID
 
