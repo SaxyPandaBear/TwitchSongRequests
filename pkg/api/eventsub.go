@@ -72,15 +72,14 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
-	c.SetUserAccessToken(user.TwitchAccessToken)
-	token, err := c.RefreshUserAccessToken(user.TwitchRefreshToken)
+
+	token, err := c.RequestAppAccessToken([]string{e.auth.Scope})
 	if err != nil {
 		log.Println("failed to get updated access token for", id, err)
 		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
-	c.SetUserAccessToken(token.Data.AccessToken)
 
 	res, err := c.CreateEventSubSubscription(&createSub)
 	if err != nil {
@@ -88,9 +87,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
-	}
-
-	if len(res.ErrorMessage) > 0 {
+	} else if len(res.ErrorMessage) > 0 {
 		log.Printf("error occurred while creating EventSub subscription | HTTP %v | %s | %s\n", res.ErrorStatus, res.Error, res.ErrorMessage)
 	}
 
