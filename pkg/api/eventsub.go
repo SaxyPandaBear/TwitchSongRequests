@@ -29,7 +29,7 @@ func NewEventSubHandler(u db.UserStore, auth *util.AuthConfig, callbackURL, secr
 	return &EventSubHandler{
 		userStore:   u,
 		auth:        auth,
-		callbackURL: callbackURL,
+		callbackURL: callbackURL + "/callback",
 		secret:      secret,
 	}
 }
