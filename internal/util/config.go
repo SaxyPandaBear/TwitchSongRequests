@@ -12,12 +12,14 @@ import (
 const (
 	// SpotifyAuthURL is the URL to Spotify Accounts Service's OAuth2 endpoint.
 	SpotifyAuthURL = "https://accounts.spotify.com/authorize"
+
+	//nolint:gosec // Mistakenly flagging an authorization URL
 	// SpotifyTokenURL is the URL to the Spotify Accounts Service's OAuth2
 	// token endpoint.
 	SpotifyTokenURL = "https://accounts.spotify.com/api/token"
 	// SpotifyUserScope is the set of permissions required to access the necessary
 	// Spotify APIs
-	SpotifyUserScope = "user-modify-playback-state user-read-playback-state"
+	SpotifyUserScope = "user-modify-playback-state user-read-playback-state user-read-email"
 	// TwitchUserScope is the set of permissions required to access the necessary
 	// Twitch APIs
 	TwitchUserScope = "channel:manage:redemptions"

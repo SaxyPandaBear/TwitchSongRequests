@@ -10,6 +10,8 @@ type User struct {
 	SpotifyRefreshToken string     `column:"spotify_refresh"`
 	SpotifyExpiry       *time.Time `column:"spotify_expiry"`
 	Subscribed          bool       `column:"subscribed"`
+	SubscriptionID      string     `column:"subscription_id"`
+	Email               string     `column:"email"`
 }
 
 func (u *User) IsAuthenticated() bool {

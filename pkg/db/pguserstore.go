@@ -1,3 +1,4 @@
+// nolint
 package db
 
 import (
@@ -27,8 +28,8 @@ func (s *PostgresUserStore) GetUser(id string) (*users.User, error) {
 	}
 
 	err := s.pool.QueryRow(context.Background(),
-		"SELECT COALESCE(twitch_access, ''), COALESCE(twitch_refresh, ''), COALESCE(spotify_access, ''), COALESCE(spotify_refresh, ''), spotify_expiry, COALESCE(subscribed, FALSE) FROM users WHERE id=$1", id).
-		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken, &u.SpotifyExpiry, &u.Subscribed)
+		"SELECT COALESCE(twitch_access, ''), COALESCE(twitch_refresh, ''), COALESCE(spotify_access, ''), COALESCE(spotify_refresh, ''), spotify_expiry, COALESCE(subscribed, FALSE), COALESCE(subscription_id, ''), COALESCE(email, '') FROM users WHERE id=$1", id).
+		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken, &u.SpotifyExpiry, &u.Subscribed, &u.SubscriptionID, &u.Email)
 
 	if err != nil {
 		log.Printf("failed to get user %s: %v\n", id, err)
@@ -52,7 +53,7 @@ func (s *PostgresUserStore) AddUser(user *users.User) error {
 
 func (s *PostgresUserStore) UpdateUser(user *users.User) error {
 	if _, err := s.pool.Exec(context.Background(),
-		"update users set twitch_access=$1, twitch_refresh=$2, spotify_access=$3, spotify_refresh=$4, spotify_expiry=$5, last_updated=$6, subscribed=$7 where id=$8",
+		"update users set twitch_access=$1, twitch_refresh=$2, spotify_access=$3, spotify_refresh=$4, spotify_expiry=$5, last_updated=$6, subscribed=$7, subscription_id=$8, email=$9 where id=$10",
 		user.TwitchAccessToken,
 		user.TwitchRefreshToken,
 		user.SpotifyAccessToken,
@@ -60,6 +61,8 @@ func (s *PostgresUserStore) UpdateUser(user *users.User) error {
 		user.SpotifyExpiry,
 		time.Now().Format(time.RFC3339),
 		user.Subscribed,
+		user.SubscriptionID,
+		user.Email,
 		user.TwitchID); err != nil {
 		log.Printf("failed to update user %s: %v\n", user.TwitchID, err)
 		return err

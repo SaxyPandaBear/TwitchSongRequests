@@ -64,6 +64,14 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 	u.SpotifyRefreshToken = token.RefreshToken
 	u.SpotifyExpiry = &token.Expiry
 
+	client := util.GetNewSpotifyClient(r.Context(), h.auth, token)
+	user, err := client.CurrentUser(r.Context())
+	if err != nil {
+		log.Printf("failed to get Spotify user for %s: %v", userID, err)
+	} else {
+		u.Email = user.Email
+	}
+
 	err = h.userStore.UpdateUser(u)
 	if err != nil {
 		log.Println("failed to update user", err)

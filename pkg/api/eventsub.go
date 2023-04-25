@@ -46,7 +46,6 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	user, err := e.userStore.GetUser(id)
 	if err != nil {
 		log.Println("failed to get user", err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -68,7 +67,6 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	c, err := util.GetNewTwitchClient(e.auth)
 	if err != nil {
 		log.Println("failed to get Twitch client for", id, err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -76,7 +74,6 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	token, err := c.RequestAppAccessToken([]string{e.auth.Scope})
 	if err != nil {
 		log.Println("failed to get updated access token for", id, err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -85,25 +82,28 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	res, err := c.CreateEventSubSubscription(&createSub)
 	if err != nil {
 		log.Println("failed to create EventSub subscription ", err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	} else if len(res.ErrorMessage) > 0 {
 		log.Printf("error occurred while creating EventSub subscription | HTTP %v | %s | %s\n", res.ErrorStatus, res.Error, res.ErrorMessage)
-		w.Write([]byte(res.ErrorMessage))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
 
 	log.Println("Subscriptions:", res.Data.EventSubSubscriptions)
 
+	if len(res.Data.EventSubSubscriptions) < 1 {
+		log.Println("failed to subscribe to webhook event")
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
+	}
+
 	// successfully subscribed
 	user.Subscribed = true
+	user.SubscriptionID = res.Data.EventSubSubscriptions[0].ID
 	err = e.userStore.UpdateUser(user)
-
 	if err != nil {
 		log.Println("failed to update twitch credentials", err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}

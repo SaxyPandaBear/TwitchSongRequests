@@ -1,0 +1,18 @@
+name: Beta Onboarding
+description: Submit an application to be onboarded and allowlisted to use the service.
+title: Onboarding Request
+labels: ["onboarding"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in this project! 
+        A reminder that this form should only be submitted if you have signed in and are looking to use my service.
+  - type: textarea
+    id: username
+    attributes:
+      label: Your Twitch username
+      description: What is your Twitch username for the account that you authorized with the service?
+      placeholder: username
+    validations:
+      required: true
