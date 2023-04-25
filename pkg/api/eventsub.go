@@ -29,7 +29,7 @@ func NewEventSubHandler(u db.UserStore, auth *util.AuthConfig, callbackURL, secr
 	return &EventSubHandler{
 		userStore:   u,
 		auth:        auth,
-		callbackURL: callbackURL + "/callback",
+		callbackURL: callbackURL,
 		secret:      secret,
 	}
 }
@@ -59,7 +59,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		},
 		Transport: helix.EventSubTransport{
 			Method:   subMethod,
-			Callback: e.callbackURL,
+			Callback: e.callbackURL + "/callback",
 			Secret:   e.secret,
 		},
 	}
