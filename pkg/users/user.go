@@ -13,7 +13,7 @@ type User struct {
 }
 
 func (u *User) IsAuthenticated() bool {
-	tAuthed := len(u.TwitchAccessToken) > 0 && len(u.TwitchRefreshToken) > 0
-	sAuthed := len(u.SpotifyAccessToken) > 0 && len(u.SpotifyRefreshToken) > 0
+	tAuthed := len(u.TwitchAccessToken) > 0
+	sAuthed := len(u.SpotifyAccessToken) > 0
 	return tAuthed && sAuthed
 }
