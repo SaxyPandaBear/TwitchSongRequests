@@ -39,7 +39,7 @@ func (s *PostgresUserStore) GetUser(id string) (*users.User, error) {
 
 func (s *PostgresUserStore) AddUser(user *users.User) error {
 	if _, err := s.pool.Exec(context.Background(),
-		"insert into users(id, twitch_access, twitch_refresh, last_updated) values ($1, $2, $3, $4) on conflict do nothing",
+		"INSERT INTO users(id, twitch_access, twitch_refresh, last_updated) VALUES ($1, $2, $3, $4) ON CONFLICT DO UPDATE SET twitch_access = $2 WHERE id = $1",
 		user.TwitchID,
 		user.TwitchAccessToken,
 		user.TwitchRefreshToken,
