@@ -21,6 +21,7 @@ type HomePageRenderer struct {
 }
 
 type HomePageData struct {
+	UserID         string
 	TwitchAuthURL  string
 	SubscribeURL   string
 	UnsubscribeURL string
@@ -43,7 +44,7 @@ func NewHomePageRenderer(siteURL string, u db.UserStore, twitch, spotify *util.A
 func (h *HomePageRenderer) HomePage(w http.ResponseWriter, r *http.Request) {
 	data := h.getHomePageData(r)
 
-	log.Printf("Serving home page: %v %v %s\n", data.Authenticated, data.Subscribed, data.Error)
+	log.Printf("Serving home page to %s: %v %v %s\n", data.UserID, data.Authenticated, data.Subscribed, data.Error)
 
 	if err := homePage.Execute(w, data); err != nil {
 		log.Println("error occurred while executing template:", err)
@@ -64,6 +65,8 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 		log.Println("failed to get Twitch ID", err)
 		return &d
 	}
+
+	d.UserID = id
 
 	user, err := h.userStore.GetUser(id)
 	if err != nil {
