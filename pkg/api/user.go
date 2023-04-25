@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/constants"
@@ -33,7 +34,6 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		log.Println("failed to get Twitch ID from request", err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -41,7 +41,32 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	c, err := util.GetNewTwitchClient(h.twitch)
 	if err != nil {
 		log.Println("failed to get Twitch client", err)
-		w.Write([]byte(err.Error()))
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	}
+
+	u, err := h.users.GetUser(userID)
+	if err != nil {
+		log.Println("failed to get user", err)
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	}
+
+	// revoke subscription first
+	appToken, err := c.RequestAppAccessToken(strings.Split(h.twitch.Scope, " "))
+	if err != nil {
+		log.Println("failed to get app access token", err)
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	}
+	c.SetAppAccessToken(appToken.Data.AccessToken)
+	res, err := c.RemoveEventSubSubscription(u.SubscriptionID)
+	if err != nil {
+		log.Println("failed to remove eventsub subscription for", userID, err)
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
+		return
+	} else if len(res.ErrorMessage) > 0 {
+		log.Printf("failed to remove eventsub subscription for %s: HTTP %d | %s | %s", userID, res.ErrorStatus, res.Error, res.ErrorMessage)
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -57,7 +82,6 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	tokenResp, err := c.RefreshUserAccessToken(tok.RefreshToken)
 	if err != nil {
 		log.Println("failed to refresh twitch token", err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -66,7 +90,6 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	_, err = c.RevokeUserAccessToken(tokenResp.Data.AccessToken)
 	if err != nil {
 		log.Println("failed to revoke access", err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -74,7 +97,6 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	err = h.users.DeleteUser(userID)
 	if err != nil {
 		log.Println("failed to delete user", err)
-		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
