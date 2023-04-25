@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/o11y/metrics"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
+	"github.com/zmb3/spotify/v2"
 )
 
 const (
@@ -36,6 +38,7 @@ type RewardHandler struct {
 	// OnSuccess is a callback function that executes after successfully
 	// publishing to the queue
 	OnSuccess func(*util.AuthConfig, db.UserStore, *helix.EventSubChannelPointsCustomRewardRedemptionEvent, bool) error
+	CheckUser func(context.Context, *spotify.Client, *helix.EventSubChannelPointsCustomRewardRedemptionEvent)
 }
 
 type RewardHandlerConfig struct {
@@ -52,6 +55,7 @@ func NewRewardHandler(config *RewardHandlerConfig) *RewardHandler {
 	return &RewardHandler{
 		config:    config,
 		OnSuccess: UpdateRedemptionStatus,
+		CheckUser: CheckSpotifyUser,
 	}
 }
 
@@ -151,12 +155,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 
 	c := util.GetNewSpotifyClient(r.Context(), h.config.Spotify, refreshed)
-	spotifyUser, err := c.CurrentUser(r.Context())
-	if err != nil {
-		log.Println("failed to get current Spotify user", err)
-	} else {
-		log.Printf("Spotify user tied to (%s|%s) = %s\n", redeemEvent.BroadcasterUserID, redeemEvent.BroadcasterUserLogin, spotifyUser.DisplayName)
-	}
+	h.CheckUser(r.Context(), c, &redeemEvent)
 
 	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
@@ -258,4 +257,13 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	}
 
 	return nil
+}
+
+func CheckSpotifyUser(ctx context.Context, client *spotify.Client, redeemEvent *helix.EventSubChannelPointsCustomRewardRedemptionEvent) {
+	spotifyUser, err := client.CurrentUser(ctx)
+	if err != nil {
+		log.Println("failed to get current Spotify user", err)
+	} else {
+		log.Printf("Spotify user tied to (%s|%s) = %s\n", redeemEvent.BroadcasterUserID, redeemEvent.BroadcasterUserLogin, spotifyUser.DisplayName)
+	}
 }

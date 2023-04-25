@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
@@ -104,11 +105,18 @@ func (s *InMemoryUserStore) DeleteUser(id string) error {
 
 type DummyCallback struct {
 	CallbackExecuted chan bool
+	CheckExecuted    chan bool
 }
 
 func (c *DummyCallback) Callback(a *util.AuthConfig, u db.UserStore, e *helix.EventSubChannelPointsCustomRewardRedemptionEvent, success bool) error {
+	log.Println("received callback request", success)
 	c.CallbackExecuted <- success
 	return nil
+}
+
+func (c *DummyCallback) CheckUser(context.Context, *spotify.Client, *helix.EventSubChannelPointsCustomRewardRedemptionEvent) {
+	log.Println("received check user request")
+	c.CheckExecuted <- true
 }
 
 var _ db.PreferenceStore = (*InMemoryPreferenceStore)(nil)

@@ -37,7 +37,7 @@ var (
 	msgIDHeader            = "Twitch-Eventsub-Message-Id"
 	msgTimestampHeader     = "Twitch-Eventsub-Message-Timestamp"
 	msgSignatureHeader     = "Twitch-Eventsub-Message-Signature"
-	testResponseTimeout    = time.Millisecond * 20
+	testResponseTimeout    = time.Millisecond * 100
 )
 
 //go:embed testdata/redeem.json
@@ -46,7 +46,7 @@ var redeemPayload string
 //go:embed testdata/verification.json
 var verificationPayload string
 
-func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.InMemoryUserStore, *testutil.InMemoryMessageCounter, chan string, chan bool) {
+func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.InMemoryUserStore, *testutil.InMemoryMessageCounter, chan string, chan bool, chan bool) {
 	m := make(chan string)
 	p := testutil.DummyPublisher{
 		Messages:   m,
@@ -63,9 +63,11 @@ func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.In
 		Msgs: make([]*metrics.Message, 0),
 	}
 
-	mc := make(chan bool)
+	callbackChan := make(chan bool)
+	checkChan := make(chan bool)
 	c := testutil.DummyCallback{
-		CallbackExecuted: mc,
+		CallbackExecuted: callbackChan,
+		CheckExecuted:    checkChan,
 	}
 
 	rhc := api.RewardHandlerConfig{
@@ -73,12 +75,13 @@ func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.In
 	}
 	rh := api.NewRewardHandler(&rhc)
 	rh.OnSuccess = c.Callback
+	rh.CheckUser = c.CheckUser
 
-	return rh, &u, &messages, m, mc
+	return rh, &u, &messages, m, callbackChan, checkChan
 }
 
 func TestPublishRedeem(t *testing.T) {
-	rh, u, counter, m, callbacks := getTestRewardHandler(true)
+	rh, u, counter, m, callbacks, checks := getTestRewardHandler(true)
 
 	err := u.AddUser(&users.User{ // spoof a user so the test doesen't fail
 		TwitchID:            "12826",
@@ -116,6 +119,13 @@ func TestPublishRedeem(t *testing.T) {
 		api.ServeHTTP(rr, req)
 	}()
 
+	select {
+	case <-checks:
+		t.Log("found expected event")
+	case <-time.After(testResponseTimeout):
+		t.Error("did not receive message in time")
+	}
+
 	var event string
 	select {
 	case event = <-m:
@@ -145,7 +155,7 @@ func TestPublishRedeem(t *testing.T) {
 }
 
 func TestPublishRedeemEmptyBody(t *testing.T) {
-	rh, _, _, m, callbacks := getTestRewardHandler(true)
+	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -176,6 +186,20 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 	}()
 
 	select {
+	case <-callbacks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
+	case <-checks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
 	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
@@ -183,17 +207,10 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-
-	select {
-	case <-callbacks:
-		t.Error("should not have received a message")
-	case <-time.After(testResponseTimeout):
-		t.Log("no event expected")
-	}
 }
 
 func TestPublishIncorrectRewardTitle(t *testing.T) {
-	rh, _, _, m, callbacks := getTestRewardHandler(false)
+	rh, _, _, m, callbacks, checks := getTestRewardHandler(false)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -224,6 +241,20 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 	}()
 
 	select {
+	case <-callbacks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
+	case <-checks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
 	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
@@ -231,17 +262,10 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-
-	select {
-	case <-callbacks:
-		t.Error("should not have received a message")
-	case <-time.After(testResponseTimeout):
-		t.Log("no event expected")
-	}
 }
 
 func TestPublishNoAuthenticatedUser(t *testing.T) {
-	rh, _, _, m, callbacks := getTestRewardHandler(false)
+	rh, _, _, m, callbacks, checks := getTestRewardHandler(false)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -272,6 +296,20 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 	}()
 
 	select {
+	case <-callbacks:
+		t.Error("no message expected")
+	case <-time.After(testResponseTimeout):
+		t.Log("did not expect to receive message")
+	}
+
+	select {
+	case <-checks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
 	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
@@ -279,17 +317,10 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-
-	select {
-	case <-callbacks:
-		t.Error("no message expected")
-	case <-time.After(testResponseTimeout):
-		t.Log("did not expect to receive message")
-	}
 }
 
 func TestPublishRedeemFails(t *testing.T) {
-	rh, u, counter, m, callbacks := getTestRewardHandler(false)
+	rh, u, counter, m, callbacks, checks := getTestRewardHandler(false)
 
 	err := u.AddUser(&users.User{
 		TwitchID:            "12826",
@@ -328,6 +359,13 @@ func TestPublishRedeemFails(t *testing.T) {
 	}()
 
 	select {
+	case <-checks:
+		t.Log("found expected event")
+	case <-time.After(testResponseTimeout):
+		t.Error("did not receive message in time")
+	}
+
+	select {
 	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
@@ -352,7 +390,7 @@ func TestPublishRedeemFails(t *testing.T) {
 }
 
 func TestPublishRedeemInvalidSignature(t *testing.T) {
-	rh, _, _, m, callbacks := getTestRewardHandler(true)
+	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -377,6 +415,20 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 	}()
 
 	select {
+	case <-callbacks:
+		t.Error("should not have received message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no message expected")
+	}
+
+	select {
+	case <-checks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
 	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
@@ -384,17 +436,10 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
-
-	select {
-	case <-callbacks:
-		t.Error("should not have received message")
-	case <-time.After(testResponseTimeout):
-		t.Log("no message expected")
-	}
 }
 
 func TestPublishRedeemInvalidJSON(t *testing.T) {
-	rh, _, _, m, callbacks := getTestRewardHandler(true)
+	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -424,6 +469,20 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 	}()
 
 	select {
+	case <-callbacks:
+		t.Error("should not have received event")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
+	case <-checks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
 	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
@@ -431,17 +490,10 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-
-	select {
-	case <-callbacks:
-		t.Error("should not have received event")
-	case <-time.After(testResponseTimeout):
-		t.Log("no event expected")
-	}
 }
 
 func TestPublishRedeemInvalidPayload(t *testing.T) {
-	rh, _, _, m, callbacks := getTestRewardHandler(true)
+	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -475,6 +527,20 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 	}()
 
 	select {
+	case <-callbacks:
+		t.Error("should not have received event")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
+	case <-checks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
 	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
@@ -482,19 +548,12 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-
-	select {
-	case <-callbacks:
-		t.Error("should not have received event")
-	case <-time.After(testResponseTimeout):
-		t.Log("no event expected")
-	}
 }
 
 // The endpoint used for webhook callbacks must also verify itself:
 // https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#responding-to-a-challenge-request
 func TestVerifyWebhookCallback(t *testing.T) {
-	rh, _, _, m, callbacks := getTestRewardHandler(true)
+	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
@@ -529,6 +588,20 @@ func TestVerifyWebhookCallback(t *testing.T) {
 	}()
 
 	select {
+	case <-callbacks:
+		t.Error("should not have received event")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
+	case <-checks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
 	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
@@ -536,17 +609,10 @@ func TestVerifyWebhookCallback(t *testing.T) {
 	}
 
 	assert.Equal(t, challenge, rr.Body.String())
-
-	select {
-	case <-callbacks:
-		t.Error("should not have received event")
-	case <-time.After(testResponseTimeout):
-		t.Log("no event expected")
-	}
 }
 
 func TestSubscriptionRevoked(t *testing.T) {
-	rh, _, _, m, callbacks := getTestRewardHandler(true)
+	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
@@ -581,14 +647,21 @@ func TestSubscriptionRevoked(t *testing.T) {
 	}()
 
 	select {
-	case <-m:
+	case <-callbacks:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")
 	}
 
 	select {
-	case <-callbacks:
+	case <-checks:
+		t.Error("should not have received a message")
+	case <-time.After(testResponseTimeout):
+		t.Log("no event expected")
+	}
+
+	select {
+	case <-m:
 		t.Error("should not have received a message")
 	case <-time.After(testResponseTimeout):
 		t.Log("no event expected")
