@@ -90,7 +90,7 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("validated", data.Data.Login)
+	log.Printf("validated token for %v:%s\n", data.Data.UserID, data.Data.Login)
 
 	user := users.User{
 		TwitchID:           data.Data.UserID,

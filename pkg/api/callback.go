@@ -151,6 +151,12 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	}
 
 	c := util.GetNewSpotifyClient(r.Context(), h.config.Spotify, refreshed)
+	spotifyUser, err := c.CurrentUser(r.Context())
+	if err != nil {
+		log.Println("failed to get current Spotify user", err)
+	} else {
+		log.Printf("Spotify user tied to (%s|%s) = %s\n", redeemEvent.BroadcasterUserID, redeemEvent.BroadcasterUserLogin, spotifyUser.DisplayName)
+	}
 
 	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
