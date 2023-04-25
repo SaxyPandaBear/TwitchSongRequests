@@ -80,6 +80,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
+	c.SetAppAccessToken(token.Data.AccessToken)
 
 	res, err := c.CreateEventSubSubscription(&createSub)
 	if err != nil {
@@ -89,13 +90,14 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		return
 	} else if len(res.ErrorMessage) > 0 {
 		log.Printf("error occurred while creating EventSub subscription | HTTP %v | %s | %s\n", res.ErrorStatus, res.Error, res.ErrorMessage)
+		w.Write([]byte(res.ErrorMessage))
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
 	}
 
 	log.Println("Subscriptions:", res.Data.EventSubSubscriptions)
 
-	// refresh db with the updated token
-	user.TwitchAccessToken = token.Data.AccessToken
-	user.TwitchRefreshToken = token.Data.RefreshToken
+	// successfully subscribed
 	user.Subscribed = true
 	err = e.userStore.UpdateUser(user)
 
