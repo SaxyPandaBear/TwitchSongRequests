@@ -91,7 +91,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	}
 
 	if len(res.ErrorMessage) > 0 {
-		log.Printf("error occurred while creating EventSub subscription | HTTP %v - %s\n", res.ErrorStatus, res.Error)
+		log.Printf("error occurred while creating EventSub subscription | HTTP %v | %s | %s\n", res.ErrorStatus, res.Error, res.ErrorMessage)
 	}
 
 	log.Println("Subscriptions:", res.Data.EventSubSubscriptions)
