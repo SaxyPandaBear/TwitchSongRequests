@@ -4,7 +4,7 @@ Integrate Twitch channel point rewards directly with a user's Spotify player.
 Configure a channel point reward to accept a Spotify song URL, and enqueue
 the song in the user's current playing session.
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/SaxyPandaBear/TwitchSongRequests/ci.yml?style=for-the-badge) ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/SaxyPandaBear/TwitchSongRequests?style=for-the-badge) ![Total number of songs queued](https://img.shields.io/endpoint?url=https%3A%2F%2Ftwitchsongrequests-production.up.railway.app%2Fmessages) ![Queued last 30 days](https://img.shields.io/endpoint?url=https%3A%2F%2Ftwitchsongrequests-production.up.railway.app%2Fmessages%3Fdays%3D30)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/SaxyPandaBear/TwitchSongRequests/ci.yml?style=for-the-badge) ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/SaxyPandaBear/TwitchSongRequests?style=for-the-badge) ![Total number of songs queued](https://img.shields.io/endpoint?url=https%3A%2F%2Ftwitchsongrequests-production.up.railway.app%2Fstats%2Ftotal) ![Queued last 30 days](https://img.shields.io/endpoint?url=https%3A%2F%2Ftwitchsongrequests-production.up.railway.app%2Fstats%2Frunning%3Fdays%3D30)
 
 ---
 

@@ -62,7 +62,7 @@ func TestCountMessages(t *testing.T) {
 	rr = httptest.NewRecorder()
 
 	// Check the messages again just to be sure, add query parameter
-	req, err = http.NewRequest("GET", "/count?days=5", nil)
+	req, err = http.NewRequest("GET", "/count", nil)
 	assert.NoError(t, err)
 
 	go func() {
@@ -83,5 +83,4 @@ func TestCountMessages(t *testing.T) {
 	err = json.Unmarshal(bytes, &res)
 	assert.NoError(t, err)
 	assert.Equal(t, "1", res.Message)
-	assert.Equal(t, "Queued in the last 5 days", res.Label)
 }
