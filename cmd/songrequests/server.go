@@ -107,7 +107,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Post("/preference", preferenceHandler.SavePreferences) // this is a POST because forms don't support DELETE
 
 	statsHandler := api.NewStatsHandler(messageCounter)
-	r.With(cached).Get("/messages", statsHandler.GetMessageCount)
+	r.With(cached).Get("/messages", statsHandler.TotalMessages)
 
 	// ===== Website Pages =====
 

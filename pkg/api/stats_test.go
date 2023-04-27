@@ -25,7 +25,7 @@ func TestCountMessages(t *testing.T) {
 	assert.NoError(t, err)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(sh.GetMessageCount)
+	handler := http.HandlerFunc(sh.TotalMessages)
 
 	assert.Len(t, counter.Msgs, 0)
 
@@ -51,13 +51,20 @@ func TestCountMessages(t *testing.T) {
 	err = json.Unmarshal(bytes, &res)
 	assert.NoError(t, err)
 	assert.Equal(t, "0", res.Message)
+	assert.Equal(t, "Songs Queued", res.Label)
+	assert.Equal(t, "for-the-badge", res.Style)
+	assert.Equal(t, 1, res.SchemaVersion)
+	assert.Equal(t, "informational", res.Color)
 
 	counter.AddMessage(&metrics.Message{})
 	assert.Len(t, counter.Msgs, 1)
 
 	rr = httptest.NewRecorder()
 
-	// Check the messages again just to be sure
+	// Check the messages again just to be sure, add query parameter
+	req, err = http.NewRequest("GET", "/count?days=5", nil)
+	assert.NoError(t, err)
+
 	go func() {
 		handler.ServeHTTP(rr, req)
 		ready <- struct{}{}
@@ -73,8 +80,8 @@ func TestCountMessages(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Result().StatusCode)
 	bytes, err = io.ReadAll(rr.Result().Body)
 	assert.NoError(t, err)
-	var res2 api.SvgData
-	err = json.Unmarshal(bytes, &res2)
+	err = json.Unmarshal(bytes, &res)
 	assert.NoError(t, err)
-	assert.Equal(t, "1", res2.Message)
+	assert.Equal(t, "1", res.Message)
+	assert.Equal(t, "Queued in the last 5 days", res.Label)
 }

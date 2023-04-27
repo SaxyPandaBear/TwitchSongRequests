@@ -159,6 +159,10 @@ func (c *InMemoryMessageCounter) AddMessage(m *metrics.Message) {
 	c.Msgs = append(c.Msgs, m)
 }
 
-func (c *InMemoryMessageCounter) CountMessages() uint64 {
+func (c *InMemoryMessageCounter) TotalMessages() uint64 {
+	return uint64(len(c.Msgs))
+}
+
+func (c *InMemoryMessageCounter) RunningCount(int) uint64 {
 	return uint64(len(c.Msgs))
 }

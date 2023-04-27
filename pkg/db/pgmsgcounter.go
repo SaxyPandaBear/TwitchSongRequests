@@ -26,12 +26,18 @@ func (p *PostgresMessageCounter) AddMessage(m *metrics.Message) {
 	}
 }
 
-func (p *PostgresMessageCounter) CountMessages() uint64 {
+func (p *PostgresMessageCounter) TotalMessages() uint64 {
 	var v uint64
-	err := p.pool.QueryRow(context.Background(), "select count(*) from messages").Scan(&v)
-
-	if err != nil {
+	if err := p.pool.QueryRow(context.Background(), "select count(*) from messages").Scan(&v); err != nil {
 		log.Println("failed to count messages", err)
+	}
+	return v
+}
+
+func (p *PostgresMessageCounter) RunningCount(days int) uint64 {
+	var v uint64
+	if err := p.pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM messages WHERE AGE(messages.created_at) <= INTERVAL '$1 day'", days).Scan(v); err != nil {
+		log.Println("failed to get running count of messages", err)
 	}
 	return v
 }

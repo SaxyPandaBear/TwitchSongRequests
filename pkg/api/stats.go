@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 )
@@ -28,13 +29,22 @@ func NewStatsHandler(counter db.MessageCounter) *StatsHandler {
 	}
 }
 
-func (h *StatsHandler) GetMessageCount(w http.ResponseWriter, r *http.Request) {
+func (h *StatsHandler) TotalMessages(w http.ResponseWriter, r *http.Request) {
 	data := SvgData{
 		SchemaVersion: 1,
 		Label:         "Songs Queued",
 		Style:         "for-the-badge",
 		Color:         "informational",
-		Message:       fmt.Sprintf("%v", h.msgCounter.CountMessages()),
+		Message:       "0", // default just in case
+	}
+
+	daysBack := r.URL.Query().Get("days")
+
+	if i, err := strconv.Atoi(daysBack); err == nil {
+		data.Label = fmt.Sprintf("Queued in the last %d days", i)
+		data.Message = fmt.Sprintf("%v", h.msgCounter.RunningCount(i))
+	} else {
+		data.Message = fmt.Sprintf("%v", h.msgCounter.TotalMessages())
 	}
 
 	bytes, err := json.Marshal(data)
