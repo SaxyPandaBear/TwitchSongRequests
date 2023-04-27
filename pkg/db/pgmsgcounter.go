@@ -36,7 +36,8 @@ func (p *PostgresMessageCounter) TotalMessages() uint64 {
 
 func (p *PostgresMessageCounter) RunningCount(days int) uint64 {
 	var v uint64
-	if err := p.pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM messages WHERE AGE(messages.created_at) <= INTERVAL '$1 day'", days).Scan(v); err != nil {
+	// https://github.com/jackc/pgx/issues/852 can't embed the parameter directly in the text string for the interval syntax
+	if err := p.pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM messages WHERE AGE(messages.created_at) <= $1 * INTERVAL '1 day'", days).Scan(v); err != nil {
 		log.Println("failed to get running count of messages", err)
 	}
 	return v
