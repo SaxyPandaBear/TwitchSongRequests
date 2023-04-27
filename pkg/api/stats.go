@@ -62,7 +62,7 @@ func (h *StatsHandler) RunningCount(w http.ResponseWriter, r *http.Request) {
 
 	daysBack := r.URL.Query().Get("days")
 
-	if i, err := strconv.Atoi(daysBack); err == nil {
+	if i, err := strconv.Atoi(daysBack); err == nil && i > 0 {
 		data.Label = fmt.Sprintf("Queued in the last %d days", i)
 		data.Message = fmt.Sprintf("%v", h.msgCounter.RunningCount(i))
 	}
