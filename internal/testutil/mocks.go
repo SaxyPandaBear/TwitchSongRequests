@@ -158,3 +158,7 @@ type InMemoryMessageCounter struct {
 func (c *InMemoryMessageCounter) AddMessage(m *metrics.Message) {
 	c.Msgs = append(c.Msgs, m)
 }
+
+func (c *InMemoryMessageCounter) CountMessages() uint64 {
+	return uint64(len(c.Msgs))
+}

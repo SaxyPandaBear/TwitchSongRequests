@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
+	"github.com/go-chi/stampede"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
@@ -52,6 +53,9 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.Heartbeat("/ping"))
+
+	// Only really need caching/coalescing for heavier traffic GET requests, like the stats data
+	cached := stampede.Handler(512, 1*time.Second)
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
@@ -101,6 +105,9 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 
 	preferenceHandler := api.NewPreferenceHandler(preferenceStore, redirectURL)
 	r.Post("/preference", preferenceHandler.SavePreferences) // this is a POST because forms don't support DELETE
+
+	statsHandler := api.NewStatsHandler(messageCounter)
+	r.With(cached).Get("/messages", statsHandler.GetMessageCount)
 
 	// ===== Website Pages =====
 

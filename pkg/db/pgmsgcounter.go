@@ -25,3 +25,13 @@ func (p *PostgresMessageCounter) AddMessage(m *metrics.Message) {
 		log.Println("failed to add message", err)
 	}
 }
+
+func (p *PostgresMessageCounter) CountMessages() uint64 {
+	var v uint64
+	err := p.pool.QueryRow(context.Background(), "select count(*) from messages").Scan(&v)
+
+	if err != nil {
+		log.Println("failed to count messages", err)
+	}
+	return v
+}

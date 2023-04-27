@@ -6,4 +6,5 @@ import (
 
 type MessageCounter interface {
 	AddMessage(*metrics.Message)
+	CountMessages() uint64
 }
