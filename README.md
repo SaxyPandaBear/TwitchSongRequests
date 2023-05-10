@@ -24,7 +24,7 @@ player. Between jobs, I coded up an initial proof of concept and the rest is his
 1. If it worked, you should see a `Subscribe` and `Revoke Access` button
 1. Click `Subscribe`. If successful, you should see the UI update accordingly
 1. Submit an [onboarding request](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new?assignees=&labels=onboarding&template=Onboarding-Form.yml&title=Onboarding+Request) on this GitHub project, and I will manually allowlist your Spotify account to let you access the service (this is a limitation on Spotify, not on me)
-1. You're done! Now start using it!
+1. Wait for me to manually onboard you and then you're done! Now start using it!
 
 ### From Spotify
 > We appreciate your interest and efforts in using Spotify's open platform to innovate and build interesting integrations. However, after reviewing we found that your app does not comply with our terms and conditions for the following reasons:
