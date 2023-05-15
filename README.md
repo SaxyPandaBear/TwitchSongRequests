@@ -41,6 +41,7 @@ As much as I would love to make this more broadly accessible, looks like it goes
 1. If your Spotify player has queued the song, you're good!
 1. If your player did not queue the song, make sure you copied the URL correctly, and use the right Channel Point reward
 1. If you are pretty sure you didn't mess anything up, make an issue [here](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new?assignees=&labels=bug&template=User-Bug-Report.yml&title=%5BBug%5D%3A+%5BDescribe+the+issue%5D)
+1. If you want to allow your viewers to submit song requests for [explicit songs](https://support.spotify.com/us/article/explicit-content/), you have to opt in to this by updating your [preferences](https://twitchsongrequests-production.up.railway.app/preferences)
 
 ## Demo
 [![Demo](https://img.youtube.com/vi/Oz5Zs8mVDRY/hqdefault.jpg)](https://youtu.be/Oz5Zs8mVDRY)
