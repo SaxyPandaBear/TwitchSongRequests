@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	openSpotifyURLPattern = regexp.MustCompile(`^https://open.spotify.com/track/([A-Za-z0-9]+)`)
+	openSpotifyURLPattern = regexp.MustCompile(`^https://open.spotify.com/(.+?/)*?track/([A-Za-z0-9]+)`)
 	ErrInvalidInput       = errors.New("invalid user input for Spotify URI")
 	ErrExplicitSong       = errors.New("user does nto allow adding explicit songs to the queue")
 )

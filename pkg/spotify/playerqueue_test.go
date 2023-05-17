@@ -15,8 +15,9 @@ func TestParseSpotifyURL(t *testing.T) {
 		"https://open.spotify.com/track/3cfOd4CMv2snFaKAnMdnvK?si=a99029531fa04a00": "3cfOd4CMv2snFaKAnMdnvK",
 		"":    "",
 		"abc": "",
-		"http://open.spotify.com/track/3cfOd4CMv2snFaKAnMdnvK": "",
-		"https://open.spotify.com/track/?si=a99029531fa04a00":  "",
+		"http://open.spotify.com/track/3cfOd4CMv2snFaKAnMdnvK":                              "",
+		"https://open.spotify.com/track/?si=a99029531fa04a00":                               "",
+		"https://open.spotify.com/intl-de/track/5Sk39LuvdwuvL84jD01Dum?si=f515f3232b994c5b": "5Sk39LuvdwuvL84jD01Dum",
 	}
 	for input, expected := range tests {
 		t.Run(input, func(t *testing.T) {
