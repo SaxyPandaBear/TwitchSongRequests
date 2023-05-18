@@ -11,7 +11,7 @@ import (
 
 const (
 	PrefFormExplicitKey   = "explicit"
-	PrefFormSongLengthKey = "songlength"
+	PrefFormSongLengthKey = "song-length"
 )
 
 type PreferenceHandler struct {
