@@ -11,7 +11,7 @@ import (
 
 const (
 	PrefFormExplicitKey   = "explicit"
-	PrefFormSongLengthKey = "song-length"
+	PrefFormSongLengthKey = "songlength"
 )
 
 type PreferenceHandler struct {
@@ -55,8 +55,6 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 	// leaving the checkbox unchecked omits it from the form,
 	// so need to always compare the value from the checkbox
 	p.ExplicitSongs = r.Form.Get(PrefFormExplicitKey) == "true"
-
-	log.Println("song length value?", r.Form.Get(PrefFormSongLengthKey))
 
 	// if the song length value exists, update the preference with it
 	if length := r.Form.Get(PrefFormSongLengthKey); length != "" {
