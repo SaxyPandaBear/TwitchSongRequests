@@ -46,7 +46,7 @@ func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, url string, pref *pref
 func ShouldQueue(client queue.Queuer, id spotify.ID, p *preferences.Preference) error {
 	track, err := client.GetTrack(context.Background(), id)
 	if err != nil {
-		return fmt.Errorf("failed to get track %s: %v", id.String(), err)
+		return fmt.Errorf("failed to get track %s: %w", id.String(), err)
 	}
 
 	if (p == nil || !p.ExplicitSongs) && track.Explicit {
