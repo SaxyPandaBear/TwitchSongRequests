@@ -140,20 +140,20 @@ func TestShouldQueueExplicitSongs(t *testing.T) {
 		ExplicitSongs: true,
 	}
 
-	assert.True(t, ShouldQueue(&q, spotify.ID("abc123"), &p))
-	assert.False(t, ShouldQueue(&q, spotify.ID("abc123"), nil))
+	assert.NoError(t, ShouldQueue(&q, spotify.ID("abc123"), &p))
+	assert.Error(t, ShouldQueue(&q, spotify.ID("abc123"), nil))
 	p.ExplicitSongs = false
-	assert.False(t, ShouldQueue(&q, spotify.ID("bcd234"), &p))
-	assert.False(t, ShouldQueue(&q, spotify.ID("bcd234"), nil))
+	assert.Error(t, ShouldQueue(&q, spotify.ID("bcd234"), &p))
+	assert.Error(t, ShouldQueue(&q, spotify.ID("bcd234"), nil))
 
 	// default does not return a song tagged as explicit
 	q.GetTrackFunc = testutil.DefaultMockQueuerGetTrackFunc
 	p.ExplicitSongs = true
-	assert.True(t, ShouldQueue(&q, spotify.ID("abc123"), &p))
-	assert.True(t, ShouldQueue(&q, spotify.ID("abc123"), nil))
+	assert.NoError(t, ShouldQueue(&q, spotify.ID("abc123"), &p))
+	assert.NoError(t, ShouldQueue(&q, spotify.ID("abc123"), nil))
 	p.ExplicitSongs = false
-	assert.True(t, ShouldQueue(&q, spotify.ID("bcd234"), &p))
-	assert.True(t, ShouldQueue(&q, spotify.ID("bcd234"), nil))
+	assert.NoError(t, ShouldQueue(&q, spotify.ID("bcd234"), &p))
+	assert.NoError(t, ShouldQueue(&q, spotify.ID("bcd234"), nil))
 }
 
 func TestShouldQueueMaxSongLength(t *testing.T) {
@@ -167,14 +167,14 @@ func TestShouldQueueMaxSongLength(t *testing.T) {
 	}
 
 	p := preferences.Preference{}
-	assert.True(t, ShouldQueue(&q, spotify.ID("abc123"), &p))
+	assert.NoError(t, ShouldQueue(&q, spotify.ID("abc123"), &p))
 	p.MaxSongLength = 1000
-	assert.False(t, ShouldQueue(&q, spotify.ID("bcd234"), &p))
+	assert.Error(t, ShouldQueue(&q, spotify.ID("bcd234"), &p))
 
 	q.GetTrackFunc = func(i spotify.ID) (*spotify.FullTrack, error) {
 		track := spotify.FullTrack{}
 		track.Duration = 10
 		return &track, nil
 	}
-	assert.True(t, ShouldQueue(&q, spotify.ID("cde345"), &p))
+	assert.NoError(t, ShouldQueue(&q, spotify.ID("cde345"), &p))
 }

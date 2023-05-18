@@ -3,7 +3,7 @@ package spotify
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
 	"regexp"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
@@ -14,7 +14,8 @@ import (
 var (
 	openSpotifyURLPattern = regexp.MustCompile(`^https://open.spotify.com/(.+?/)*?track/([A-Za-z0-9]+)`)
 	ErrInvalidInput       = errors.New("invalid user input for Spotify URI")
-	ErrExplicitSong       = errors.New("user does nto allow adding explicit songs to the queue")
+	ErrExplicitSong       = errors.New("user does not allow adding explicit songs to the queue")
+	ErrSongTooLong        = errors.New("song is too long")
 )
 
 // ensure struct implements queue.Publisher
@@ -34,32 +35,29 @@ func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, url string, pref *pref
 
 	sID := spotify.ID(id)
 
-	if !ShouldQueue(client, sID, pref) {
-		return ErrExplicitSong
+	if err := ShouldQueue(client, sID, pref); err != nil {
+		return err
 	}
 
 	return client.QueueSong(context.Background(), sID)
 }
 
 // TODO: this should be in the queuer
-func ShouldQueue(client queue.Queuer, id spotify.ID, p *preferences.Preference) bool {
+func ShouldQueue(client queue.Queuer, id spotify.ID, p *preferences.Preference) error {
 	track, err := client.GetTrack(context.Background(), id)
 	if err != nil {
-		log.Println("failed to get track", id.String(), err)
-		return false
+		return fmt.Errorf("failed to get track %s: %v", id.String(), err)
 	}
 
 	if (p == nil || !p.ExplicitSongs) && track.Explicit {
-		log.Println("explicit song not allowed")
-		return false
+		return ErrExplicitSong
 	}
 
 	if p != nil && p.MaxSongLength > 0 && track.Duration > p.MaxSongLength {
-		log.Printf("song is too long. %d > %d\n", track.Duration, p.MaxSongLength)
-		return false
+		return fmt.Errorf("song is too long. %d > %d", track.Duration, p.MaxSongLength)
 	}
 
-	return true
+	return nil
 }
 
 // parseSpotifyTrackID takes an input string and tries to match it to the URL that you
