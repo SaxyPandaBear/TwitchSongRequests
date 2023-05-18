@@ -26,8 +26,8 @@ func (s *PostgresPreferenceStore) GetPreference(id string) (*preferences.Prefere
 		TwitchID: id,
 	}
 
-	err := s.pool.QueryRow(context.Background(), "select COALESCE(explicit, false), COALESCE(reward_id, '') from preferences where id=$1", id).
-		Scan(&p.ExplicitSongs, &p.CustomRewardID)
+	err := s.pool.QueryRow(context.Background(), "select COALESCE(explicit, false), COALESCE(reward_id, ''), COALESCE(max_song_length, 0) from preferences where id=$1", id).
+		Scan(&p.ExplicitSongs, &p.CustomRewardID, &p.MaxSongLength)
 	if err != nil {
 		log.Printf("failed to get user %s: %v\n", id, err)
 		return nil, err
@@ -38,10 +38,11 @@ func (s *PostgresPreferenceStore) GetPreference(id string) (*preferences.Prefere
 
 func (s *PostgresPreferenceStore) AddPreference(p *preferences.Preference) error {
 	if _, err := s.pool.Exec(context.Background(),
-		"insert into preferences(id, reward_id, explicit, last_updated) values ($1, $2, $3, $4) on conflict do nothing",
+		"insert into preferences(id, reward_id, explicit, max_song_length, last_updated) values ($1, $2, $3, $4, $5) on conflict do nothing",
 		p.TwitchID,
 		p.CustomRewardID,
 		p.ExplicitSongs,
+		p.MaxSongLength,
 		time.Now().Format(time.RFC3339)); err != nil {
 		log.Printf("failed to insert preferences for %s: %v\n", p.TwitchID, err)
 		return err
@@ -51,9 +52,10 @@ func (s *PostgresPreferenceStore) AddPreference(p *preferences.Preference) error
 
 func (s *PostgresPreferenceStore) UpdatePreference(p *preferences.Preference) error {
 	if _, err := s.pool.Exec(context.Background(),
-		"update preferences set reward_id=$1, explicit=$2, last_updated=$3 where id=$4",
+		"update preferences set reward_id=$1, explicit=$2, max_song_length=$3, last_updated=$4 where id=$5",
 		p.CustomRewardID,
 		p.ExplicitSongs,
+		p.MaxSongLength,
 		time.Now().Format(time.RFC3339),
 		p.TwitchID); err != nil {
 		log.Printf("failed to update preferences for %s: %v\n", p.TwitchID, err)
