@@ -24,12 +24,12 @@ type DummyPublisher struct {
 
 var _ queue.Publisher = (*DummyPublisher)(nil)
 
-func (p DummyPublisher) Publish(client queue.Queuer, url string, allow bool) error {
+func (p DummyPublisher) Publish(client queue.Queuer, url string, pref *preferences.Preference) error {
 	if p.ShouldFail {
 		return errors.New("oops")
 	}
 
-	if allow && !p.IsMessageExplicit {
+	if (pref == nil || !pref.ExplicitSongs) && p.IsMessageExplicit {
 		return errors.New("not allowed")
 	}
 

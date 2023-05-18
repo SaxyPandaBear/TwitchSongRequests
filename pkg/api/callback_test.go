@@ -46,7 +46,7 @@ var redeemPayload string
 //go:embed testdata/verification.json
 var verificationPayload string
 
-func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.InMemoryUserStore, *testutil.InMemoryMessageCounter, chan string, chan bool, chan bool) {
+func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.InMemoryUserStore, *testutil.InMemoryPreferenceStore, *testutil.InMemoryMessageCounter, chan string, chan bool, chan bool) {
 	m := make(chan string)
 	p := testutil.DummyPublisher{
 		Messages:   m,
@@ -77,11 +77,11 @@ func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.In
 	rh.OnSuccess = c.Callback
 	rh.CheckUser = c.CheckUser
 
-	return rh, &u, &messages, m, callbackChan, checkChan
+	return rh, &u, &prefs, &messages, m, callbackChan, checkChan
 }
 
 func TestPublishRedeem(t *testing.T) {
-	rh, u, counter, m, callbacks, checks := getTestRewardHandler(true)
+	rh, u, prefs, counter, m, callbacks, checks := getTestRewardHandler(true)
 
 	err := u.AddUser(&users.User{ // spoof a user so the test doesen't fail
 		TwitchID:            "12826",
@@ -90,6 +90,9 @@ func TestPublishRedeem(t *testing.T) {
 		SpotifyExpiry:       &time.Time{},
 	})
 	assert.NoError(t, err)
+	err = prefs.AddPreference(&preferences.Preference{
+		TwitchID: "12826",
+	})
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -155,7 +158,7 @@ func TestPublishRedeem(t *testing.T) {
 }
 
 func TestPublishRedeemEmptyBody(t *testing.T) {
-	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
+	rh, _, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -210,7 +213,7 @@ func TestPublishRedeemEmptyBody(t *testing.T) {
 }
 
 func TestPublishIncorrectRewardTitle(t *testing.T) {
-	rh, _, _, m, callbacks, checks := getTestRewardHandler(false)
+	rh, _, _, _, m, callbacks, checks := getTestRewardHandler(false)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -265,7 +268,7 @@ func TestPublishIncorrectRewardTitle(t *testing.T) {
 }
 
 func TestPublishNoAuthenticatedUser(t *testing.T) {
-	rh, _, _, m, callbacks, checks := getTestRewardHandler(false)
+	rh, _, _, _, m, callbacks, checks := getTestRewardHandler(false)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -320,7 +323,7 @@ func TestPublishNoAuthenticatedUser(t *testing.T) {
 }
 
 func TestPublishRedeemFails(t *testing.T) {
-	rh, u, counter, m, callbacks, checks := getTestRewardHandler(false)
+	rh, u, _, counter, m, callbacks, checks := getTestRewardHandler(false)
 
 	err := u.AddUser(&users.User{
 		TwitchID:            "12826",
@@ -390,7 +393,7 @@ func TestPublishRedeemFails(t *testing.T) {
 }
 
 func TestPublishRedeemInvalidSignature(t *testing.T) {
-	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
+	rh, _, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -439,7 +442,7 @@ func TestPublishRedeemInvalidSignature(t *testing.T) {
 }
 
 func TestPublishRedeemInvalidJSON(t *testing.T) {
-	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
+	rh, _, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -493,7 +496,7 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 }
 
 func TestPublishRedeemInvalidPayload(t *testing.T) {
-	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
+	rh, _, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -553,7 +556,7 @@ func TestPublishRedeemInvalidPayload(t *testing.T) {
 // The endpoint used for webhook callbacks must also verify itself:
 // https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#responding-to-a-challenge-request
 func TestVerifyWebhookCallback(t *testing.T) {
-	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
+	rh, _, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)
@@ -612,7 +615,7 @@ func TestVerifyWebhookCallback(t *testing.T) {
 }
 
 func TestSubscriptionRevoked(t *testing.T) {
-	rh, _, _, m, callbacks, checks := getTestRewardHandler(true)
+	rh, _, _, _, m, callbacks, checks := getTestRewardHandler(true)
 
 	challenge := generateUserInput(t)
 	payload := strings.Replace(verificationPayload, challengePlaceholder, challenge, 1)

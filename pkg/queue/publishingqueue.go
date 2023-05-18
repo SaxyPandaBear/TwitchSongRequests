@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 
+	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/zmb3/spotify/v2"
 )
 
@@ -16,5 +17,5 @@ type Publisher interface {
 	// Publish takes a Spotify client and a value (the URL for the Spotify track)
 	// and attempts to queue the song to the user's player. The client parameter is tied
 	// to an individual user's access token.
-	Publish(client Queuer, url string, allowExplicit bool) error
+	Publish(client Queuer, url string, p *preferences.Preference) error
 }

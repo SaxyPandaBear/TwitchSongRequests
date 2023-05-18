@@ -54,7 +54,7 @@ type RewardHandlerConfig struct {
 func NewRewardHandler(config *RewardHandlerConfig) *RewardHandler {
 	return &RewardHandler{
 		config:    config,
-		OnSuccess: UpdateRedemptionStatus,
+		OnSuccess: DoNothingOnSuccess,
 		CheckUser: CheckSpotifyUser,
 	}
 }
@@ -146,12 +146,9 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	var allowExplicit bool
 	preferences, err := h.config.PrefStore.GetPreference(redeemEvent.BroadcasterUserID)
 	if err != nil {
 		log.Println("failed to get user preferences, defaulting to false for explicit songs", err)
-	} else {
-		allowExplicit = preferences.ExplicitSongs
 	}
 
 	c := util.GetNewSpotifyClient(r.Context(), h.config.Spotify, refreshed)
@@ -159,7 +156,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 
 	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
 
-	err = h.config.Publisher.Publish(c, redeemEvent.UserInput, allowExplicit)
+	err = h.config.Publisher.Publish(c, redeemEvent.UserInput, preferences)
 	msg := metrics.Message{
 		CreatedAt: &redeemEvent.RedeemedAt.Time,
 	}
@@ -199,6 +196,17 @@ func IsValidReward(e *helix.EventSubChannelPointsCustomRewardRedemptionEvent) bo
 	return e != nil && strings.Contains(e.Reward.Title, SongRequestsTitle)
 }
 
+// DoNothingOnSuccess is a no-op to satisfy the function interface. See https://github.com/SaxyPandaBear/TwitchSongRequests/issues/133
+func DoNothingOnSuccess(auth *util.AuthConfig,
+	userStore db.UserStore,
+	event *helix.EventSubChannelPointsCustomRewardRedemptionEvent,
+	success bool) error {
+	return nil
+}
+
+// TODO: this doesn't work unless the application manages the channel point reward
+//
+//	see https://github.com/SaxyPandaBear/TwitchSongRequests/issues/133
 func UpdateRedemptionStatus(auth *util.AuthConfig,
 	userStore db.UserStore,
 	event *helix.EventSubChannelPointsCustomRewardRedemptionEvent,
