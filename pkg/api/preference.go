@@ -56,12 +56,16 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 	// so need to always compare the value from the checkbox
 	p.ExplicitSongs = r.Form.Get(PrefFormExplicitKey) == "true"
 
+	log.Println("song length value?", r.Form.Get(PrefFormSongLengthKey))
+
 	// if the song length value exists, update the preference with it
 	if length := r.Form.Get(PrefFormSongLengthKey); length != "" {
 		var l int
 		l, err = strconv.Atoi(length)
 		if err == nil && l >= 0 {
 			p.MaxSongLength = l * 1000 // the value is expected to be in seconds, but we store millis
+		} else {
+			log.Printf("failed to convert %s to an int: %v\n", length, err)
 		}
 	}
 
