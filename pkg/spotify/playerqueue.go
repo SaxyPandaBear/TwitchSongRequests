@@ -50,10 +50,12 @@ func ShouldQueue(client queue.Queuer, id spotify.ID, p *preferences.Preference) 
 	}
 
 	if (p == nil || !p.ExplicitSongs) && track.Explicit {
+		log.Println("explicit song not allowed")
 		return false
 	}
 
 	if p != nil && p.MaxSongLength > 0 && track.Duration > p.MaxSongLength {
+		log.Printf("song is too long. %d > %d\n", track.Duration, p.MaxSongLength)
 		return false
 	}
 

@@ -3,12 +3,16 @@ package api
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 )
 
-const PrefFormExplicitKey = "explicit"
+const (
+	PrefFormExplicitKey   = "explicit"
+	PrefFormSongLengthKey = "song-length"
+)
 
 type PreferenceHandler struct {
 	prefs       db.PreferenceStore
@@ -51,6 +55,15 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 	// leaving the checkbox unchecked omits it from the form,
 	// so need to always compare the value from the checkbox
 	p.ExplicitSongs = r.Form.Get(PrefFormExplicitKey) == "true"
+
+	// if the song length value exists, update the preference with it
+	if length := r.Form.Get(PrefFormSongLengthKey); length != "" {
+		var l int
+		l, err = strconv.Atoi(length)
+		if err == nil && l >= 0 {
+			p.MaxSongLength = l * 1000 // the value is expected to be in seconds, but we store millis
+		}
+	}
 
 	err = h.prefs.UpdatePreference(p)
 	if err != nil {

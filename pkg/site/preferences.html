@@ -82,7 +82,7 @@
         }
 
         .option>*:not(:last-child) {
-            margin-bottom: 2%;
+            margin-bottom: 4%;
         }
 
         .button-icon {
@@ -112,8 +112,12 @@
         <div class="oauth-options">
             <form method="post" action="{{.SaveURL}}">
                 <div class="option">
-                    <span>Allow explicit songs?</span>
+                    <span>Allow explicit songs? </span>
                     <input type="checkbox" id="explicit" name="explicit" value="true" {{if .Explicit}}checked{{end}}>
+                </div>
+                <div class="option">
+                    <span>Max song length (seconds): </span>
+                    <input type="number" id="song-length" value="{{.SongLengthLimit}}">
                 </div>
                 <div class="option">
                     <button type="submit">
