@@ -102,6 +102,13 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		},
 	}
 
+	// need to get a whole new client after setting the user access token, for some reason
+	c, err = util.GetNewTwitchClient(e.auth)
+	if err != nil {
+		log.Println("failed to get Twitch client for", id, err)
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
+	}
 	// creating the event sub subscription requires an app access token
 	token, err := c.RequestAppAccessToken([]string{e.auth.Scope})
 	if err != nil {
