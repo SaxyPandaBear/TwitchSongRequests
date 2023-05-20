@@ -67,14 +67,6 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	token, err := c.RequestAppAccessToken([]string{e.auth.Scope})
-	if err != nil {
-		log.Println("failed to get updated access token for", id, err)
-		http.Redirect(w, r, e.callbackURL, http.StatusFound)
-		return
-	}
-	c.SetAppAccessToken(token.Data.AccessToken)
-
 	createReward := helix.ChannelCustomRewardsParams{
 		BroadcasterID:       id,
 		Title:               "Spotify Song Request",
@@ -108,6 +100,15 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 			Secret:   e.secret,
 		},
 	}
+
+	// creating the event sub subscription requires an app access token
+	token, err := c.RequestAppAccessToken([]string{e.auth.Scope})
+	if err != nil {
+		log.Println("failed to get updated access token for", id, err)
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
+	}
+	c.SetAppAccessToken(token.Data.AccessToken)
 
 	res, err := c.CreateEventSubSubscription(&createSub)
 	if err != nil {
