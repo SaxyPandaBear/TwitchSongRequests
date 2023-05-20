@@ -50,6 +50,15 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// TODO: figure this out
+	// createReward := helix.ChannelCustomRewardsParams{
+	// 	Title: "Spotify Song Request",
+	// 	IsUserInputRequired: true,
+	// 	IsEnabled: true,
+	// 	Cost: 1000,
+	// 	Prompt: "Request with a Spotify URL",
+	// }
+
 	createSub := helix.EventSubSubscription{
 		Type:    helix.EventSubTypeChannelPointsCustomRewardRedemptionAdd,
 		Version: topicVersion,
