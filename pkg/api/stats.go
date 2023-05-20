@@ -21,6 +21,7 @@ type SvgData struct {
 	Message       string `json:"message"`
 	Color         string `json:"color"`
 	Style         string `json:"style"`
+	CacheSeconds  int    `json:"cacheSeconds"`
 }
 
 func NewStatsHandler(counter db.MessageCounter) *StatsHandler {
@@ -36,6 +37,7 @@ func (h *StatsHandler) TotalMessages(w http.ResponseWriter, r *http.Request) {
 		Style:         "for-the-badge",
 		Color:         "informational",
 		Message:       fmt.Sprintf("%v", h.msgCounter.TotalMessages()),
+		CacheSeconds:  60 * 30,
 	}
 
 	bytes, err := json.Marshal(data)
@@ -48,7 +50,9 @@ func (h *StatsHandler) TotalMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(bytes)
+	if _, err = w.Write(bytes); err != nil {
+		log.Println("failed to write response", err)
+	}
 }
 
 func (h *StatsHandler) RunningCount(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +62,7 @@ func (h *StatsHandler) RunningCount(w http.ResponseWriter, r *http.Request) {
 		Style:         "for-the-badge",
 		Color:         "informational",
 		Message:       "0", // default just in case
+		CacheSeconds:  60 * 60,
 	}
 
 	daysBack := r.URL.Query().Get("days")
@@ -77,5 +82,7 @@ func (h *StatsHandler) RunningCount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(bytes)
+	if _, err = w.Write(bytes); err != nil {
+		log.Println("failed to write response", err)
+	}
 }
