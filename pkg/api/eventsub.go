@@ -66,6 +66,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
+	c.SetUserAccessToken(user.TwitchAccessToken)
 
 	createReward := helix.ChannelCustomRewardsParams{
 		BroadcasterID:       id,
