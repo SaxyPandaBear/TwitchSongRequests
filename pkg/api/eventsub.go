@@ -76,6 +76,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	c.SetAppAccessToken(token.Data.AccessToken)
 
 	createReward := helix.ChannelCustomRewardsParams{
+		BroadcasterID:       id,
 		Title:               "Spotify Song Request",
 		IsUserInputRequired: true,
 		IsEnabled:           true,
