@@ -41,9 +41,10 @@ As much as I would love to make this more broadly accessible, looks like it goes
 ## How do I use it?
 1. Open Spotify on your computer
 1. Navigate to your Twitch channel
-1. Create a channel point reward with `TwitchSongRequests` somewhere in the title, that accepts text input
 1. Start playing music on Spotify (the service needs an "active" player to work)
-1. Find your favorite song on Spotify, copy the URI and use it as input when redeeming
+1. Find your favorite song on Spotify, copy the URI
+1. Navigate to the Twitch channel, and find the song request reward (the default title is `Spotify Song Request`)
+1. Submit the Spotify URI as part of the reward redemption, e.g.: https://open.spotify.com/track/6mfiGqZw4AqXA1nqo3EzIF
 1. If your Spotify player has queued the song, you're good!
 1. If your player did not queue the song, make sure you copied the URL correctly, and use the right Channel Point reward
 1. If you are pretty sure you didn't mess anything up, make an issue [here](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new?assignees=&labels=bug&template=User-Bug-Report.yml&title=%5BBug%5D%3A+%5BDescribe+the+issue%5D)
