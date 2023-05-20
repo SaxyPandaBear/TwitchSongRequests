@@ -15,6 +15,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"github.com/saxypandabear/twitchsongrequests/pkg/o11y/metrics"
+	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 	"github.com/zmb3/spotify/v2"
 )
@@ -110,7 +111,12 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if !IsValidReward(&redeemEvent) {
+	preferences, err := h.config.PrefStore.GetPreference(redeemEvent.BroadcasterUserID)
+	if err != nil {
+		log.Println("failed to get user preferences", err)
+	}
+
+	if !IsValidReward(&redeemEvent, preferences) {
 		log.Println("not a valid song request, so dropping")
 		w.WriteHeader(http.StatusOK)
 		return
@@ -144,11 +150,6 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 			// if we got a valid token but failed to update the DB this is not necessarily fatal.
 			log.Println("failed to update user's spotify token", err)
 		}
-	}
-
-	preferences, err := h.config.PrefStore.GetPreference(redeemEvent.BroadcasterUserID)
-	if err != nil {
-		log.Println("failed to get user preferences, defaulting to false for explicit songs", err)
 	}
 
 	c := util.GetNewSpotifyClient(r.Context(), h.config.Spotify, refreshed)
@@ -190,9 +191,13 @@ func IsRevocationRequest(r *http.Request) bool {
 	return revocationType == r.Header.Get(strings.ToLower(messageTypeHeader))
 }
 
-// IsValidReward ensures that the redemption event has a title which contains the
-// named keyword. This is a naive approach for dropping unwanted events.
-func IsValidReward(e *helix.EventSubChannelPointsCustomRewardRedemptionEvent) bool {
+// IsValidReward ensures that the redemption event is a valid event that we want to consume.
+// Original implementation relies on the existence of a key word in the reward title. New implementation
+// verifies with the stored CustomRewardID for a user's preference.
+func IsValidReward(e *helix.EventSubChannelPointsCustomRewardRedemptionEvent, p *preferences.Preference) bool {
+	if p != nil && p.CustomRewardID != "" {
+		return e.Reward.ID == p.CustomRewardID
+	}
 	return e != nil && strings.Contains(e.Reward.Title, SongRequestsTitle)
 }
 

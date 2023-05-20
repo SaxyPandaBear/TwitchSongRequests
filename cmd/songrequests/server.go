@@ -92,7 +92,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 
 	r.Post("/callback", reward.ChannelPointRedeem)
 
-	eventSub := api.NewEventSubHandler(userStore, twitchConfig, redirectURL, s)
+	eventSub := api.NewEventSubHandler(userStore, preferenceStore, twitchConfig, redirectURL, s)
 	r.Post("/subscribe", eventSub.SubscribeToTopic)
 
 	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchConfig, userStore, preferenceStore)

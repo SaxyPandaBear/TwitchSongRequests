@@ -21,13 +21,15 @@ type SubscribeRequest struct {
 type EventSubHandler struct {
 	auth        *util.AuthConfig
 	userStore   db.UserStore
+	prefStore   db.PreferenceStore
 	callbackURL string
 	secret      string
 }
 
-func NewEventSubHandler(u db.UserStore, auth *util.AuthConfig, callbackURL, secret string) *EventSubHandler {
+func NewEventSubHandler(u db.UserStore, p db.PreferenceStore, auth *util.AuthConfig, callbackURL, secret string) *EventSubHandler {
 	return &EventSubHandler{
 		userStore:   u,
+		prefStore:   p,
 		auth:        auth,
 		callbackURL: callbackURL,
 		secret:      secret,
@@ -50,26 +52,11 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// TODO: figure this out
-	// createReward := helix.ChannelCustomRewardsParams{
-	// 	Title: "Spotify Song Request",
-	// 	IsUserInputRequired: true,
-	// 	IsEnabled: true,
-	// 	Cost: 1000,
-	// 	Prompt: "Request with a Spotify URL",
-	// }
-
-	createSub := helix.EventSubSubscription{
-		Type:    helix.EventSubTypeChannelPointsCustomRewardRedemptionAdd,
-		Version: topicVersion,
-		Condition: helix.EventSubCondition{
-			BroadcasterUserID: id,
-		},
-		Transport: helix.EventSubTransport{
-			Method:   subMethod,
-			Callback: e.callbackURL + "/callback",
-			Secret:   e.secret,
-		},
+	pref, err := e.prefStore.GetPreference(id)
+	if err != nil {
+		log.Println("failed to get user preferences", err)
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
 	}
 
 	// get user access token
@@ -88,9 +75,42 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	}
 	c.SetAppAccessToken(token.Data.AccessToken)
 
+	createReward := helix.ChannelCustomRewardsParams{
+		Title:               "Spotify Song Request",
+		IsUserInputRequired: true,
+		IsEnabled:           true,
+		Cost:                1000,
+		Prompt:              "Request with a Spotify URL",
+	}
+
+	rewardRes, err := c.CreateCustomReward(&createReward)
+	if err != nil {
+		log.Println("failed to create Channel Point reward", err)
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
+	} else if len(rewardRes.ErrorMessage) > 0 || len(rewardRes.Data.ChannelCustomRewards) < 1 {
+		log.Printf("error occurred while creating Custom Reward | HTTP %v | %s | %s\n", rewardRes.ErrorStatus, rewardRes.Error, rewardRes.ErrorMessage)
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
+	}
+
+	createSub := helix.EventSubSubscription{
+		Type:    helix.EventSubTypeChannelPointsCustomRewardRedemptionAdd,
+		Version: topicVersion,
+		Condition: helix.EventSubCondition{
+			BroadcasterUserID: id,
+			RewardID:          rewardRes.Data.ChannelCustomRewards[0].ID,
+		},
+		Transport: helix.EventSubTransport{
+			Method:   subMethod,
+			Callback: e.callbackURL + "/callback",
+			Secret:   e.secret,
+		},
+	}
+
 	res, err := c.CreateEventSubSubscription(&createSub)
 	if err != nil {
-		log.Println("failed to create EventSub subscription ", err)
+		log.Println("failed to create EventSub subscription", err)
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	} else if len(res.ErrorMessage) > 0 {
@@ -98,8 +118,6 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
-
-	log.Println("Subscriptions:", res.Data.EventSubSubscriptions)
 
 	if len(res.Data.EventSubSubscriptions) < 1 {
 		log.Println("failed to subscribe to webhook event")
@@ -112,7 +130,15 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	user.SubscriptionID = res.Data.EventSubSubscriptions[0].ID
 	err = e.userStore.UpdateUser(user)
 	if err != nil {
-		log.Println("failed to update twitch credentials", err)
+		log.Println("failed to update user", err)
+		http.Redirect(w, r, e.callbackURL, http.StatusFound)
+		return
+	}
+
+	pref.CustomRewardID = rewardRes.Data.ChannelCustomRewards[0].ID
+	err = e.prefStore.UpdatePreference(pref)
+	if err != nil {
+		log.Println("failed to update user preferences", err)
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}

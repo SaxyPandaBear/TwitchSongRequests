@@ -708,17 +708,29 @@ func TestIsVerificationRequest(t *testing.T) {
 }
 
 func TestIsValidSongRequest(t *testing.T) {
-	assert.False(t, api.IsValidReward(nil))
+	assert.False(t, api.IsValidReward(nil, nil))
 
 	e := helix.EventSubChannelPointsCustomRewardRedemptionEvent{
 		Reward: helix.EventSubReward{
 			Title: "something",
 		},
 	}
-	assert.False(t, api.IsValidReward(&e))
+	assert.False(t, api.IsValidReward(&e, nil))
 
 	e.Reward.Title = fmt.Sprintf("Middle of %s the title", api.SongRequestsTitle)
-	assert.True(t, api.IsValidReward(&e))
+	assert.True(t, api.IsValidReward(&e, nil))
+
+	pref := preferences.Preference{
+		CustomRewardID: "abc123",
+	}
+	e.Reward.Title = "something"
+	e.Reward.ID = "abc123"
+	assert.NotContains(t, e.Reward.Title, api.SongRequestsTitle)
+	assert.True(t, api.IsValidReward(&e, &pref))
+
+	e.Reward.ID = "bcd234"
+	assert.NotEqual(t, e.Reward.ID, pref.CustomRewardID)
+	assert.False(t, api.IsValidReward(&e, &pref))
 }
 
 func generateUserInput(t *testing.T) string {
