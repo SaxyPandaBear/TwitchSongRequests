@@ -55,7 +55,7 @@ type RewardHandlerConfig struct {
 func NewRewardHandler(config *RewardHandlerConfig) *RewardHandler {
 	return &RewardHandler{
 		config:    config,
-		OnSuccess: DoNothingOnSuccess,
+		OnSuccess: UpdateRedemptionStatus,
 		CheckUser: CheckSpotifyUser,
 	}
 }
@@ -209,9 +209,8 @@ func DoNothingOnSuccess(auth *util.AuthConfig,
 	return nil
 }
 
-// TODO: this doesn't work unless the application manages the channel point reward
-//
-//	see https://github.com/SaxyPandaBear/TwitchSongRequests/issues/133
+// UpdateRedemptionStatus attempts to update the status for the channel point redemption.
+// This is helpful so failed submissions should get refunded.
 func UpdateRedemptionStatus(auth *util.AuthConfig,
 	userStore db.UserStore,
 	event *helix.EventSubChannelPointsCustomRewardRedemptionEvent,

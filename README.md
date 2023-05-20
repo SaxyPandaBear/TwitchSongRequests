@@ -17,6 +17,12 @@ copy the Spotify URIs I was sending, in order to queue the songs in their Spotif
 player. Between jobs, I coded up an initial proof of concept and the rest is history.
 
 # For Users
+
+## Update 2023-05-19
+Signing up now automatically creates a custom reward with a default cost and title.
+This can be updated manually to fit your own needs. No more need to use a keyword in
+the reward title! Thanks @rosethornttv for the feedback!
+
 ## How do I sign up?
 1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
 1. Authorize the service with Twitch
