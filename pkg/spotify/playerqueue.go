@@ -27,19 +27,19 @@ type SpotifyPlayerQueue struct {
 
 // Publish will validate that the input matches a valid Spotify URL scheme,
 // and then attempt to queue it in the user's Spotify player.
-func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, url string, pref *preferences.Preference) error {
+func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, url string, pref *preferences.Preference) (spotify.ID, error) {
 	id := parseSpotifyTrackID(url)
 	if len(id) < 1 {
-		return ErrInvalidInput
+		return "", ErrInvalidInput
 	}
 
 	sID := spotify.ID(id)
 
 	if err := ShouldQueue(client, sID, pref); err != nil {
-		return err
+		return sID, err
 	}
 
-	return client.QueueSong(context.Background(), sID)
+	return sID, client.QueueSong(context.Background(), sID)
 }
 
 // TODO: this should be in the queuer

@@ -17,5 +17,5 @@ type Publisher interface {
 	// Publish takes a Spotify client and a value (the URL for the Spotify track)
 	// and attempts to queue the song to the user's player. The client parameter is tied
 	// to an individual user's access token.
-	Publish(client Queuer, url string, p *preferences.Preference) error
+	Publish(client Queuer, url string, p *preferences.Preference) (spotify.ID, error)
 }

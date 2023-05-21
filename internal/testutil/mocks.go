@@ -24,17 +24,17 @@ type DummyPublisher struct {
 
 var _ queue.Publisher = (*DummyPublisher)(nil)
 
-func (p DummyPublisher) Publish(client queue.Queuer, url string, pref *preferences.Preference) error {
+func (p DummyPublisher) Publish(client queue.Queuer, url string, pref *preferences.Preference) (spotify.ID, error) {
 	if p.ShouldFail {
-		return errors.New("oops")
+		return "", errors.New("oops")
 	}
 
 	if (pref == nil || !pref.ExplicitSongs) && p.IsMessageExplicit {
-		return errors.New("not allowed")
+		return "", errors.New("not allowed")
 	}
 
 	p.Messages <- url
-	return nil
+	return "something", nil
 }
 
 type MockReadCloser struct{}

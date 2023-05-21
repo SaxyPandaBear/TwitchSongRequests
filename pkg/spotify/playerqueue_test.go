@@ -39,10 +39,11 @@ func TestPublish(t *testing.T) {
 		ExplicitSongs: false,
 	}
 
-	err := s.Publish(&q, testSpotifyTrackURL, &pref)
+	id, err := s.Publish(&q, testSpotifyTrackURL, &pref)
 	assert.NoError(t, err)
 	assert.Len(t, q.Messages, 1)
 	assert.Equal(t, "3cfOd4CMv2snFaKAnMdnvK", q.Messages[0].String())
+	assert.Equal(t, "3cfOd4CMv2snFaKAnMdnvK", id.String())
 }
 
 func TestPublishInvalidInput(t *testing.T) {
@@ -55,7 +56,7 @@ func TestPublishInvalidInput(t *testing.T) {
 		ExplicitSongs: false,
 	}
 
-	err := s.Publish(&q, "foo", &pref)
+	_, err := s.Publish(&q, "foo", &pref)
 	assert.ErrorIs(t, err, ErrInvalidInput)
 	assert.Empty(t, q.Messages)
 }
@@ -71,7 +72,7 @@ func TestPublishFails(t *testing.T) {
 		ExplicitSongs: false,
 	}
 
-	err := s.Publish(&q, "abc123", &pref)
+	_, err := s.Publish(&q, "abc123", &pref)
 	assert.Error(t, err)
 	assert.Empty(t, q.Messages)
 }
@@ -90,7 +91,7 @@ func TestPublishExplicitSongNotAllowed(t *testing.T) {
 		ExplicitSongs: false,
 	}
 
-	err := s.Publish(&q, testSpotifyTrackURL, &pref)
+	_, err := s.Publish(&q, testSpotifyTrackURL, &pref)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, ErrExplicitSong)
 	assert.Empty(t, q.Messages)
@@ -108,7 +109,7 @@ func TestPublishExplicitSongAllowed(t *testing.T) {
 	}
 
 	// not explicit songs should work
-	err := s.Publish(&q, testSpotifyTrackURL, &pref)
+	_, err := s.Publish(&q, testSpotifyTrackURL, &pref)
 	assert.NoError(t, err)
 	assert.Len(t, q.Messages, 1)
 	assert.Equal(t, "3cfOd4CMv2snFaKAnMdnvK", q.Messages[0].String())
@@ -119,7 +120,7 @@ func TestPublishExplicitSongAllowed(t *testing.T) {
 		return &track, nil
 	}
 
-	err = s.Publish(&q, testSpotifyTrackURL, &pref)
+	_, err = s.Publish(&q, testSpotifyTrackURL, &pref)
 	assert.NoError(t, err)
 	assert.Len(t, q.Messages, 2)
 	for _, id := range q.Messages {

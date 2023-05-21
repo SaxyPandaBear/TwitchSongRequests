@@ -21,14 +21,14 @@ type PostgresMessageCounter struct {
 }
 
 func (p *PostgresMessageCounter) AddMessage(m *metrics.Message) {
-	if _, err := p.pool.Exec(context.Background(), "insert into messages(created_at, success) values ($1, $2)", m.CreatedAt, m.Success); err != nil {
+	if _, err := p.pool.Exec(context.Background(), "insert into messages(created_at, success, broadcaster_id, spotify_track) values ($1, $2, $3, $4)", m.CreatedAt, m.Success, m.BroadcasterID, m.SpotifyTrack); err != nil {
 		log.Println("failed to add message", err)
 	}
 }
 
 func (p *PostgresMessageCounter) TotalMessages() uint64 {
 	var v uint64
-	if err := p.pool.QueryRow(context.Background(), "select count(*) from messages where success = 1").Scan(&v); err != nil {
+	if err := p.pool.QueryRow(context.Background(), "select count(id) from messages where success = 1").Scan(&v); err != nil {
 		log.Println("failed to count messages", err)
 	}
 	return v
@@ -37,7 +37,7 @@ func (p *PostgresMessageCounter) TotalMessages() uint64 {
 func (p *PostgresMessageCounter) RunningCount(days int) uint64 {
 	var v uint64
 	// https://github.com/jackc/pgx/issues/852 can't embed the parameter directly in the text string for the interval syntax
-	if err := p.pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM messages WHERE success = 1 AND AGE(messages.created_at) <= $1 * INTERVAL '1 day'", days).Scan(&v); err != nil {
+	if err := p.pool.QueryRow(context.Background(), "SELECT COUNT(id) FROM messages WHERE success = 1 AND AGE(messages.created_at) <= $1 * INTERVAL '1 day'", days).Scan(&v); err != nil {
 		log.Println("failed to get running count of messages", err)
 	}
 	return v

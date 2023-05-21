@@ -44,8 +44,6 @@ func NewHomePageRenderer(siteURL string, u db.UserStore, twitch, spotify *util.A
 func (h *HomePageRenderer) HomePage(w http.ResponseWriter, r *http.Request) {
 	data := h.getHomePageData(r)
 
-	log.Printf("Serving home page to %s: %v %v %s\n", data.UserID, data.Authenticated, data.Subscribed, data.Error)
-
 	if err := homePage.Execute(w, data); err != nil {
 		log.Println("error occurred while executing template:", err)
 	}
