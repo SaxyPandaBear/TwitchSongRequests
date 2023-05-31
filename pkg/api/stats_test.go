@@ -84,3 +84,68 @@ func TestCountMessages(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "1", res.Message)
 }
+
+func TestOnboardedCount(t *testing.T) {
+	sh := api.NewStatsHandler(&testutil.InMemoryMessageCounter{})
+
+	// don't rely on the real hardcoded values for onboarded/allowed for testing
+	sh.NumOnboarded = 1
+	sh.NumAllowed = 2
+
+	req, err := http.NewRequest("GET", "/onboarded", nil)
+	assert.NoError(t, err)
+
+	handler := http.HandlerFunc(sh.Onboarded)
+
+	ready := make(chan struct{})
+
+	tests := []struct {
+		onboarded     uint
+		allowed       uint
+		expectedColor string
+	}{
+		{
+			onboarded:     1,
+			allowed:       10,
+			expectedColor: "green",
+		},
+		{
+			onboarded:     2,
+			allowed:       4,
+			expectedColor: "yellow",
+		},
+		{
+			onboarded:     1,
+			allowed:       1,
+			expectedColor: "red",
+		},
+	}
+
+	for _, test := range tests {
+		rr := httptest.NewRecorder()
+
+		sh.NumOnboarded = test.onboarded
+		sh.NumAllowed = test.allowed
+
+		go func() {
+			handler.ServeHTTP(rr, req)
+			ready <- struct{}{}
+		}()
+
+		select {
+		case <-ready:
+			t.Log("completed request")
+		case <-time.After(time.Millisecond * 100):
+			t.Error("failed to complete request in time")
+		}
+
+		assert.Equal(t, http.StatusOK, rr.Result().StatusCode)
+		bytes, err := io.ReadAll(rr.Result().Body)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, bytes)
+		var res api.SvgData
+		err = json.Unmarshal(bytes, &res)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expectedColor, res.Color)
+	}
+}

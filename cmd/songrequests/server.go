@@ -109,6 +109,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	statsHandler := api.NewStatsHandler(messageCounter)
 	r.With(cached).Get("/stats/total", statsHandler.TotalMessages)
 	r.With(cached).Get("/stats/running", statsHandler.RunningCount)
+	r.With(cached).Get("/stats/onboarded", statsHandler.Onboarded)
 
 	// ===== Website Pages =====
 

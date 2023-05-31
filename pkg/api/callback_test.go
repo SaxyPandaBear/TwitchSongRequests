@@ -92,6 +92,7 @@ func TestPublishRedeem(t *testing.T) {
 	err = prefs.AddPreference(&preferences.Preference{
 		TwitchID: "12826",
 	})
+	assert.NoError(t, err)
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
@@ -664,7 +665,6 @@ func TestIsValidSongRequest(t *testing.T) {
 
 func generateUserInput(t *testing.T) string {
 	t.Helper()
-	rand.Seed(time.Now().UnixNano())
 	pseudo := make([]rune, size)
 	for i := range pseudo {
 		pseudo[i] = letters[rand.Intn(len(letters))]

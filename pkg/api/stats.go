@@ -10,8 +10,15 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 )
 
+const (
+	NumUsersOnboarded = 16
+	NumUsersAllowed   = 25
+)
+
 type StatsHandler struct {
-	msgCounter db.MessageCounter
+	msgCounter   db.MessageCounter
+	NumOnboarded uint
+	NumAllowed   uint
 }
 
 // https://shields.io/endpoint schema
@@ -26,7 +33,9 @@ type SvgData struct {
 
 func NewStatsHandler(counter db.MessageCounter) *StatsHandler {
 	return &StatsHandler{
-		msgCounter: counter,
+		msgCounter:   counter,
+		NumOnboarded: NumUsersOnboarded,
+		NumAllowed:   NumUsersAllowed,
 	}
 }
 
@@ -40,19 +49,7 @@ func (h *StatsHandler) TotalMessages(w http.ResponseWriter, r *http.Request) {
 		CacheSeconds:  60 * 30,
 	}
 
-	bytes, err := json.Marshal(data)
-
-	if err != nil {
-		log.Println("failed to marshal data to serve in SVG", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "failed to generate message count")
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write(bytes); err != nil {
-		log.Println("failed to write response", err)
-	}
+	respondWithSVG(w, &data)
 }
 
 func (h *StatsHandler) RunningCount(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +69,35 @@ func (h *StatsHandler) RunningCount(w http.ResponseWriter, r *http.Request) {
 		data.Message = fmt.Sprintf("%v", h.msgCounter.RunningCount(i))
 	}
 
-	bytes, err := json.Marshal(data)
+	respondWithSVG(w, &data)
+}
+
+func (h *StatsHandler) Onboarded(w http.ResponseWriter, r *http.Request) {
+	var color string
+	pct := float32(h.NumOnboarded) / float32(h.NumAllowed)
+
+	if pct < 0.4 {
+		color = "green"
+	} else if pct < 0.8 {
+		color = "yellow"
+	} else {
+		color = "red"
+	}
+
+	data := SvgData{
+		SchemaVersion: 1,
+		Label:         "Queued in the last ? days",
+		Style:         "for-the-badge",
+		Color:         color,
+		Message:       fmt.Sprintf("%d/%d", h.NumOnboarded, h.NumAllowed),
+		CacheSeconds:  60 * 60,
+	}
+
+	respondWithSVG(w, &data)
+}
+
+func respondWithSVG(w http.ResponseWriter, d *SvgData) {
+	bytes, err := json.Marshal(d)
 
 	if err != nil {
 		log.Println("failed to marshal data to serve in SVG", err)
