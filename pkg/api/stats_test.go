@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -147,5 +148,8 @@ func TestOnboardedCount(t *testing.T) {
 		err = json.Unmarshal(bytes, &res)
 		assert.NoError(t, err)
 		assert.Equal(t, test.expectedColor, res.Color)
+		assert.Equal(t, "Onboarded", res.Label)
+		assert.Equal(t, "for-the-badge", res.Style)
+		assert.Equal(t, fmt.Sprintf("%d/%d", test.onboarded, test.allowed), res.Message)
 	}
 }

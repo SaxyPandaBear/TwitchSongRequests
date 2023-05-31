@@ -86,7 +86,7 @@ func (h *StatsHandler) Onboarded(w http.ResponseWriter, r *http.Request) {
 
 	data := SvgData{
 		SchemaVersion: 1,
-		Label:         "Queued in the last ? days",
+		Label:         "Onboarded",
 		Style:         "for-the-badge",
 		Color:         color,
 		Message:       fmt.Sprintf("%d/%d", h.NumOnboarded, h.NumAllowed),
