@@ -10,6 +10,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetFromEnv(t *testing.T) {
+	t.Setenv("foo", "bar")
+	t.Setenv("bar", "")
+
+	res, err := util.GetFromEnv("foo")
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", res)
+
+	res, err = util.GetFromEnv("bar")
+	assert.ErrorContains(t, err, "is defined, but empty")
+	assert.Empty(t, res)
+
+	res, err = util.GetFromEnv("baz")
+	assert.ErrorContains(t, err, "not defined in the environment")
+	assert.Empty(t, res)
+}
+
 func TestGetFromEnvOrDefault(t *testing.T) {
 	t.Setenv("foo", "bar")
 

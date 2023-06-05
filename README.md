@@ -110,7 +110,21 @@ go build .
 ```
 
 ### Required variables
-TODO - project env vars
+| Name                  | Purpose                                                          |
+| --------------------- | ---------------------------------------------------------------- |
+| PORT                  | Override default port for the HTTP server                        |
+| DATABASE_URL          | PostgresDB URL to connect to                                     |
+| SITE_REDIRECT_URL     | URL for the base path for the main site                          |
+| TWITCH_SECRET         | Passphrase to verify subscription requests for Twitch EventSub   |
+| TWITCH_CLIENT_ID      | Twitch app OAuth client ID                                       |
+| TWITCH_CLIENT_SECRET  | Twitch app OAuth client secret                                   |
+| TWITCH_STATE          | Twitch app OAuth state key                                       |
+| TWITCH_REDIRECT_URL   | Twitch OAuth redirect URL                                        |
+| MOCK_SERVER_URL       | Arbitrary mock URL for local testing with Twitch CLI mock server |
+| SPOTIFY_CLIENT_ID     | Spotify app OAuth client ID                                      |
+| SPOTIFY_CLIENT_SECRET | Spotify app OAuth client secret                                  |
+| SPOTIFY_REDIRECT_URL  | Spotify OAuth redirect URL                                       |
+| SPOTIFY_STATE         | Spotify app OAuth state key                                      |
 
 ## Testing
 
@@ -118,6 +132,9 @@ TODO - project env vars
 ```bash
 go test ./... -cover -v -timeout 10s
 ```
+
+### Integration testing
+TODO - Maybe I'll do this for fun? 
 
 ### Set up Twitch CLI
 Use the [Twitch CLI](https://dev.twitch.tv/docs/cli) for local development. 
