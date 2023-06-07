@@ -78,7 +78,7 @@ func (h *StatsHandler) Onboarded(w http.ResponseWriter, r *http.Request) {
 
 	if pct < 0.4 {
 		color = "green"
-	} else if pct < 0.8 {
+	} else if pct < 0.75 {
 		color = "yellow"
 	} else {
 		color = "red"
