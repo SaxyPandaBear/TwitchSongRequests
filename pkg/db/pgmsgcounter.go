@@ -47,7 +47,7 @@ func (p *PostgresMessageCounter) RunningCount(days int) uint64 {
 }
 
 func (p *PostgresMessageCounter) MessagesForUser(id string) []*metrics.Message {
-	rows, err := p.pool.Query(context.Background(), "SELECT spotify_track, success WHERE broadcaster_id = $1 AND spotify_track != '' ORDER BY id DESC LIMIT 100", id)
+	rows, err := p.pool.Query(context.Background(), "SELECT spotify_track, success FROM messages WHERE broadcaster_id = $1 AND spotify_track != '' ORDER BY id DESC LIMIT 100", id)
 	if err != nil {
 		zap.L().Error("failed to query for messages", zap.Error(err))
 		return []*metrics.Message{}
