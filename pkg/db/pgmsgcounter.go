@@ -56,7 +56,7 @@ func (p *PostgresMessageCounter) MessagesForUser(id string) []*metrics.Message {
 	var multi error
 	for rows.Next() {
 		var msg metrics.Message
-		if err = rows.Scan(&msg); err != nil {
+		if err = rows.Scan(&msg.SpotifyTrack, &msg.Success); err != nil {
 			multi = multierr.Append(multi, err)
 		} else {
 			m = append(m, &msg)
