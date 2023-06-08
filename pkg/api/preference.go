@@ -7,6 +7,7 @@ import (
 
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"go.uber.org/zap"
 )
 
 const (
@@ -30,7 +31,7 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 	userID, err := util.GetUserIDFromRequest(r)
 
 	if err != nil {
-		log.Println("failed to get Twitch ID from request", err)
+		zap.L().Error("failed to get Twitch ID from request", zap.Error(err))
 		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
@@ -38,7 +39,7 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 
 	p, err := h.prefs.GetPreference(userID)
 	if err != nil {
-		log.Println("failed to get user preferences for", userID, err)
+		zap.L().Error("failed to get user preferences", zap.String("id", userID), zap.Error(err))
 		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
@@ -46,7 +47,7 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 
 	err = r.ParseForm()
 	if err != nil {
-		log.Println("failed to parse HTML form", err)
+		zap.L().Error("failed to parse HTML form", zap.Error(err))
 		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
@@ -63,13 +64,13 @@ func (h *PreferenceHandler) SavePreferences(w http.ResponseWriter, r *http.Reque
 		if err == nil && l >= 0 {
 			p.MaxSongLength = l * 1000 // the value is expected to be in seconds, but we store millis
 		} else {
-			log.Printf("failed to convert %s to an int: %v\n", length, err)
+			zap.L().Error("failed to convert", zap.String("input", length), zap.Error(err))
 		}
 	}
 
 	err = h.prefs.UpdatePreference(p)
 	if err != nil {
-		log.Println("failed to update user preferences for", userID, err)
+		zap.L().Error("failed to update user preferences", zap.String("id", userID), zap.Error(err))
 		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return

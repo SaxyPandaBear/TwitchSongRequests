@@ -3,15 +3,15 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"go.uber.org/zap"
 )
 
 const (
-	NumUsersOnboarded = 18
+	NumUsersOnboarded = 19
 	NumUsersAllowed   = 25
 )
 
@@ -100,7 +100,7 @@ func respondWithSVG(w http.ResponseWriter, d *SvgData) {
 	bytes, err := json.Marshal(d)
 
 	if err != nil {
-		log.Println("failed to marshal data to serve in SVG", err)
+		zap.L().Error("failed to marshal data to serve in SVG", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, "failed to generate message count")
 		return
@@ -108,6 +108,6 @@ func respondWithSVG(w http.ResponseWriter, d *SvgData) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(bytes); err != nil {
-		log.Println("failed to write response", err)
+		zap.L().Error("failed to write response", zap.Error(err))
 	}
 }

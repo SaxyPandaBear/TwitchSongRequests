@@ -32,7 +32,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	// connect to Postgres DB
 	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Println("failed to connect to Postgres database")
+		return fmt.Errorf("failed to connect to Postgres database")
 	}
 	defer dbpool.Close()
 
@@ -61,19 +61,19 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
 	if err != nil {
-		log.Println("failed to load Twitch auth state key", err)
+		zap.L().Error("failed to load Twitch auth state key", zap.Error(err))
 		return err
 	}
 
 	twitchConfig, err := util.LoadTwitchConfigs()
 	if err != nil {
-		log.Println("failed to load Twitch configurations ", err)
+		zap.L().Error("failed to load Twitch configurations ", zap.Error(err))
 		return err
 	}
 
 	spotifyConfig, err := util.LoadSpotifyConfigs()
 	if err != nil {
-		log.Println("failed to load Spotify configurations ", err)
+		zap.L().Error("failed to load Spotify configurations ", zap.Error(err))
 		return err
 	}
 
@@ -93,7 +93,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Post("/callback", reward.ChannelPointRedeem)
 
 	eventSub := api.NewEventSubHandler(userStore, preferenceStore, twitchConfig, redirectURL, s)
-	r.Post("/subscribe", eventSub.SubscribeToTopic)
+	r.With(cached).Post("/subscribe", eventSub.SubscribeToTopic)
 
 	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchConfig, userStore, preferenceStore)
 	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyConfig, userStore)
@@ -101,7 +101,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Get("/oauth/spotify", spotifyRedirect.Authorize)
 
 	userHandler := api.NewUserHandler(userStore, preferenceStore, redirectURL, twitchConfig, spotifyConfig)
-	r.Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST because forms don't support DELETE
+	r.With(cached).Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST because forms don't support DELETE
 
 	preferenceHandler := api.NewPreferenceHandler(preferenceStore, redirectURL)
 	r.Post("/preference", preferenceHandler.SavePreferences) // this is a POST because forms don't support DELETE
@@ -110,6 +110,9 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.With(cached).Get("/stats/total", statsHandler.TotalMessages)
 	r.With(cached).Get("/stats/running", statsHandler.RunningCount)
 	r.With(cached).Get("/stats/onboarded", statsHandler.Onboarded)
+
+	queueHandler := api.NewQueueHandler(messageCounter)
+	r.With(cached).Get("/queue/{id}", queueHandler.GetLatestMessages)
 
 	// ===== Website Pages =====
 

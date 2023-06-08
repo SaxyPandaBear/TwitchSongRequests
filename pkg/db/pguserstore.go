@@ -3,11 +3,11 @@ package db
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/saxypandabear/twitchsongrequests/pkg/users"
+	"go.uber.org/zap"
 )
 
 var _ UserStore = (*PostgresUserStore)(nil)
@@ -32,7 +32,7 @@ func (s *PostgresUserStore) GetUser(id string) (*users.User, error) {
 		Scan(&u.TwitchAccessToken, &u.TwitchRefreshToken, &u.SpotifyAccessToken, &u.SpotifyRefreshToken, &u.SpotifyExpiry, &u.Subscribed, &u.SubscriptionID, &u.Email)
 
 	if err != nil {
-		log.Printf("failed to get user %s: %v\n", id, err)
+		zap.L().Error("failed to get user", zap.String("id", id), zap.Error(err))
 		return nil, err
 	}
 	return &u, nil
@@ -45,7 +45,7 @@ func (s *PostgresUserStore) AddUser(user *users.User) error {
 		user.TwitchAccessToken,
 		user.TwitchRefreshToken,
 		time.Now().Format(time.RFC3339)); err != nil {
-		log.Printf("failed to insert user %s: %v\n", user.TwitchID, err)
+		zap.L().Error("failed to insert user", zap.String("id", user.TwitchID), zap.Error(err))
 		return err
 	}
 	return nil
@@ -64,7 +64,7 @@ func (s *PostgresUserStore) UpdateUser(user *users.User) error {
 		user.SubscriptionID,
 		user.Email,
 		user.TwitchID); err != nil {
-		log.Printf("failed to update user %s: %v\n", user.TwitchID, err)
+		zap.L().Error("failed to update user", zap.String("id", user.TwitchID), zap.Error(err))
 		return err
 	}
 	return nil
@@ -72,7 +72,7 @@ func (s *PostgresUserStore) UpdateUser(user *users.User) error {
 
 func (s *PostgresUserStore) DeleteUser(id string) error {
 	if _, err := s.pool.Exec(context.Background(), "delete from users where id=$1", id); err != nil {
-		log.Printf("failed to delete user %s: %v\n", id, err)
+		zap.L().Error("failed to delete user", zap.String("id", id), zap.Error(err))
 		return err
 	}
 	return nil

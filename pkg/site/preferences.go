@@ -3,11 +3,11 @@ package site
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"go.uber.org/zap"
 )
 
 var preferencesPage = template.Must(template.ParseFiles("pkg/site/preferences.html"))
@@ -40,14 +40,14 @@ func (p *PreferencesRenderer) PreferencesPage(w http.ResponseWriter, r *http.Req
 
 	id, err := util.GetUserIDFromRequest(r)
 	if err != nil {
-		log.Println("failed to get Twitch ID from request", err)
+		zap.L().Error("failed to get Twitch ID from request", zap.Error(err))
 		d.Authenticated = false
 	}
 
 	if id != "" {
 		pref, err := p.pref.GetPreference(id)
 		if err != nil {
-			log.Println("failed to get user preferences for", id, err)
+			zap.L().Error("failed to get user preferences", zap.String("id", id), zap.Error(err))
 		} else {
 			d.Explicit = pref.ExplicitSongs
 			d.RewardID = pref.CustomRewardID
@@ -55,9 +55,7 @@ func (p *PreferencesRenderer) PreferencesPage(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	log.Println("Serving preferences page to", id)
-
 	if err := preferencesPage.Execute(w, &d); err != nil {
-		log.Println("error occurred while executing template:", err)
+		zap.L().Error("error occurred while executing template", zap.Error(err))
 	}
 }

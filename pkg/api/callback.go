@@ -16,6 +16,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/pkg/o11y/metrics"
 	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
+	"go.uber.org/zap"
 )
 
 const (
@@ -59,21 +60,21 @@ func NewRewardHandler(config *RewardHandlerConfig) *RewardHandler {
 func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println("failed to read request body", err)
+		zap.L().Error("failed to read request body", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 	// verify that the notification came from twitch using the secret.
 	if !helix.VerifyEventSubNotification(h.config.Secret, r.Header, string(body)) {
-		log.Println("no valid signature on subscription")
+		zap.L().Error("no valid signature on subscription")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	var vals EventSubNotification
 	if err = json.NewDecoder(bytes.NewReader(body)).Decode(&vals); err != nil {
-		log.Println("failed to unmarshal request body", err)
+		zap.L().Error("failed to unmarshal request body", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -84,7 +85,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	if IsVerificationRequest(r) {
 		w.WriteHeader(http.StatusOK)
 		if _, err = w.Write([]byte(vals.Challenge)); err != nil {
-			log.Println("failed to write challenge response for verification", err)
+			zap.L().Error("failed to write challenge response for verification", zap.Error(err))
 		}
 		return // short-circuit here because of the request type
 	}
@@ -92,40 +93,40 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	// A request can come in to revoke the subscription. Drop the request
 	// https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#revoking-your-subscription
 	if IsRevocationRequest(r) {
-		log.Printf("Revoked access to %s: %s\n", vals.Subscription.ID, vals.Subscription.Status)
+		zap.L().Error("Revoked access", zap.String("id", vals.Subscription.ID), zap.String("status", vals.Subscription.Status))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
-	log.Printf("Found event to consume: %s", string(vals.Event))
+	zap.L().Debug("Received event to consume", zap.String("event", string(vals.Event)))
 	var redeemEvent helix.EventSubChannelPointsCustomRewardRedemptionEvent
 	if err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&redeemEvent); err != nil {
-		log.Println("failed to unmarshal payload", err)
+		zap.L().Error("failed to unmarshal payload", zap.Error(err))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	preferences, err := h.config.PrefStore.GetPreference(redeemEvent.BroadcasterUserID)
 	if err != nil {
-		log.Println("failed to get user preferences", err)
+		zap.L().Error("failed to get user preferences", zap.Error(err))
 	}
 
 	if !IsValidReward(&redeemEvent, preferences) {
-		log.Println("not a valid song request, so dropping")
+		zap.L().Debug("not a valid song request, so dropping")
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	tok, err := db.FetchSpotifyToken(h.config.UserStore, redeemEvent.BroadcasterUserID)
 	if err != nil {
-		log.Printf("failed to verify user %s for spotify access: %v\n", redeemEvent.BroadcasterUserID, err)
+		zap.L().Error("failed to verify user for spotify access", zap.String("id", redeemEvent.BroadcasterUserID), zap.Error(err))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	refreshed, err := util.RefreshSpotifyToken(r.Context(), h.config.Spotify, tok)
 	if err != nil {
-		log.Println("failed to get valid token", err)
+		zap.L().Error("failed to get valid token", zap.Error(err))
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "failed to get refreshed token")
 		return
@@ -138,11 +139,11 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		u.SpotifyRefreshToken = refreshed.RefreshToken
 		u.SpotifyExpiry = &refreshed.Expiry
 
-		log.Println("saving updated Spotify credentials for", u.TwitchID)
+		zap.L().Debug("saving updated Spotify credentials", zap.String("id", u.TwitchID))
 
 		if err = h.config.UserStore.UpdateUser(u); err != nil {
 			// if we got a valid token but failed to update the DB this is not necessarily fatal.
-			log.Println("failed to update user's spotify token", err)
+			zap.L().Error("failed to update user's spotify token", zap.Error(err))
 		}
 	}
 
@@ -157,7 +158,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		SpotifyTrack:  sID.String(), // TODO: not sure if this works if it fails to parse..
 	}
 	if err != nil {
-		log.Println("failed to publish:", err)
+		zap.L().Error("failed to publish", zap.String("input", redeemEvent.UserInput), zap.Error(err))
 	} else {
 		msg.Success = 1
 	}
@@ -168,12 +169,12 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	// redemption
 	if err = h.OnSuccess(h.config.Twitch, h.config.UserStore, &redeemEvent, err == nil); err != nil {
 		// don't need to fail fast here because this is housekeeping
-		log.Println("failed to update Twitch reward redemption status", err)
+		zap.L().Error("failed to update Twitch reward redemption status", zap.Error(err))
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write([]byte("ok")); err != nil {
-		log.Println("failed to write response body", err)
+		zap.L().Error("failed to write response body", zap.Error(err))
 	}
 }
 
@@ -211,20 +212,20 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	success bool) error {
 	client, err := util.GetNewTwitchClient(auth)
 	if err != nil {
-		log.Println("failed to create Twitch client", err)
+		zap.L().Error("failed to create Twitch client", zap.Error(err))
 		return err
 	}
 
 	u, err := userStore.GetUser(event.BroadcasterUserID)
 	if err != nil {
-		log.Println("failed to get user", err)
+		zap.L().Error("failed to get user", zap.Error(err))
 		return err
 	}
 
 	client.SetUserAccessToken(u.TwitchAccessToken)
 	token, err := client.RefreshUserAccessToken(u.TwitchRefreshToken)
 	if err != nil {
-		log.Println("failed to refresh Twitch token", err)
+		zap.L().Error("failed to refresh Twitch token", zap.Error(err))
 		return err
 	}
 	client.SetUserAccessToken(token.Data.AccessToken)
@@ -245,20 +246,20 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 		return err
 	}
 
-	log.Printf("responded with HTTP: %d | '%s' for %d redemptions\n", resp.StatusCode, resp.ErrorMessage, len(resp.Data.Redemptions))
+	zap.L().Debug("updated redemptions", zap.Int("status", resp.StatusCode), zap.String("error", resp.ErrorMessage), zap.Int("num", len(resp.Data.Redemptions)))
 	if resp.StatusCode >= 400 {
 		return errors.New(resp.ErrorMessage)
 	}
 
 	for _, redemption := range resp.Data.Redemptions {
-		log.Printf("successfully updated redemption status for %s to '%s'\n", redemption.ID, req.Status)
+		zap.L().Debug("successfully updated redemption status", zap.String("redemption_id", redemption.ID), zap.String("status", req.Status))
 	}
 
 	// update user details for Twitch auth
 	u.TwitchAccessToken = token.Data.AccessToken
 	u.TwitchRefreshToken = token.Data.RefreshToken
 	if err = userStore.UpdateUser(u); err != nil {
-		log.Println("failed to update Twitch credentials", err)
+		zap.L().Error("failed to update Twitch credentials", zap.Error(err))
 		return err
 	}
 

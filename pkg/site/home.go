@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"go.uber.org/zap"
 )
 
 var homePage = template.Must(template.ParseFiles("pkg/site/home.html"))
@@ -45,7 +45,7 @@ func (h *HomePageRenderer) HomePage(w http.ResponseWriter, r *http.Request) {
 	data := h.getHomePageData(r)
 
 	if err := homePage.Execute(w, data); err != nil {
-		log.Println("error occurred while executing template:", err)
+		zap.L().Error("error occurred while executing template", zap.Error(err))
 	}
 }
 
@@ -60,7 +60,7 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 
 	id, err := util.GetUserIDFromRequest(r)
 	if err != nil {
-		log.Println("failed to get Twitch ID", err)
+		zap.L().Error("failed to get Twitch ID", zap.Error(err))
 		return &d
 	}
 
@@ -68,7 +68,7 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 
 	user, err := h.userStore.GetUser(id)
 	if err != nil {
-		log.Println("failed to get user", err)
+		zap.L().Error("failed to get user", zap.String("id", id), zap.Error(err))
 		return &d
 	}
 
@@ -79,11 +79,12 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println("failed to read request body", err)
+		zap.L().Error("failed to read request body", zap.Error(err))
 	} else {
+		// TODO: I don't think this does anything
 		if len(body) > 0 {
 			d.Error = string(body)
-			log.Println("found error in request body", d.Error)
+			zap.L().Error("found error in request body", zap.String("error", d.Error))
 		}
 	}
 

@@ -2,11 +2,11 @@ package util
 
 import (
 	"encoding/base64"
-	"log"
 	"net/http"
 	"net/url"
 
 	"github.com/saxypandabear/twitchsongrequests/internal/constants"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
 
@@ -30,7 +30,7 @@ func GetUserIDFromRequest(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	log.Println("raw cookie value for Twitch ID", c.Value)
+	zap.L().Debug("raw cookie value for Twitch ID", zap.String("cookie", c.Value))
 	idBytes, err := base64.StdEncoding.DecodeString(c.Value)
 	if err != nil {
 		return "", err

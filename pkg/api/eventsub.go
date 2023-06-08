@@ -7,6 +7,7 @@ import (
 	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"go.uber.org/zap"
 )
 
 const (
@@ -40,21 +41,21 @@ func NewEventSubHandler(u db.UserStore, p db.PreferenceStore, auth *util.AuthCon
 func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
 	id, err := util.GetUserIDFromRequest(r)
 	if err != nil {
-		log.Println("failed to get Twitch ID from request", err)
+		zap.L().Error("failed to get Twitch ID from request", zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
 
 	user, err := e.userStore.GetUser(id)
 	if err != nil {
-		log.Println("failed to get user", err)
+		zap.L().Error("failed to get user", zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
 
 	pref, err := e.prefStore.GetPreference(id)
 	if err != nil {
-		log.Println("failed to get user preferences", err)
+		zap.L().Error("failed to get user preferences", zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -62,7 +63,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	// get user access token
 	c, err := util.GetNewTwitchClient(e.auth)
 	if err != nil {
-		log.Println("failed to get Twitch client for", id, err)
+		zap.L().Error("failed to get Twitch client", zap.String("id", id), zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -79,11 +80,11 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 
 	rewardRes, err := c.CreateCustomReward(&createReward)
 	if err != nil {
-		log.Println("failed to create Channel Point reward", err)
+		zap.L().Error("failed to create Channel Point reward", zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	} else if len(rewardRes.ErrorMessage) > 0 || len(rewardRes.Data.ChannelCustomRewards) < 1 {
-		log.Printf("error occurred while creating Custom Reward | HTTP %v | %s | %s\n", rewardRes.ErrorStatus, rewardRes.Error, rewardRes.ErrorMessage)
+		zap.L().Error("error occurred while creating Custom Reward", zap.Int("status", rewardRes.ErrorStatus), zap.String("err", rewardRes.Error), zap.String("error_msg", rewardRes.ErrorMessage))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -105,14 +106,14 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	// need to get a whole new client after setting the user access token, for some reason
 	c, err = util.GetNewTwitchClient(e.auth)
 	if err != nil {
-		log.Println("failed to get Twitch client for", id, err)
+		zap.L().Error("failed to get Twitch client", zap.String("id", id), zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
 	// creating the event sub subscription requires an app access token
 	token, err := c.RequestAppAccessToken([]string{e.auth.Scope})
 	if err != nil {
-		log.Println("failed to get updated access token for", id, err)
+		zap.L().Error("failed to get updated access token", zap.String("id", id), zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -120,17 +121,17 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 
 	res, err := c.CreateEventSubSubscription(&createSub)
 	if err != nil {
-		log.Println("failed to create EventSub subscription", err)
+		zap.L().Error("failed to create EventSub subscription", zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	} else if len(res.ErrorMessage) > 0 {
-		log.Printf("error occurred while creating EventSub subscription | HTTP %v | %s | %s\n", res.ErrorStatus, res.Error, res.ErrorMessage)
+		zap.L().Error("error occurred while creating EventSub subscription", zap.Int("status", res.ErrorStatus), zap.String("err", res.Error), zap.String("error_msg", res.ErrorMessage))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
 
 	if len(res.Data.EventSubSubscriptions) < 1 {
-		log.Println("failed to subscribe to webhook event")
+		zap.L().Error("failed to subscribe to webhook event")
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -140,7 +141,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	user.SubscriptionID = res.Data.EventSubSubscriptions[0].ID
 	err = e.userStore.UpdateUser(user)
 	if err != nil {
-		log.Println("failed to update user", err)
+		zap.L().Error("failed to update user", zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -148,7 +149,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	pref.CustomRewardID = rewardRes.Data.ChannelCustomRewards[0].ID
 	err = e.prefStore.UpdatePreference(pref)
 	if err != nil {
-		log.Println("failed to update user preferences", err)
+		zap.L().Error("failed to update user preferences", zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}

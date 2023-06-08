@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
+	"go.uber.org/zap"
 )
 
 var _ PreferenceStore = (*PostgresPreferenceStore)(nil)
@@ -29,7 +29,7 @@ func (s *PostgresPreferenceStore) GetPreference(id string) (*preferences.Prefere
 	err := s.pool.QueryRow(context.Background(), "select COALESCE(explicit, false), COALESCE(reward_id, ''), COALESCE(max_song_length, 0) from preferences where id=$1", id).
 		Scan(&p.ExplicitSongs, &p.CustomRewardID, &p.MaxSongLength)
 	if err != nil {
-		log.Printf("failed to get user %s: %v\n", id, err)
+		zap.L().Error("failed to get user", zap.String("id", id), zap.Error(err))
 		return nil, err
 	}
 
@@ -44,7 +44,7 @@ func (s *PostgresPreferenceStore) AddPreference(p *preferences.Preference) error
 		p.ExplicitSongs,
 		p.MaxSongLength,
 		time.Now().Format(time.RFC3339)); err != nil {
-		log.Printf("failed to insert preferences for %s: %v\n", p.TwitchID, err)
+		zap.L().Error("failed to insert preferences", zap.String("id", p.TwitchID), zap.Error(err))
 		return err
 	}
 	return nil
@@ -58,7 +58,7 @@ func (s *PostgresPreferenceStore) UpdatePreference(p *preferences.Preference) er
 		p.MaxSongLength,
 		time.Now().Format(time.RFC3339),
 		p.TwitchID); err != nil {
-		log.Printf("failed to update preferences for %s: %v\n", p.TwitchID, err)
+		zap.L().Error("failed to update preferences", zap.String("id", p.TwitchID), zap.Error(err))
 		return err
 	}
 	return nil
@@ -66,7 +66,7 @@ func (s *PostgresPreferenceStore) UpdatePreference(p *preferences.Preference) er
 
 func (s *PostgresPreferenceStore) DeletePreference(id string) error {
 	if _, err := s.pool.Exec(context.Background(), "delete from preferences where id=$1", id); err != nil {
-		log.Printf("failed to delete user %s: %v\n", id, err)
+		zap.L().Error("failed to delete user", zap.String("id", id), zap.Error(err))
 		return err
 	}
 

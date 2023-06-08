@@ -6,6 +6,7 @@ import (
 
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"go.uber.org/zap"
 )
 
 type SpotifyAuthZHandler struct {
@@ -26,7 +27,7 @@ func NewSpotifyAuthZHandler(url string, auth *util.AuthConfig, userStore db.User
 func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	userID, err := util.GetUserIDFromRequest(r)
 	if err != nil {
-		log.Println("failed to get Twitch ID from request", err)
+		zap.L().Error("failed to get Twitch ID from request", zap.Error(err))
 		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
@@ -34,7 +35,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 
 	u, err := h.userStore.GetUser(userID)
 	if err != nil {
-		log.Println("failed to get user", err)
+		zap.L().Error("failed to get user", zap.Error(err))
 		w.Write([]byte(err.Error()))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
@@ -42,8 +43,8 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 
 	state := r.URL.Query().Get("state")
 	if state != h.auth.State {
-		log.Println("failed to validate auth state")
-		w.Write([]byte("failed to validate auth statee"))
+		zap.L().Error("failed to validate auth state")
+		w.Write([]byte("failed to validate auth state"))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -52,7 +53,7 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 	token, err := h.auth.OAuth.Exchange(r.Context(), code)
 
 	if err != nil {
-		log.Println("failed to get spotify auth token for user", userID)
+		zap.L().Error("failed to get spotify auth token", zap.String("id", userID), zap.Error(err))
 		w.Write([]byte("failed to get spotify auth token for user"))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
@@ -67,14 +68,14 @@ func (h *SpotifyAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) 
 	client := util.GetNewSpotifyClient(r.Context(), h.auth, token)
 	user, err := client.CurrentUser(r.Context())
 	if err != nil {
-		log.Printf("failed to get Spotify user for %s: %v", userID, err)
+		zap.L().Error("failed to get Spotify user", zap.String("id", userID), zap.Error(err))
 	} else {
 		u.Email = user.Email
 	}
 
 	err = h.userStore.UpdateUser(u)
 	if err != nil {
-		log.Println("failed to update user", err)
+		zap.L().Error("failed to update user", zap.Error(err))
 	}
 
 	http.Redirect(w, r, h.redirectURL, http.StatusFound)

@@ -9,6 +9,7 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"go.uber.org/zap"
 )
 
 type UserHandler struct {
@@ -33,21 +34,21 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	userID, err := util.GetUserIDFromRequest(r)
 
 	if err != nil {
-		log.Println("failed to get Twitch ID from request", err)
+		zap.L().Error("failed to get Twitch ID from request", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
 	c, err := util.GetNewTwitchClient(h.twitch)
 	if err != nil {
-		log.Println("failed to get Twitch client", err)
+		zap.L().Error("failed to get Twitch client", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
 	u, err := h.users.GetUser(userID)
 	if err != nil {
-		log.Println("failed to get user", err)
+		zap.L().Error("failed to get user", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -55,25 +56,25 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	// revoke subscription first
 	appToken, err := c.RequestAppAccessToken(strings.Split(h.twitch.Scope, " "))
 	if err != nil {
-		log.Println("failed to get app access token", err)
+		zap.L().Error("failed to get app access token", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 	c.SetAppAccessToken(appToken.Data.AccessToken)
 	res, err := c.RemoveEventSubSubscription(u.SubscriptionID)
 	if err != nil {
-		log.Println("failed to remove eventsub subscription for", userID, err)
+		zap.L().Error("failed to remove eventsub subscription", zap.String("id", userID), zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	} else if len(res.ErrorMessage) > 0 {
-		log.Printf("failed to remove eventsub subscription for %s: HTTP %d | %s | %s", userID, res.ErrorStatus, res.Error, res.ErrorMessage)
+		zap.L().Error("failed to remove eventsub subscription", zap.String("id", userID), zap.Int("status", res.ErrorStatus), zap.String("err", res.Error), zap.String("error_msg", res.ErrorMessage))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
 	tok, err := db.FetchTwitchToken(h.users, userID)
 	if err != nil {
-		log.Println("failed to get user token", err)
+		zap.L().Error("failed to get user token", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -81,7 +82,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	c.SetUserAccessToken(tok.AccessToken)
 	tokenResp, err := c.RefreshUserAccessToken(tok.RefreshToken)
 	if err != nil {
-		log.Println("failed to refresh twitch token", err)
+		zap.L().Error("failed to refresh twitch token", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -89,14 +90,14 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	// make sure that the token is fresh before revoking
 	_, err = c.RevokeUserAccessToken(tokenResp.Data.AccessToken)
 	if err != nil {
-		log.Println("failed to revoke access", err)
+		zap.L().Error("failed to revoke access", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
 	err = h.users.DeleteUser(userID)
 	if err != nil {
-		log.Println("failed to delete user", err)
+		zap.L().Error("failed to delete user", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -106,7 +107,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 	err = h.prefs.DeletePreference(userID)
 	if err != nil {
 		// I'm not sure if this is fatal or not.
-		log.Println("failed to delete user", err)
+		zap.L().Error("failed to delete user", zap.Error(err))
 	}
 
 	twitchCookie := http.Cookie{

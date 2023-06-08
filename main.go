@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -23,7 +22,8 @@ func main() {
 	config.EncoderConfig = encoderConfig
 	logger := zap.Must(config.Build())
 
-	zap.RedirectStdLog(logger)
+	zap.RedirectStdLog(logger) // log.PrintX() functions will log at an info level, always
+	zap.ReplaceGlobals(logger) // Not recommended, but I'm lazy
 	defer logger.Sync()
 
 	var port = defaultPort
@@ -31,7 +31,7 @@ func main() {
 	if ok {
 		p, err := strconv.Atoi(portEnv)
 		if err != nil {
-			log.Printf("Configured PORT environment variable %s is not valid\n", portEnv)
+			zap.L().Error("Configured PORT environment variable is not valid", zap.String("port", portEnv))
 			os.Exit(1)
 		}
 
@@ -40,7 +40,7 @@ func main() {
 
 	go func() {
 		if err := songrequests.StartServer(logger, port); err != nil {
-			log.Println("server terminated unexpectedly", err)
+			zap.L().Error("server terminated unexpectedly", zap.Error(err))
 			os.Exit(1)
 		}
 	}()
