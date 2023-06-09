@@ -51,6 +51,16 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
+      - name: Create test database
+        run: |
+          psql -U postgres -h postgres -f ./testdata/db.sql
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          PGPASSWORD: postgres
+
       - name: Populate test database
         run: |
           psql -U postgres -d testdb -h postgres -f ./testdata/data.sql
@@ -63,3 +73,8 @@ jobs:
 
       - name: Run tests
         run: go test ./... -run Postgres -v -timeout 120s
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
