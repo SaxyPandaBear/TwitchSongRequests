@@ -18,3 +18,46 @@ jobs:
       run: go build -v ./...
     - name: Test
       run: go test ./... -cover -v -timeout 10s
+
+  postgres-tests:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: golang:1.20.1-alpine3.17
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Install psql
+        run: |
+          apt-get update
+          apt-get install --yes --no-install-recommends postgresql-client
+
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Populate test database
+        run: |
+          psql -f ./testdata/data.sql
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
+      - name: Run tests
+        run: go test ./... -tags=postgres -v -timeout=120s
