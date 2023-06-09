@@ -25,7 +25,7 @@ func TestPostgresAddMessage(t *testing.T) {
 	err := pool.QueryRow(context.Background(), "select count(id) from messages").Scan(&count)
 	assert.NoError(t, err)
 
-	assert.Greater(t, count, 0)
+	assert.Greater(t, count, uint64(0))
 
 	store.AddMessage(&metrics.Message{
 		Success:       1,
@@ -45,4 +45,24 @@ func TestPostgresAddMessage(t *testing.T) {
 	assert.Equal(t, 1, m.Success)
 	assert.Equal(t, "12345", m.BroadcasterID)
 	assert.Equal(t, "xyz", m.SpotifyTrack)
+}
+
+func TestPostgresGetMessagesForUser(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integ test")
+	}
+
+	msgOnce.Do(connect)
+
+	store := db.NewPostgresMessageCounter(pool)
+
+	var count uint64
+	err := pool.QueryRow(context.Background(), "select count(id) from messages where broadcaster_id = '12345'").Scan(&count)
+	assert.NoError(t, err)
+
+	assert.Greater(t, count, uint64(0))
+
+	msgs := store.MessagesForUser("12345")
+	assert.NotEmpty(t, msgs)
+	assert.Equal(t, count, uint64(len(msgs)))
 }

@@ -27,7 +27,7 @@ func TestPostgresGetUser(t *testing.T) {
 	assert.Equal(t, "b", u.TwitchRefreshToken)
 	assert.Equal(t, "c", u.SpotifyAccessToken)
 	assert.Equal(t, "d", u.SpotifyRefreshToken)
-	assert.False(t, u.Subscribed)
+	assert.True(t, u.Subscribed)
 	assert.Equal(t, "abc-123", u.SubscriptionID)
 	assert.Equal(t, "foo@bar", u.Email)
 }
@@ -88,7 +88,7 @@ func TestPostgresUpdateUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, u)
 	assert.Equal(t, "22", u.TwitchID)
-	assert.Equal(t, "abc@123", u.TwitchID)
+	assert.Equal(t, "abc@123", u.Email)
 
 	u.Email = "123@abc"
 	err = store.UpdateUser(u)
