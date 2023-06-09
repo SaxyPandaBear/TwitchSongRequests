@@ -17,7 +17,7 @@ jobs:
     - name: Build
       run: go build -v ./...
     - name: Test
-      run: go test ./... -cover -v -timeout 10s
+      run: go test ./... -cover -v -timeout 10s -short
 
   postgres-tests:
     needs: build
@@ -53,7 +53,7 @@ jobs:
 
       - name: Populate test database
         run: |
-          psql -U postgres -h postgres -f ./testdata/data.sql
+          psql -U postgres -d testdb -h postgres -f ./testdata/data.sql
         env:
           POSTGRES_HOST: postgres
           POSTGRES_PORT: 5432
@@ -62,4 +62,4 @@ jobs:
           PGPASSWORD: postgres
 
       - name: Run tests
-        run: go test ./... -tags=postgres -v -timeout=120s
+        run: go test ./... -run Postgres -v -timeout 120s

@@ -130,7 +130,7 @@ go build .
 
 ### Unit testing
 ```bash
-go test ./... -cover -v -timeout 10s
+go test ./... -cover -v -timeout 10s -short
 ```
 
 ### Integration testing

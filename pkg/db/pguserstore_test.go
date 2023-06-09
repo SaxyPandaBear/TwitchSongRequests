@@ -1,6 +1,3 @@
-//go:build postgres
-// +build postgres
-
 package db_test
 
 import (
@@ -32,7 +29,11 @@ func connect() {
 	}
 }
 
-func TestGetUser(t *testing.T) {
+func TestPostgresGetUser(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integ test")
+	}
+
 	connectOnce.Do(connect)
 
 	store := db.NewPostgresUserStore(pool)

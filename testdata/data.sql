@@ -1,6 +1,3 @@
-CREATE DATABASE testdb;
-USE testdb;
-
 CREATE TABLE users(
     id TEXT PRIMARY KEY, 
     twitch_access TEXT, 
