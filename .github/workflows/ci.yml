@@ -20,6 +20,7 @@ jobs:
       run: go test ./... -cover -v -timeout 10s
 
   postgres-tests:
+    needs: build
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     # Docker Hub image that `container-job` executes in
@@ -44,8 +45,8 @@ jobs:
     steps:
       - name: Install psql
         run: |
-          apt-get update
-          apt-get install --yes --no-install-recommends postgresql-client
+          apk update
+          apk add postgresql
 
       - name: Check out repository code
         uses: actions/checkout@v3
