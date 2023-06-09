@@ -1,43 +1,125 @@
 package db_test
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"os"
 	"sync"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
+	"github.com/saxypandabear/twitchsongrequests/pkg/users"
 	"github.com/stretchr/testify/assert"
 )
 
-var connectOnce sync.Once
-var pool *pgxpool.Pool
-
-func connect() {
-	user := os.Getenv("POSTGRES_USER")
-	pwd := os.Getenv("POSTGRES_PASSWORD")
-	host := os.Getenv("POSTGRES_HOST")
-	port := os.Getenv("POSTGRES_PORT")
-
-	var err error
-	pool, err = pgxpool.New(context.Background(), fmt.Sprintf("postgres://%s:%s@%s:%s/testdb", user, pwd, host, port))
-	if err != nil {
-		log.Fatalf("failed to connect to postgres db: %v\n", err)
-	}
-}
+var userOnce sync.Once
 
 func TestPostgresGetUser(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integ test")
 	}
 
-	connectOnce.Do(connect)
+	userOnce.Do(connect)
 
 	store := db.NewPostgresUserStore(pool)
 	u, err := store.GetUser("12345")
 	assert.NoError(t, err)
 	assert.NotNil(t, u)
+	assert.Equal(t, "12345", u.TwitchID)
+	assert.Equal(t, "a", u.TwitchAccessToken)
+	assert.Equal(t, "b", u.TwitchRefreshToken)
+	assert.Equal(t, "c", u.SpotifyAccessToken)
+	assert.Equal(t, "d", u.SpotifyRefreshToken)
+	assert.False(t, u.Subscribed)
+	assert.Equal(t, "abc-123", u.SubscriptionID)
+	assert.Equal(t, "foo@bar", u.Email)
+}
+
+func TestPostgresGetUserMissing(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integ test")
+	}
+
+	userOnce.Do(connect)
+
+	store := db.NewPostgresUserStore(pool)
+	u, err := store.GetUser("98765")
+	assert.Error(t, err)
+	assert.Nil(t, u)
+}
+
+func TestPostgresAddUser(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integ test")
+	}
+
+	userOnce.Do(connect)
+
+	store := db.NewPostgresUserStore(pool)
+
+	u := users.User{
+		TwitchID: "555",
+	}
+
+	err := store.AddUser(&u)
+	assert.NoError(t, err)
+
+	fetched, err := store.GetUser("555")
+	assert.NoError(t, err)
+	assert.NotNil(t, fetched)
+	assert.Equal(t, "555", fetched.TwitchID)
+}
+
+func TestPostgresUpdateUser(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integ test")
+	}
+
+	userOnce.Do(connect)
+
+	store := db.NewPostgresUserStore(pool)
+
+	u := &users.User{
+		TwitchID: "22",
+		Email:    "abc@123",
+	}
+
+	err := store.AddUser(u)
+	assert.NoError(t, err)
+
+	u, err = store.GetUser("22")
+	assert.NoError(t, err)
+	assert.NotNil(t, u)
+	assert.Equal(t, "22", u.TwitchID)
+	assert.Equal(t, "abc@123", u.TwitchID)
+
+	u.Email = "123@abc"
+	err = store.UpdateUser(u)
+	assert.NoError(t, err)
+
+	u, err = store.GetUser("22")
+	assert.NoError(t, err)
+	assert.NotNil(t, u)
+	assert.Equal(t, "123@abc", u.Email)
+}
+
+func TestPostgresDeleteUser(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integ test")
+	}
+
+	userOnce.Do(connect)
+
+	store := db.NewPostgresUserStore(pool)
+
+	u := &users.User{
+		TwitchID: "555",
+	}
+
+	err := store.AddUser(u)
+	assert.NoError(t, err)
+
+	err = store.DeleteUser("555")
+	assert.NoError(t, err)
+
+	u, err = store.GetUser("555")
+	assert.Error(t, err)
+	assert.Nil(t, u)
 }
