@@ -76,6 +76,7 @@ func TestPostgresUpdateUser(t *testing.T) {
 
 	store := db.NewPostgresUserStore(pool)
 
+	// Adding a user doesn't include the email value
 	u := &users.User{
 		TwitchID: "22",
 		Email:    "abc@123",
@@ -88,8 +89,9 @@ func TestPostgresUpdateUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, u)
 	assert.Equal(t, "22", u.TwitchID)
-	assert.Equal(t, "abc@123", u.Email)
+	assert.Empty(t, u.Email)
 
+	// Updating a user includes the email value
 	u.Email = "123@abc"
 	err = store.UpdateUser(u)
 	assert.NoError(t, err)
