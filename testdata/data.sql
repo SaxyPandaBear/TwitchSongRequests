@@ -23,7 +23,7 @@ CREATE TABLE preferences(
 );
 
 INSERT INTO preferences(id, explicit, reward_id, max_song_length)
-VALUES ('12345', false, "abc-123", 0), ('23456', true, 'bcd-234', 50000);
+VALUES ('12345', false, 'abc-123', 0), ('23456', true, 'bcd-234', 50000);
 
 CREATE TABLE messages(
     id SERIAL PRIMARY KEY,
