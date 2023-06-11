@@ -22,7 +22,7 @@ INSERT INTO users(
     email,
     last_updated,
     spotify_expiry) 
-VALUES ('12345', 'a', 'b', 'c', 'd', true, 'abc-123', 'foo@bar', now(), now());
+VALUES ('12345', 'a', 'b', 'c', 'd', true, 'abc-123', 'foo@bar', current_timestamp, current_timestamp);
 
 CREATE TABLE preferences(
     id TEXT PRIMARY KEY,
@@ -33,7 +33,7 @@ CREATE TABLE preferences(
 );
 
 INSERT INTO preferences(id, explicit, reward_id, max_song_length, last_updated)
-VALUES ('12345', false, 'abc-123', 0), ('23456', true, 'bcd-234', 50000, now());
+VALUES ('12345', false, 'abc-123', 0), ('23456', true, 'bcd-234', 50000, current_timestamp);
 
 CREATE TABLE messages(
     id SERIAL PRIMARY KEY,
@@ -44,4 +44,4 @@ CREATE TABLE messages(
 );
 
 INSERT INTO messages(success, broadcaster_id, spotify_track, created_at)
-VALUES (1, '12345', 'abc', '2017-03-14'), (0, '23456', '', now()), (1, '12345', 'bcd', now());
+VALUES (1, '12345', 'abc', '2017-03-14'), (0, '23456', '', current_timestamp), (1, '12345', 'bcd', current_timestamp);
