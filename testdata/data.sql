@@ -11,8 +11,18 @@ CREATE TABLE users(
     email TEXT
 );
 
-INSERT INTO users(id, twitch_access, twitch_refresh, spotify_access, spotify_refresh, subscribed, subscription_id, email) 
-VALUES ('12345', 'a', 'b', 'c', 'd', true, 'abc-123', 'foo@bar');
+INSERT INTO users(
+    id, 
+    twitch_access, 
+    twitch_refresh, 
+    spotify_access, 
+    spotify_refresh, 
+    subscribed, 
+    subscription_id,
+    email,
+    last_updated,
+    spotify_expiry) 
+VALUES ('12345', 'a', 'b', 'c', 'd', true, 'abc-123', 'foo@bar', now(), now());
 
 CREATE TABLE preferences(
     id TEXT PRIMARY KEY,
@@ -22,8 +32,8 @@ CREATE TABLE preferences(
     max_song_length INT
 );
 
-INSERT INTO preferences(id, explicit, reward_id, max_song_length)
-VALUES ('12345', false, 'abc-123', 0), ('23456', true, 'bcd-234', 50000);
+INSERT INTO preferences(id, explicit, reward_id, max_song_length, last_updated)
+VALUES ('12345', false, 'abc-123', 0), ('23456', true, 'bcd-234', 50000, now());
 
 CREATE TABLE messages(
     id SERIAL PRIMARY KEY,
@@ -33,5 +43,5 @@ CREATE TABLE messages(
     spotify_track TEXT
 );
 
-INSERT INTO messages(success, broadcaster_id, spotify_track)
-VALUES (1, '12345', 'abc'), (0, '23456', ''), (1, '12345', 'bcd');
+INSERT INTO messages(success, broadcaster_id, spotify_track, created_at)
+VALUES (1, '12345', 'abc', '2017-03-14'), (0, '23456', '', now()), (1, '12345', 'bcd', now());

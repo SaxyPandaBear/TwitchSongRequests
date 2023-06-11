@@ -29,6 +29,7 @@ func (p *PostgresMessageCounter) AddMessage(m *metrics.Message) {
 	}
 }
 
+// TotalMessages counts only the successful messages that were queued
 func (p *PostgresMessageCounter) TotalMessages() uint64 {
 	var v uint64
 	if err := p.pool.QueryRow(context.Background(), "select count(id) from messages where success = 1").Scan(&v); err != nil {

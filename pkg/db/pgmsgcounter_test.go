@@ -66,3 +66,39 @@ func TestPostgresGetMessagesForUser(t *testing.T) {
 	assert.NotEmpty(t, msgs)
 	assert.Equal(t, count, uint64(len(msgs)))
 }
+
+func TestPostgresTotalMessages(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integ test")
+	}
+
+	msgOnce.Do(connect)
+
+	store := db.NewPostgresMessageCounter(pool)
+
+	var count uint64
+	err := pool.QueryRow(context.Background(), "select count(id) from messages").Scan(&count)
+	assert.NoError(t, err)
+
+	assert.Greater(t, count, uint64(0))
+
+	actual := store.TotalMessages()
+	assert.Greater(t, count, actual)
+	assert.NotZero(t, actual)
+}
+
+func TestPostgresRunningCount(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integ test")
+	}
+
+	msgOnce.Do(connect)
+
+	store := db.NewPostgresMessageCounter(pool)
+
+	total := store.TotalMessages()
+
+	count := store.RunningCount(5)
+	assert.Greater(t, total, count)
+	assert.NotZero(t, count)
+}
