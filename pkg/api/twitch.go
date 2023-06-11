@@ -2,10 +2,10 @@ package api
 
 import (
 	"encoding/base64"
-	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
@@ -35,16 +35,14 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	// https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/
 	if r.URL.Query().Has("error") {
 		zap.L().Error("failed to authorize", zap.String("error", r.URL.Query().Get("error_description")))
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "failed to authorize")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		zap.L().Error("could not extract access code from redirect")
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintln(w, "failed to authorize")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
@@ -52,8 +50,7 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	if state != h.auth.State {
 		zap.L().Error("could not verify request state")
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintln(w, "failed to verify state")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
@@ -61,16 +58,14 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	client, err := util.GetNewTwitchClient(h.auth)
 	if err != nil {
 		zap.L().Error("failed to get Twitch client", zap.Error(err))
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "failed to authorize")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
 	token, err := client.RequestUserAccessToken(code)
 	if err != nil {
 		zap.L().Error("failed to retrieve user access token", zap.Error(err))
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "failed to authorize")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 	zap.L().Debug("token response", zap.Int("status", token.StatusCode), zap.String("error", token.ErrorMessage))
@@ -81,17 +76,30 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	ok, data, err := client.ValidateToken(token.Data.AccessToken)
 	if err != nil {
 		zap.L().Error("error occurred while validating Twitch OAuth token", zap.Error(err))
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintln(w, "failed to validate Twitch OAuth token")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	} else if !ok {
 		zap.L().Error("failed to validate client token", zap.Int("status", data.ErrorStatus), zap.String("error", data.ErrorMessage))
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintln(w, "failed to validate Twitch OAuth token")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
 
 	log.Printf("validated token for %v:%s\n", data.Data.UserID, data.Data.Login)
+
+	// Check that the user is affiliated or partnered before letting them continue
+	res, err := client.GetUsers(&helix.UsersParams{
+		IDs: []string{data.Data.UserID},
+	})
+	if err != nil {
+		zap.L().Error("failed to query user details", zap.String("id", data.Data.UserID), zap.Error(err))
+	} else if len(res.Data.Users) == 1 {
+		fetched := res.Data.Users[0]
+		if fetched.BroadcasterType == "" {
+			zap.L().Error("user is not affiliated or partnered", zap.String("id", data.Data.UserID))
+			http.Redirect(w, r, h.redirectURL, http.StatusFound)
+			return
+		}
+	}
 
 	user := users.User{
 		TwitchID:           data.Data.UserID,
@@ -102,8 +110,7 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	err = h.userStore.AddUser(&user)
 	if err != nil {
 		zap.L().Error("failed to store user auth details", zap.String("id", user.TwitchID), zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "failed to save details on user")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return // don't set a cookie on the client
 	}
 
@@ -114,8 +121,7 @@ func (h *TwitchAuthZHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	err = h.prefStore.AddPreference(&pref)
 	if err != nil {
 		zap.L().Error("failed to store preference details for", zap.String("id", pref.TwitchID), zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "failed to save preferences for user")
+		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return // don't set a cookie on the client
 	}
 
