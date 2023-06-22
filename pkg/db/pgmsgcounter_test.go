@@ -99,6 +99,8 @@ func TestPostgresRunningCount(t *testing.T) {
 	total := store.TotalMessages()
 
 	count := store.RunningCount(5)
+
+	// there is older test data that should not be counted
 	assert.Greater(t, total, count)
 	assert.NotZero(t, count)
 }

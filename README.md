@@ -134,7 +134,11 @@ go test ./... -cover -v -timeout 10s -short
 ```
 
 ### Integration testing
-TODO - Maybe I'll do this for fun? 
+Integration testing for Postgres queries is done via GitHub actions. 
+Take a look at the `.github/workflows/ci.yml` file for how they are run.
+
+Technically they can be run locally by standing up a Postgres db and injecting 
+the same test data into a local instance. 
 
 ### Set up Twitch CLI
 Use the [Twitch CLI](https://dev.twitch.tv/docs/cli) for local development. 
