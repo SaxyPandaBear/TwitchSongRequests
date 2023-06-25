@@ -17,6 +17,7 @@ func main() {
 	flag.Parse()
 
 	config := zap.NewProductionConfig()
+	config.Level.SetLevel(zapcore.DebugLevel)
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder // human readable timestamps for logs
 	config.EncoderConfig = encoderConfig
