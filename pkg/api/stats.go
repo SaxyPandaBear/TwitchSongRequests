@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	NumUsersOnboarded = 24
+	NumUsersOnboarded = 25
 	NumUsersAllowed   = 25
 )
 
