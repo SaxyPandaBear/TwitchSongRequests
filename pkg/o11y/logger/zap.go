@@ -42,7 +42,7 @@ func (z *ZapLogEntry) Write(status, bytes int, header http.Header, elapsed time.
 }
 
 func (z *ZapLogEntry) Panic(v interface{}, stack []byte) {
-	middleware.PrintPrettyStack(v) // TODO: maybe implement this myself?
+	z.L.Error("Panicked", zap.String("stack", string(stack)))
 }
 
 var _ middleware.LogEntry = (*ZapLogEntry)(nil)

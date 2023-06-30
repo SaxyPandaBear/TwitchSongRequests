@@ -38,6 +38,13 @@ the reward title! Thanks @rosethornttv for the feedback!
 
 As much as I would love to make this more broadly accessible, looks like it goes against their ToS. This means that there will be limited access to the service, since I have to manually allowlist users. If you really want to use it, please sign up via the above steps. 
 
+### What happens after all 25 slots are taken?
+I am working on figuring out how to audit usage of my service, so that I can 
+give priority to streamers that would actually use it. Even if the service is
+at capacity, please still go through all of the onboarding steps. I will 
+evaluate onboarding newer users first-in-first-out, so getting in line early
+is to your own benefit!
+
 ## How do I use it?
 1. Open Spotify on your computer
 1. Navigate to your Twitch channel
