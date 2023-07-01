@@ -87,6 +87,7 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
+	c.SetUserAccessToken(tokenResp.Data.AccessToken)
 
 	// attempt to remove the reward, if the reward ID is non-empty
 	prefs, err := h.prefs.GetPreference(userID)
