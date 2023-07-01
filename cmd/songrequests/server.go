@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -56,6 +57,11 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 
 	// Only really need caching/coalescing for heavier traffic GET requests, like the stats data
 	cached := stampede.Handler(512, 1*time.Second)
+	customKeyFunc := func(r *http.Request) uint64 {
+		token := chi.URLParam(r, "id")
+		return stampede.StringToHash(r.Method, strings.ToLower(strings.ToLower(token)))
+	}
+	playerQueueCache := stampede.HandlerWithKey(512, 1*time.Minute, customKeyFunc)
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
@@ -111,8 +117,8 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.With(cached).Get("/stats/running", statsHandler.RunningCount)
 	r.With(cached).Get("/stats/onboarded", statsHandler.Onboarded)
 
-	queueHandler := api.NewQueueHandler(messageCounter)
-	r.With(cached).Get("/queue/{id}", queueHandler.GetLatestMessages)
+	queueHandler := api.NewQueueHandler(userStore, spotifyConfig)
+	r.With(playerQueueCache).Get("/queue/{id}", queueHandler.GetUserQueue)
 
 	// ===== Website Pages =====
 

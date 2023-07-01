@@ -47,6 +47,8 @@ func (p *PostgresMessageCounter) RunningCount(days int) uint64 {
 	return v
 }
 
+// MessagesForUser reads out of the database of queued songs to track successful queues, but doesn't provide a lot of user
+// value. Leaving this here for now, but might remove in the future.
 func (p *PostgresMessageCounter) MessagesForUser(id string) []*metrics.Message {
 	rows, err := p.pool.Query(context.Background(), "SELECT spotify_track, success FROM messages WHERE broadcaster_id = $1 AND spotify_track != '' ORDER BY id DESC LIMIT 100", id)
 	if err != nil {
