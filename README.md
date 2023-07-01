@@ -132,6 +132,8 @@ go build .
 | SPOTIFY_CLIENT_SECRET | Spotify app OAuth client secret                                  |
 | SPOTIFY_REDIRECT_URL  | Spotify OAuth redirect URL                                       |
 | SPOTIFY_STATE         | Spotify app OAuth state key                                      |
+| ONBOARDED_USERS       | Number of onboarded users to display stats for                   |
+| ALLOWED_USERS         | Number of users that are allowed to be onboarded                 |
 
 ## Testing
 

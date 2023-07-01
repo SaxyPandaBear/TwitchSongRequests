@@ -20,7 +20,7 @@ func TestCountMessages(t *testing.T) {
 		Msgs: make([]*metrics.Message, 0, 1),
 	}
 
-	sh := api.NewStatsHandler(&counter)
+	sh := api.NewStatsHandler(&counter, 0, 100)
 
 	req, err := http.NewRequest("GET", "/count", nil)
 	assert.NoError(t, err)
@@ -87,11 +87,7 @@ func TestCountMessages(t *testing.T) {
 }
 
 func TestOnboardedCount(t *testing.T) {
-	sh := api.NewStatsHandler(&testutil.InMemoryMessageCounter{})
-
-	// don't rely on the real hardcoded values for onboarded/allowed for testing
-	sh.NumOnboarded = 1
-	sh.NumAllowed = 2
+	sh := api.NewStatsHandler(&testutil.InMemoryMessageCounter{}, 1, 2)
 
 	req, err := http.NewRequest("GET", "/onboarded", nil)
 	assert.NoError(t, err)

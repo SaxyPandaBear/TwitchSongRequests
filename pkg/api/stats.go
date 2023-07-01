@@ -10,11 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	NumUsersOnboarded = 24
-	NumUsersAllowed   = 25
-)
-
 type StatsHandler struct {
 	msgCounter   db.MessageCounter
 	NumOnboarded uint
@@ -31,11 +26,11 @@ type SvgData struct {
 	CacheSeconds  int    `json:"cacheSeconds"`
 }
 
-func NewStatsHandler(counter db.MessageCounter) *StatsHandler {
+func NewStatsHandler(counter db.MessageCounter, onboarded, allowed uint) *StatsHandler {
 	return &StatsHandler{
 		msgCounter:   counter,
-		NumOnboarded: NumUsersOnboarded,
-		NumAllowed:   NumUsersAllowed,
+		NumOnboarded: onboarded,
+		NumAllowed:   allowed,
 	}
 }
 

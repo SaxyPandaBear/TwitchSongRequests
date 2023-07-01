@@ -18,4 +18,8 @@ const (
 
 	// Shared cookie
 	TwitchIDCookieKey = "TwitchSongRequests-Twitch-ID"
+
+	// User metrics
+	NumOnboardedUsers = "ONBOARDED_USERS"
+	NumAllowedUsers   = "ALLOWED_USERS"
 )

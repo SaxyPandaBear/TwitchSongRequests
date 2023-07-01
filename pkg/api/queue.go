@@ -58,20 +58,24 @@ func (h *QueueHandler) GetUserQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// store the refreshed token
-	u, err := h.userStore.GetUser(userID)
-	if err == nil {
-		u.SpotifyAccessToken = refreshed.AccessToken
-		u.SpotifyRefreshToken = refreshed.RefreshToken
-		u.SpotifyExpiry = &refreshed.Expiry
+	// try to offload this to see if the response time is better
+	defer func() {
+		// store the refreshed token
+		u, err := h.userStore.GetUser(userID)
+		if err == nil {
+			u.SpotifyAccessToken = refreshed.AccessToken
+			u.SpotifyRefreshToken = refreshed.RefreshToken
+			u.SpotifyExpiry = &refreshed.Expiry
 
-		zap.L().Debug("saving updated Spotify credentials", zap.String("id", u.TwitchID))
+			zap.L().Debug("saving updated Spotify credentials", zap.String("id", u.TwitchID))
 
-		if err = h.userStore.UpdateUser(u); err != nil {
-			// if we got a valid token but failed to update the DB this is not necessarily fatal.
-			zap.L().Error("failed to update user's spotify token", zap.Error(err))
+			if err = h.userStore.UpdateUser(u); err != nil {
+				// if we got a valid token but failed to update the DB this is not necessarily fatal.
+				zap.L().Error("failed to update user's spotify token", zap.Error(err))
+			}
 		}
-	}
+	}()
+
 	c := util.GetNewSpotifyClient(r.Context(), h.spotify, refreshed)
 
 	q, err := c.GetQueue(context.Background())

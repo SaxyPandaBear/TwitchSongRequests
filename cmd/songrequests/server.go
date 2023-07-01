@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -83,6 +84,17 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 		return err
 	}
 
+	onboardedUsers := util.GetFromEnvOrDefault(constants.NumOnboardedUsers, "0")
+	allowedUsers := util.GetFromEnvOrDefault(constants.NumAllowedUsers, "1")
+	var numOnboarded uint
+	var numAllowed uint = 1
+	if i, err := strconv.Atoi(onboardedUsers); err == nil {
+		numOnboarded = uint(i)
+	}
+	if i, err := strconv.Atoi(allowedUsers); err == nil {
+		numAllowed = uint(i)
+	}
+
 	// ===== APIs =====
 	p := spotify.SpotifyPlayerQueue{}
 	rhconfig := api.RewardHandlerConfig{
@@ -112,7 +124,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	preferenceHandler := api.NewPreferenceHandler(preferenceStore, redirectURL)
 	r.Post("/preference", preferenceHandler.SavePreferences) // this is a POST because forms don't support DELETE
 
-	statsHandler := api.NewStatsHandler(messageCounter)
+	statsHandler := api.NewStatsHandler(messageCounter, numOnboarded, numAllowed)
 	r.With(cached).Get("/stats/total", statsHandler.TotalMessages)
 	r.With(cached).Get("/stats/running", statsHandler.RunningCount)
 	r.With(cached).Get("/stats/onboarded", statsHandler.Onboarded)
