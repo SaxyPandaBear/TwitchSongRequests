@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
@@ -85,6 +86,24 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		zap.L().Error("failed to refresh twitch token", zap.Error(err))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
+	}
+
+	// attempt to remove the reward, if the reward ID is non-empty
+	prefs, err := h.prefs.GetPreference(userID)
+	if err != nil {
+		// This is really a non-issue. Log and move on.
+		zap.L().Warn("failed to get user preferences", zap.String("id", userID), zap.Error(err))
+	} else if len(prefs.CustomRewardID) > 0 {
+		dcrResponse, err := c.DeleteCustomRewards(&helix.DeleteCustomRewardsParams{
+			BroadcasterID: userID,
+			ID:            prefs.CustomRewardID,
+		})
+		// again, if this fails it's really a non-issue. log and move on.
+		if err != nil {
+			zap.L().Warn("failed to call api to delete custom reward", zap.String("id", userID), zap.String("reward_id", prefs.CustomRewardID), zap.Error(err))
+		} else if dcrResponse.StatusCode >= 400 {
+			zap.L().Warn("failed to delete custom reward", zap.String("id", userID), zap.String("reward_id", prefs.CustomRewardID), zap.Int("status", dcrResponse.StatusCode), zap.String("error", dcrResponse.Error), zap.String("error_msg", dcrResponse.ErrorMessage))
+		}
 	}
 
 	// make sure that the token is fresh before revoking
