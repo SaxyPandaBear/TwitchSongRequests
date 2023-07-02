@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const trackLimit = 5 // Spotify consistently returns 20, but this is not good for displaying on a stream
+const trackLimit = 2 // Spotify consistently returns 20, but this is not good for displaying on a stream
 
 var queuePage = template.Must(template.ParseFiles("pkg/site/queue.html"))
 
@@ -96,8 +96,15 @@ func (h *QueuePageRenderer) GetUserQueue(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	tracks := make([]util.Track, 0, trackLimit+1)
+	tracks = append(tracks, *util.SpotifyTrackToPageData(&q.CurrentlyPlaying))
+	tracks = append(tracks, util.ParseTrackData(q.Items, trackLimit)...)
+	for i, t := range tracks {
+		t.Position = i + 1
+	}
+
 	data := QueuePageData{
-		Tracks: util.ParseTrackData(q.Items, trackLimit),
+		Tracks: tracks,
 	}
 
 	if err := queuePage.Execute(w, data); err != nil {

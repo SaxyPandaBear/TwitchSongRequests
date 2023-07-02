@@ -64,9 +64,7 @@ func TestParseTrackDataTruncates(t *testing.T) {
 	assert.Greater(t, len(tracks), len(response))
 	assert.Len(t, response, 2)
 	assert.Equal(t, "foo", response[0].Title)
-	assert.Equal(t, 1, response[0].Position)
 	assert.Equal(t, "bar", response[1].Title)
-	assert.Equal(t, 2, response[1].Position)
 }
 
 func TestParseTrackDataEmpty(t *testing.T) {
@@ -91,9 +89,9 @@ func TestSpotifyTrackToPageData(t *testing.T) {
 		},
 	}
 
-	resp := util.SpotifyTrackToPageData(&track, 1)
+	resp := util.SpotifyTrackToPageData(&track)
 	assert.NotNil(t, resp)
-	assert.Equal(t, 1, resp.Position)
+	assert.Equal(t, 0, resp.Position) // default value
 	assert.Equal(t, "foo", resp.Title)
 	assert.Equal(t, "Some Album", resp.Album)
 	assert.Equal(t, "Name1, Other Artist", resp.Artist)
