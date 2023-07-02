@@ -129,7 +129,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.With(cached).Get("/stats/running", statsHandler.RunningCount)
 	r.With(cached).Get("/stats/onboarded", statsHandler.Onboarded)
 
-	queueHandler := api.NewQueueHandler(userStore, spotifyConfig)
+	queueHandler := site.NewQueuePageRenderer(redirectURL, userStore, spotifyConfig)
 	r.With(playerQueueCache).Get("/queue/{id}", queueHandler.GetUserQueue)
 
 	// ===== Website Pages =====

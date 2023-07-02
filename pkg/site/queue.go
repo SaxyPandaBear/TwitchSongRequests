@@ -1,10 +1,10 @@
-package api
+package site
 
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -13,19 +13,29 @@ import (
 	"go.uber.org/zap"
 )
 
-type QueueHandler struct {
+const trackLimit = 100
+
+var queuePage = template.Must(template.ParseFiles("pkg/site/queue.html"))
+
+type QueuePageRenderer struct {
 	spotify   *util.AuthConfig
 	userStore db.UserStore
+	siteURL   string
 }
 
-func NewQueueHandler(u db.UserStore, spotify *util.AuthConfig) *QueueHandler {
-	return &QueueHandler{
+type QueuePageData struct {
+	Tracks []util.Track
+}
+
+func NewQueuePageRenderer(siteURL string, u db.UserStore, spotify *util.AuthConfig) *QueuePageRenderer {
+	return &QueuePageRenderer{
 		userStore: u,
 		spotify:   spotify,
+		siteURL:   siteURL,
 	}
 }
 
-func (h *QueueHandler) GetUserQueue(w http.ResponseWriter, r *http.Request) {
+func (h *QueuePageRenderer) GetUserQueue(w http.ResponseWriter, r *http.Request) {
 	// This ID parameter is expected to be the b64 encoding for the user's user ID. This isn't great or
 	// really opaque, but it's good enough.
 	id := chi.URLParam(r, "id")
@@ -86,15 +96,11 @@ func (h *QueueHandler) GetUserQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bytes, err := json.Marshal(q)
-	if err != nil {
-		zap.L().Warn("failed to marshal response JSON", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "failed to generate response")
-		return
+	data := QueuePageData{
+		Tracks: util.ParseTrackData(q.Items, trackLimit),
 	}
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write(bytes); err != nil {
-		zap.L().Warn("failed to write response", zap.Error(err))
+
+	if err := queuePage.Execute(w, data); err != nil {
+		zap.L().Error("error occurred while executing template", zap.Error(err))
 	}
 }
