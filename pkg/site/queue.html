@@ -72,7 +72,6 @@
                 <th>Title</th>
                 <th>Artist(s)</th>
                 <th>Album</th>
-                <th>URI</th>
             </tr>
             {{ range .Tracks }}
                 <tr>
@@ -80,12 +79,10 @@
                     <td>{{ .Title }}</td>
                     <td>{{ .Artist }}</td>
                     <td>{{ .Album }}</td>
-                    <td>{{ .URI }}</td>
                 </tr>
             {{ end }}
             <tr> <!-- trailing row to indicate there are more songs? -->
                 <td>...</td>
-                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>

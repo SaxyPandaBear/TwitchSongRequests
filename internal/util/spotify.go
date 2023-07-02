@@ -11,7 +11,6 @@ type Track struct {
 	Title    string
 	Artist   string
 	Album    string
-	URI      string
 }
 
 func ParseTrackData(tracks []spotify.FullTrack, limit int) []Track {
@@ -38,6 +37,5 @@ func SpotifyTrackToPageData(tr *spotify.FullTrack, pos int) *Track {
 		Title:    tr.Name,
 		Artist:   strings.Join(artistNames, ", "),
 		Album:    tr.Album.Name,
-		URI:      string(tr.URI),
 	}
 }
