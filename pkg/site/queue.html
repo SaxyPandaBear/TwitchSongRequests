@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="og:title" content="TwitchSongRequests" />
     <meta name="og:description" content="Integrate your Spotify player with Twitch channel points" />
-    <meta http-equiv="refresh" content="75">
+    <meta http-equiv="refresh" content="30">
     <title>TwitchSongRequests</title>
 
     <style>
@@ -43,7 +43,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding-block: 2rem;
         }
 
         table {
@@ -84,6 +83,13 @@
                     <td>{{ .URI }}</td>
                 </tr>
             {{ end }}
+            <tr> <!-- trailing row to indicate there are more songs? -->
+                <td>...</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
         </table>
     </div>
 </body>

@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const trackLimit = 100
+const trackLimit = 5 // Spotify consistently returns 20, but this is not good for displaying on a stream
 
 var queuePage = template.Must(template.ParseFiles("pkg/site/queue.html"))
 
