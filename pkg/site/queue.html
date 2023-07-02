@@ -45,15 +45,19 @@
             background-color: rgb(60, 55, 62);
             /* default OBS browser source size is 800x600 */
             width: 800px;
-            height: 600px;
+            height: 300px;
         }
 
         table {
-            border: 1px solid white;
-            font-size: large;
+            border: 2px solid white;
+            font-size: larger;
             color: white;
             width: 100%;
             height: 100%;
+        }
+
+        th, td {
+            border: 1px solid white;
         }
 
         .container {
@@ -73,8 +77,8 @@
     <div class="container">
         <table>
             <tr>
-                <th></th>
-                <th>Song Queue</th>
+                <th>#</th>
+                <th>Song</th>
             </tr>
             {{ range .Tracks }}
                 <tr>
