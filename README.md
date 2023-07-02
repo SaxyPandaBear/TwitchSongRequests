@@ -57,6 +57,10 @@ is to your own benefit!
 1. If you are pretty sure you didn't mess anything up, make an issue [here](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new?assignees=&labels=bug&template=User-Bug-Report.yml&title=%5BBug%5D%3A+%5BDescribe+the+issue%5D)
 1. If you want to allow your viewers to submit song requests for [explicit songs](https://support.spotify.com/us/article/explicit-content/), you have to opt in to this by updating your [preferences](https://twitchsongrequests-production.up.railway.app/preferences)
 1. If you want to limit the length of the songs chatters can submit, specify the max song length in seconds in your [preferences](https://twitchsongrequests-production.up.railway.app/preferences). Any value less than or equal to zero means any song length is allowed
+1. If you want to display your song queue (current playing, and next two songs)
+on your stream, use the link shown on the page for the OBS browser source. Feel
+free to override the CSS with your own custom CSS to make it your own. The page
+auto refreshes every 10 seconds. 
 
 ## Demo
 [![Demo](https://img.youtube.com/vi/Oz5Zs8mVDRY/hqdefault.jpg)](https://youtu.be/Oz5Zs8mVDRY)
@@ -65,8 +69,10 @@ is to your own benefit!
 In order to use custom channel point rewards, you must be an affiliate or partner
 streamer.
 
-Last I checked, in order to queue songs into a player, the user must have Spotify
-Premium.
+The Spotify account used must have Spotify Premium. If it turns out you do not
+have Spotify Premium and you are onboarded but fail to queue songs because of 
+that, I will take the liberty of removing you from the allowed users in order to
+give a chance to other users who want to use the service. 
 
 ## How do I stop using it?
 1. Navigate to the site: https://twitchsongrequests-production.up.railway.app
