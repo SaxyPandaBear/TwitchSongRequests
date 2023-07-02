@@ -29,7 +29,24 @@ func TestParseTrackDataTruncates(t *testing.T) {
 		},
 		{
 			SimpleTrack: spotify.SimpleTrack{
-				Name: "bar", // order matters for truncation
+				Name: "bar",
+				Artists: []spotify.SimpleArtist{
+					{
+						Name: "Name1",
+					},
+					{
+						Name: "Other Artist",
+					},
+				},
+				URI: spotify.URI("abc/def"),
+			},
+			Album: spotify.SimpleAlbum{
+				Name: "Some Album",
+			},
+		},
+		{
+			SimpleTrack: spotify.SimpleTrack{
+				Name: "baz", // order matters for truncation
 				Artists: []spotify.SimpleArtist{
 					{
 						Name: "Name1",
@@ -48,8 +65,11 @@ func TestParseTrackDataTruncates(t *testing.T) {
 
 	response := util.ParseTrackData(tracks, 1)
 	assert.Greater(t, len(tracks), len(response))
-	assert.Len(t, response, 1)
+	assert.Len(t, response, 2)
 	assert.Equal(t, "foo", response[0].Title)
+	assert.Equal(t, 1, response[0].Position)
+	assert.Equal(t, "bar", response[1].Title)
+	assert.Equal(t, 2, response[1].Position)
 }
 
 func TestParseTrackDataEmpty(t *testing.T) {
@@ -75,8 +95,9 @@ func TestSpotifyTrackToPageData(t *testing.T) {
 		},
 	}
 
-	resp := util.SpotifyTrackToPageData(&track)
+	resp := util.SpotifyTrackToPageData(&track, 1)
 	assert.NotNil(t, resp)
+	assert.Equal(t, 1, resp.Position)
 	assert.Equal(t, "foo", resp.Title)
 	assert.Equal(t, "abc/def", resp.URI)
 	assert.Equal(t, "Some Album", resp.Album)

@@ -7,10 +7,11 @@ import (
 )
 
 type Track struct {
-	Title  string
-	Artist string
-	Album  string
-	URI    string
+	Position int
+	Title    string
+	Artist   string
+	Album    string
+	URI      string
 }
 
 func ParseTrackData(tracks []spotify.FullTrack, limit int) []Track {
@@ -19,13 +20,13 @@ func ParseTrackData(tracks []spotify.FullTrack, limit int) []Track {
 		if i >= limit {
 			break
 		}
-		response = append(response, *SpotifyTrackToPageData(&tr))
+		response = append(response, *SpotifyTrackToPageData(&tr, i+1))
 	}
 
 	return response
 }
 
-func SpotifyTrackToPageData(tr *spotify.FullTrack) *Track {
+func SpotifyTrackToPageData(tr *spotify.FullTrack, pos int) *Track {
 	// need to concatenate the list of artist names since they are all separated
 	artistNames := make([]string, 0, len(tr.Artists))
 	for _, a := range tr.Artists {
@@ -33,9 +34,10 @@ func SpotifyTrackToPageData(tr *spotify.FullTrack) *Track {
 	}
 
 	return &Track{
-		Title:  tr.Name,
-		Artist: strings.Join(artistNames, ", "),
-		Album:  tr.Album.Name,
-		URI:    string(tr.URI),
+		Position: pos,
+		Title:    tr.Name,
+		Artist:   strings.Join(artistNames, ", "),
+		Album:    tr.Album.Name,
+		URI:      string(tr.URI),
 	}
 }
