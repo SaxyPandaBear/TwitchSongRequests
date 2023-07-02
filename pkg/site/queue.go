@@ -60,6 +60,7 @@ func (h *QueuePageRenderer) GetUserQueue(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// TODO: this should not refresh every time.
 	refreshed, err := util.RefreshSpotifyToken(r.Context(), h.spotify, tok)
 	if err != nil {
 		zap.L().Error("failed to get valid token", zap.Error(err))

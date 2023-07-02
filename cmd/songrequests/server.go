@@ -62,7 +62,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 		token := chi.URLParam(r, "id")
 		return stampede.StringToHash(r.Method, strings.ToLower(strings.ToLower(token)))
 	}
-	playerQueueCache := stampede.HandlerWithKey(512, 20*time.Second, customKeyFunc)
+	playerQueueCache := stampede.HandlerWithKey(512, 5*time.Second, customKeyFunc)
 
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 

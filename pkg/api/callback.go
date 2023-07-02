@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
@@ -149,8 +148,6 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 
 	c := util.GetNewSpotifyClient(r.Context(), h.config.Spotify, refreshed)
 
-	log.Printf("User '%s' submitted '%s'", redeemEvent.UserName, redeemEvent.UserInput)
-
 	sID, err := h.config.Publisher.Publish(c, redeemEvent.UserInput, preferences)
 	msg := metrics.Message{
 		CreatedAt:     &redeemEvent.RedeemedAt.Time,
@@ -161,6 +158,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		zap.L().Error("failed to publish", zap.String("input", redeemEvent.UserInput), zap.Error(err))
 	} else {
 		msg.Success = 1
+		zap.L().Info("Submitted song request", zap.String("user", redeemEvent.UserName), zap.String("uri", redeemEvent.UserInput), zap.String("broadcaster", redeemEvent.BroadcasterUserLogin))
 	}
 
 	h.config.MsgCount.AddMessage(&msg)
@@ -249,10 +247,6 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	zap.L().Debug("updated redemptions", zap.Int("status", resp.StatusCode), zap.String("error", resp.ErrorMessage), zap.Int("num", len(resp.Data.Redemptions)))
 	if resp.StatusCode >= 400 {
 		return errors.New(resp.ErrorMessage)
-	}
-
-	for _, redemption := range resp.Data.Redemptions {
-		zap.L().Debug("successfully updated redemption status", zap.String("redemption_id", redemption.ID), zap.String("status", req.Status))
 	}
 
 	// update user details for Twitch auth
