@@ -203,6 +203,13 @@
             margin-right: 5px;
             padding: 1% 0;
         }
+
+        .browser-source {
+            overflow-x: scroll;
+            white-space: nowrap;
+            color: white;
+            background-color: #817b7b;
+        }
     </style>
 </head>
 
@@ -248,6 +255,19 @@
                         <div class="oauth-name">Preferences</div>
                     </button>
                 </a>
+            </div>
+            <br />
+            <div class="oauth-options">
+                <h2 class="about-header">OBS integration</h2>
+                <p class="about">
+                    Show your song queue on stream with this browser source. Don't share your link publicly, 
+                    as it is read-level access to your Spotify player queue.
+                </p>
+            </div>
+            <div class="oauth-options">
+                <p class="browser-source">
+                    {{ .BrowserSource }}
+                </p>
             </div>
             {{end}}
         </div>
@@ -303,9 +323,6 @@
                 Are you having trouble?
                 <br><br>
                 File a <a href="https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new/choose" target="_blank">bug report</a> and I'll get to it when I have time.
-            </p>
-            <p class="about">
-                <button class="styled-sub-button" data-provider="error" onclick="showError()">Check for errors</button>
             </p>
             <div class="cookie-disclaimer">
                 <h2 class="about-header">Use of cookies</h2>

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
 	"github.com/saxypandabear/twitchsongrequests/pkg/db"
 	"go.uber.org/zap"
@@ -30,6 +31,7 @@ type HomePageData struct {
 	Authenticated  bool
 	Subscribed     bool
 	Error          string
+	BrowserSource  string
 }
 
 func NewHomePageRenderer(siteURL string, u db.UserStore, twitch, spotify *util.AuthConfig) *HomePageRenderer {
@@ -74,6 +76,12 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 
 	d.Authenticated = user.IsAuthenticated()
 	d.Subscribed = user.Subscribed
+
+	if d.Subscribed {
+		// They're subscribed, so display the OBS source link
+		c, _ := r.Cookie(constants.TwitchIDCookieKey) // At this point, the cookie is already valid
+		d.BrowserSource = fmt.Sprintf("%s/queue/%s", h.siteURL, c.Value)
+	}
 
 	// check if there is an error in the request body
 	defer r.Body.Close()
