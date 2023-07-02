@@ -13,13 +13,13 @@ type Track struct {
 	Album    string
 }
 
-func ParseTrackData(tracks []spotify.FullTrack, limit int) []Track {
-	response := make([]Track, 0, limit) // TODO: not sure how many queued songs Spotify will respond with
+func ParseTrackData(tracks []spotify.FullTrack, limit int) []*Track {
+	response := make([]*Track, 0, limit) // TODO: not sure how many queued songs Spotify will respond with
 	for i, tr := range tracks {
 		if i >= limit {
 			break
 		}
-		response = append(response, *SpotifyTrackToPageData(&tr))
+		response = append(response, SpotifyTrackToPageData(&tr))
 	}
 
 	return response

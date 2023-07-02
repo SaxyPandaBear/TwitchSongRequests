@@ -24,7 +24,7 @@ type QueuePageRenderer struct {
 }
 
 type QueuePageData struct {
-	Tracks []util.Track
+	Tracks []*util.Track
 }
 
 func NewQueuePageRenderer(siteURL string, u db.UserStore, spotify *util.AuthConfig) *QueuePageRenderer {
@@ -96,8 +96,8 @@ func (h *QueuePageRenderer) GetUserQueue(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tracks := make([]util.Track, 0, trackLimit+1)
-	tracks = append(tracks, *util.SpotifyTrackToPageData(&q.CurrentlyPlaying))
+	tracks := make([]*util.Track, 0, trackLimit+1)
+	tracks = append(tracks, util.SpotifyTrackToPageData(&q.CurrentlyPlaying))
 	tracks = append(tracks, util.ParseTrackData(q.Items, trackLimit)...)
 	for i, t := range tracks {
 		t.Position = i + 1
