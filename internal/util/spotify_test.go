@@ -63,7 +63,7 @@ func TestParseTrackDataTruncates(t *testing.T) {
 		},
 	}
 
-	response := util.ParseTrackData(tracks, 1)
+	response := util.ParseTrackData(tracks, 2)
 	assert.Greater(t, len(tracks), len(response))
 	assert.Len(t, response, 2)
 	assert.Equal(t, "foo", response[0].Title)
