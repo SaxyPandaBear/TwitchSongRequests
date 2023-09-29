@@ -1,6 +1,7 @@
 package spotify
 
 import (
+	_ "embed"
 	"testing"
 	"time"
 
@@ -12,6 +13,9 @@ import (
 
 var testSpotifyTrackURL = "https://open.spotify.com/track/3cfOd4CMv2snFaKAnMdnvK?si=a99029531fa04a00"
 
+//go:embed testdata/sample_response.html
+var sampleHTML string
+
 func TestParseSpotifyURL(t *testing.T) {
 	tests := map[string]string{
 		"https://open.spotify.com/track/3cfOd4CMv2snFaKAnMdnvK?si=a99029531fa04a00": "3cfOd4CMv2snFaKAnMdnvK",
@@ -21,16 +25,21 @@ func TestParseSpotifyURL(t *testing.T) {
 		"https://open.spotify.com/track/?si=a99029531fa04a00":                                                "",
 		"https://open.spotify.com/intl-de/track/5Sk39LuvdwuvL84jD01Dum?si=f515f3232b994c5b":                  "5Sk39LuvdwuvL84jD01Dum",
 		"This is the https://open.spotify.com/track/3cfOd4CMv2snFaKAnMdnvK?si=a99029531fa04a00 song request": "3cfOd4CMv2snFaKAnMdnvK",
+		"https://spotify.link/8qo05dnCrDb":                                                                   "0RM0BeXRRIz1LExEl83GhA",
 	}
 	for input, expected := range tests {
 		t.Run(input, func(t *testing.T) {
-			assert.Equal(t, expected, parseSpotifyTrackID(input))
+			assert.Equal(t, expected, parseSpotifyTrackID(input, respondWithHTML))
 		})
 	}
 }
 
+func respondWithHTML(_ string) string {
+	return sampleHTML
+}
+
 func TestPublish(t *testing.T) {
-	s := SpotifyPlayerQueue{}
+	s := NewSpotifyPlayerQueue()
 	q := testutil.MockQueuer{
 		Messages:     make([]spotify.ID, 0, 1),
 		GetTrackFunc: testutil.DefaultMockQueuerGetTrackFunc,
@@ -47,7 +56,7 @@ func TestPublish(t *testing.T) {
 }
 
 func TestPublishInvalidInput(t *testing.T) {
-	s := SpotifyPlayerQueue{}
+	s := NewSpotifyPlayerQueue()
 	q := testutil.MockQueuer{
 		Messages:     make([]spotify.ID, 0, 1),
 		GetTrackFunc: testutil.DefaultMockQueuerGetTrackFunc,
@@ -62,7 +71,7 @@ func TestPublishInvalidInput(t *testing.T) {
 }
 
 func TestPublishFails(t *testing.T) {
-	s := SpotifyPlayerQueue{}
+	s := NewSpotifyPlayerQueue()
 	q := testutil.MockQueuer{
 		Messages:     make([]spotify.ID, 0, 1),
 		GetTrackFunc: testutil.DefaultMockQueuerGetTrackFunc,
@@ -78,7 +87,7 @@ func TestPublishFails(t *testing.T) {
 }
 
 func TestPublishExplicitSongNotAllowed(t *testing.T) {
-	s := SpotifyPlayerQueue{}
+	s := NewSpotifyPlayerQueue()
 	q := testutil.MockQueuer{
 		Messages: make([]spotify.ID, 0, 1),
 		GetTrackFunc: func(i spotify.ID) (*spotify.FullTrack, error) {
@@ -98,7 +107,7 @@ func TestPublishExplicitSongNotAllowed(t *testing.T) {
 }
 
 func TestPublishExplicitSongAllowed(t *testing.T) {
-	s := SpotifyPlayerQueue{}
+	s := NewSpotifyPlayerQueue()
 	q := testutil.MockQueuer{
 		Messages:     make([]spotify.ID, 0, 2),
 		Explicit:     true,

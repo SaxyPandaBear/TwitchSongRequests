@@ -96,10 +96,10 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	}
 
 	// ===== APIs =====
-	p := spotify.SpotifyPlayerQueue{}
+	p := spotify.NewSpotifyPlayerQueue()
 	rhconfig := api.RewardHandlerConfig{
 		Secret:    s,
-		Publisher: &p,
+		Publisher: p,
 		UserStore: userStore,
 		PrefStore: preferenceStore,
 		MsgCount:  messageCounter,

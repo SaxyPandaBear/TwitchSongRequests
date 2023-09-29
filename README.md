@@ -81,8 +81,13 @@ give a chance to other users who want to use the service.
 1. Navigate to your [Spotify account](https://www.spotify.com/us/account/apps/) to revoke access for the service. This can't be done by the service, because they don't expose an API for it. See [here](https://github.com/spotify/web-api/issues/600) for why.
 1. You're done!
 
-## Troubleshooting
-TBD
+## This was working but isn't anymore. What happened?
+In order to better accommodate people who want to use this project, I am going to start actively revoking access
+to streamers that have not used it in 30 days. Personally, I think it sucks, but it's the only way to fairly keep
+up with demand considering I am only allowed to serve 25 users. 
+
+If you want to have better control over this and are willing to host the project yourself, I will be writing up
+a guide on how to self-host. TBD
 
 ## How does it work?
 The TwitchSongRequests service will authorize to your Twitch account so that the 

@@ -9,7 +9,10 @@ import (
 	"go.uber.org/zap"
 )
 
-const LIMIT = 100
+const (
+	LIMIT                 = 100
+	DEFAULT_DAYS_TO_EVICT = 30
+)
 
 var _ MessageCounter = (*PostgresMessageCounter)(nil)
 
@@ -20,7 +23,8 @@ func NewPostgresMessageCounter(pool *pgxpool.Pool) *PostgresMessageCounter {
 }
 
 type PostgresMessageCounter struct {
-	pool *pgxpool.Pool
+	pool           *pgxpool.Pool
+	evictTtlInDays int
 }
 
 func (p *PostgresMessageCounter) AddMessage(m *metrics.Message) {
@@ -70,4 +74,10 @@ func (p *PostgresMessageCounter) MessagesForUser(id string) []*metrics.Message {
 	}
 
 	return m
+}
+
+// EvictedUsers returns the set of users that have not received a successful redeem in the past X days
+func (p *PostgresMessageCounter) EvictedUsers() []string {
+	// rows, err := p.pool.Query(context.Background(), "")
+	return []string{} // TODO: implement this
 }
