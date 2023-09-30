@@ -85,9 +85,9 @@ give a chance to other users who want to use the service.
 In order to better accommodate people who want to use this project, I am going to start actively revoking access
 to streamers that have not used it in 30 days. Personally, I think it sucks, but it's the only way to fairly keep
 up with demand considering I am only allowed to serve 25 users. I will keep track of Twitch users that I revoke access to 
-via the `Discussions` tab on the GitHub page.
+via the `CHANGELOG` file.
 
-### Query ran on the database
+### Query ran on the database to get Twitch IDs
 ```sql
 select distinct broadcaster_id from messages 
   where broadcaster_id != '' 
@@ -95,9 +95,25 @@ select distinct broadcaster_id from messages
   and age(messages.created_at) > 30 * INTERVAL '1 day' 
 except select distinct broadcaster_id from messages 
   where broadcaster_id != '' 
-  and success = 1 
   and age(messages.created_at) <= 30 * INTERVAL '1 day';
 ```
+
+So the criteria are:
+1. Had at least 1 successful song request redeemed more than 30 days ago
+1. Has not had ANY redeems in the past 30 days
+
+This allows for errors such as issues with the API, credentials, etc in the past 30 days, because
+at least it was attempted.
+
+### API call to get usernames
+```bash
+# for each user ID
+twitch token
+twitch api get users -q id=$ID
+```
+
+If you believe that I revoked your access in error, please feel free to open a GitHub issue to appeal it, otherwise
+you'll want to submit a new onboarding request.
 
 If you want to have better control over this and are willing to host the project yourself, I will be writing up
 a guide on how to self-host. TBD
