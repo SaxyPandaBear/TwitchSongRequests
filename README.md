@@ -84,7 +84,20 @@ give a chance to other users who want to use the service.
 ## This was working but isn't anymore. What happened?
 In order to better accommodate people who want to use this project, I am going to start actively revoking access
 to streamers that have not used it in 30 days. Personally, I think it sucks, but it's the only way to fairly keep
-up with demand considering I am only allowed to serve 25 users. 
+up with demand considering I am only allowed to serve 25 users. I will keep track of Twitch users that I revoke access to 
+via the `Discussions` tab on the GitHub page.
+
+### Query ran on the database
+```sql
+select distinct broadcaster_id from messages 
+  where broadcaster_id != '' 
+  and success = 1 
+  and age(messages.created_at) > 30 * INTERVAL '1 day' 
+except select distinct broadcaster_id from messages 
+  where broadcaster_id != '' 
+  and success = 1 
+  and age(messages.created_at) <= 30 * INTERVAL '1 day';
+```
 
 If you want to have better control over this and are willing to host the project yourself, I will be writing up
 a guide on how to self-host. TBD

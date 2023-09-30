@@ -7,13 +7,6 @@ body:
     attributes:
       value: |
         Thanks for submitting a report. I'll try to get to it ASAP.
-  - type: checkboxes
-    attributes:
-      label: Please confirm the following
-      description: You affirm that if this was working previously, you have successfully redeemed a song request in the past 30 days.
-      options:
-        - label: Yes
-          required: true
   - type: textarea
     id: issue
     attributes:

@@ -170,7 +170,3 @@ func (c *InMemoryMessageCounter) RunningCount(int) uint64 {
 func (c *InMemoryMessageCounter) MessagesForUser(string) []*metrics.Message {
 	return c.Msgs
 }
-
-func (c *InMemoryMessageCounter) EvictedUsers() []string {
-	return []string{}
-}

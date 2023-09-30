@@ -9,5 +9,4 @@ type MessageCounter interface {
 	TotalMessages() uint64
 	RunningCount(int) uint64
 	MessagesForUser(string) []*metrics.Message
-	EvictedUsers() []string
 }
