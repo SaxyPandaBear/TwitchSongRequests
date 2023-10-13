@@ -73,7 +73,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		BroadcasterID:       id,
 		Title:               "Spotify Song Request",
 		IsUserInputRequired: true,
-		IsEnabled:           true,
+		IsEnabled:           false, // create the reward, but don't enable it by default
 		Cost:                1000,
 		Prompt:              "Request with a Spotify URL",
 	}
