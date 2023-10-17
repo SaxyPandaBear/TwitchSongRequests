@@ -54,10 +54,14 @@ func NewSpotifyPlayerQueue() *SpotifyPlayerQueue {
 
 // Publish will validate that the input matches a valid Spotify URL scheme,
 // and then attempt to queue it in the user's Spotify player.
-func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, url string, pref *preferences.Preference) (spotify.ID, error) {
-	id := parseSpotifyTrackID(url, s.OpaqueLinkResolver)
+func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, input string, pref *preferences.Preference) (spotify.ID, error) {
+	id := parseSpotifyTrackID(input, s.OpaqueLinkResolver)
 	if len(id) < 1 {
-		return "", ErrInvalidInput
+		var err error
+		id, err = Search(client, input, pref)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	sID := spotify.ID(id)
@@ -67,6 +71,17 @@ func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, url string, pref *pref
 	}
 
 	return sID, client.QueueSong(context.Background(), sID)
+}
+
+func Search(client queue.Queuer, input string, pref *preferences.Preference) (string, error) {
+	res, err := client.Search(context.Background(), input, spotify.SearchTypeTrack)
+	if err != nil {
+		return "", err
+	}
+	if len(res.Tracks.Tracks) < 1 {
+		return "", ErrInvalidInput // no search results found, so most likely a malformed original input
+	}
+	return res.Tracks.Tracks[0].ID.String(), nil
 }
 
 // TODO: this should be in the queuer

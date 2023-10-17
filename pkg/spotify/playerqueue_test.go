@@ -55,7 +55,7 @@ func TestPublish(t *testing.T) {
 	assert.Equal(t, "3cfOd4CMv2snFaKAnMdnvK", id.String())
 }
 
-func TestPublishInvalidInput(t *testing.T) {
+func TestPublishNotUrlFoundSearchResult(t *testing.T) {
 	s := NewSpotifyPlayerQueue()
 	q := testutil.MockQueuer{
 		Messages:     make([]spotify.ID, 0, 1),
@@ -66,8 +66,9 @@ func TestPublishInvalidInput(t *testing.T) {
 	}
 
 	_, err := s.Publish(&q, "foo", &pref)
-	assert.ErrorIs(t, err, ErrInvalidInput)
-	assert.Empty(t, q.Messages)
+	assert.NoError(t, err)
+	assert.Len(t, q.Messages, 1)
+	assert.Equal(t, "abc123", q.Messages[0].String())
 }
 
 func TestPublishFails(t *testing.T) {

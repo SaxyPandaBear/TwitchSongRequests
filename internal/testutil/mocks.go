@@ -68,6 +68,24 @@ func (m *MockQueuer) GetTrack(ctx context.Context, id spotify.ID, opts ...spotif
 	return m.GetTrackFunc(id)
 }
 
+func (m *MockQueuer) Search(ctx context.Context, query string, t spotify.SearchType, opts ...spotify.RequestOption) (*spotify.SearchResult, error) {
+	if m.ShouldFail {
+		return nil, errors.New("expected to fail")
+	}
+
+	return &spotify.SearchResult{
+		Tracks: &spotify.FullTrackPage{
+			Tracks: []spotify.FullTrack{
+				{
+					SimpleTrack: spotify.SimpleTrack{
+						ID: "abc123",
+					},
+				},
+			},
+		},
+	}, nil
+}
+
 func DefaultMockQueuerGetTrackFunc(id spotify.ID) (*spotify.FullTrack, error) {
 	return &spotify.FullTrack{}, nil
 }
