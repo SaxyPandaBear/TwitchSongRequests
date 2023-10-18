@@ -75,7 +75,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		IsUserInputRequired: true,
 		IsEnabled:           false, // create the reward, but don't enable it by default
 		Cost:                1000,
-		Prompt:              "Request with a Spotify URL",
+		Prompt:              "Request with a Spotify URL, or search for a song with keywords",
 	}
 
 	rewardRes, err := c.CreateCustomReward(&createReward)

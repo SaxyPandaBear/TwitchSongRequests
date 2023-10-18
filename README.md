@@ -51,7 +51,7 @@ is to your own benefit!
 1. Open Spotify on your computer
 1. Navigate to your Twitch channel
 1. Start playing music on Spotify (the service needs an "active" player to work)
-1. Find your favorite song on Spotify, copy the URI
+1. Find your favorite song on Spotify, copy the URI - **(Now supports searching songs with keywords! [#218](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/218))**
 1. Navigate to the Twitch channel, and find the song request reward (the default title is `Spotify Song Request`)
 1. Submit the Spotify URI as part of the reward redemption, e.g.: https://open.spotify.com/track/6mfiGqZw4AqXA1nqo3EzIF
 1. If your Spotify player has queued the song, you're good!
