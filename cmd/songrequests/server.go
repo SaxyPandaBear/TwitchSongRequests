@@ -7,13 +7,11 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
-	"github.com/go-chi/stampede"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/saxypandabear/twitchsongrequests/internal/constants"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
@@ -56,14 +54,6 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.Heartbeat("/ping"))
 
-	// Only really need caching/coalescing for heavier traffic GET requests, like the stats data
-	cached := stampede.Handler(512, 1*time.Second)
-	customKeyFunc := func(r *http.Request) uint64 {
-		token := chi.URLParam(r, "id")
-		return stampede.StringToHash(r.Method, strings.ToLower(strings.ToLower(token)))
-	}
-	playerQueueCache := stampede.HandlerWithKey(512, 5*time.Second, customKeyFunc)
-
 	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
@@ -94,6 +84,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	if i, err := strconv.Atoi(allowedUsers); err == nil {
 		numAllowed = uint(i)
 	}
+	zap.L().Debug(fmt.Sprintf("Currently serving song requests for %d/%d users", numOnboarded, numAllowed))
 
 	// ===== APIs =====
 	p := spotify.NewSpotifyPlayerQueue()
@@ -111,7 +102,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Post("/callback", reward.ChannelPointRedeem)
 
 	eventSub := api.NewEventSubHandler(userStore, preferenceStore, twitchConfig, redirectURL, s)
-	r.With(cached).Post("/subscribe", eventSub.SubscribeToTopic)
+	r.Post("/subscribe", eventSub.SubscribeToTopic)
 
 	twitchRedirect := api.NewTwitchAuthZHandler(redirectURL, twitchConfig, userStore, preferenceStore)
 	spotifyRedirect := api.NewSpotifyAuthZHandler(redirectURL, spotifyConfig, userStore)
@@ -119,18 +110,18 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Get("/oauth/spotify", spotifyRedirect.Authorize)
 
 	userHandler := api.NewUserHandler(userStore, preferenceStore, redirectURL, twitchConfig, spotifyConfig)
-	r.With(cached).Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST because forms don't support DELETE
+	r.Post("/revoke", userHandler.RevokeUserAccesses) // this is a POST because forms don't support DELETE
 
 	preferenceHandler := api.NewPreferenceHandler(preferenceStore, redirectURL)
 	r.Post("/preference", preferenceHandler.SavePreferences) // this is a POST because forms don't support DELETE
 
 	statsHandler := api.NewStatsHandler(messageCounter, numOnboarded, numAllowed)
-	r.With(cached).Get("/stats/total", statsHandler.TotalMessages)
-	r.With(cached).Get("/stats/running", statsHandler.RunningCount)
-	r.With(cached).Get("/stats/onboarded", statsHandler.Onboarded)
+	r.Get("/stats/total", statsHandler.TotalMessages)
+	r.Get("/stats/running", statsHandler.RunningCount)
+	r.Get("/stats/onboarded", statsHandler.Onboarded)
 
 	queueHandler := site.NewQueuePageRenderer(redirectURL, userStore, spotifyConfig)
-	r.With(playerQueueCache).Get("/queue/{id}", queueHandler.GetUserQueue)
+	r.Get("/queue/{id}", queueHandler.GetUserQueue)
 
 	// ===== Website Pages =====
 
