@@ -1,0 +1,22 @@
+name: Add comment about missing email
+on:
+  issues:
+    types:
+      - labeled
+jobs:
+  missing-email:
+    if: github.event.label.name == 'missing email'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Add comment
+        run: gh issue comment "$NUMBER" --body "$BODY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          BODY: >
+            Thanks for onboarding. I don't see an email associated with your Spotify account
+            and I need that to add you to my allowlist. 
+            Can you please send that to me? My discord is `@saxypandabear`
