@@ -1,7 +1,6 @@
 package site
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"html/template"
@@ -72,24 +71,24 @@ func (h *QueuePageRenderer) GetUserQueue(w http.ResponseWriter, r *http.Request)
 	// try to offload this to see if the response time is better
 	defer func() {
 		// store the refreshed token
-		u, err := h.userStore.GetUser(userID)
-		if err == nil {
+		u, innerErr := h.userStore.GetUser(userID)
+		if innerErr == nil {
 			u.SpotifyAccessToken = refreshed.AccessToken
 			u.SpotifyRefreshToken = refreshed.RefreshToken
 			u.SpotifyExpiry = &refreshed.Expiry
 
 			zap.L().Debug("saving updated Spotify credentials", zap.String("id", u.TwitchID))
 
-			if err = h.userStore.UpdateUser(u); err != nil {
+			if innerErr = h.userStore.UpdateUser(u); err != nil {
 				// if we got a valid token but failed to update the DB this is not necessarily fatal.
-				zap.L().Error("failed to update user's spotify token", zap.Error(err))
+				zap.L().Error("failed to update user's spotify token", zap.Error(innerErr))
 			}
 		}
 	}()
 
 	c := util.GetNewSpotifyClient(r.Context(), h.spotify, refreshed)
 
-	q, err := c.GetQueue(context.Background())
+	q, err := c.GetQueue(r.Context())
 	if err != nil {
 		zap.L().Error("failed to get Spotify queue for user", zap.String("id", userID), zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)

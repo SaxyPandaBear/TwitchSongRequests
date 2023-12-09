@@ -46,7 +46,13 @@ var redeemPayload string
 //go:embed testdata/verification.json
 var verificationPayload string
 
-func getTestRewardHandler(publishSuccess bool) (*api.RewardHandler, *testutil.InMemoryUserStore, *testutil.InMemoryPreferenceStore, *testutil.InMemoryMessageCounter, chan string, chan bool) {
+func getTestRewardHandler(publishSuccess bool) (
+	*api.RewardHandler,
+	*testutil.InMemoryUserStore,
+	*testutil.InMemoryPreferenceStore,
+	*testutil.InMemoryMessageCounter,
+	chan string,
+	chan bool) {
 	m := make(chan string)
 	p := testutil.DummyPublisher{
 		Messages:   m,

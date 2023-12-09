@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/nicklaw5/helix/v2"
@@ -80,11 +79,15 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 
 	rewardRes, err := c.CreateCustomReward(&createReward)
 	if err != nil {
-		zap.L().Error("failed to create Channel Point reward", zap.Error(err))
+		zap.L().Error("failed to create Channel Point reward", zap.String("id", id), zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	} else if len(rewardRes.ErrorMessage) > 0 || len(rewardRes.Data.ChannelCustomRewards) < 1 {
-		zap.L().Error("error occurred while creating Custom Reward", zap.Int("status", rewardRes.ErrorStatus), zap.String("err", rewardRes.Error), zap.String("error_msg", rewardRes.ErrorMessage))
+		zap.L().Error("error occurred while creating Custom Reward",
+			zap.String("id", id),
+			zap.Int("status", rewardRes.ErrorStatus),
+			zap.String("err", rewardRes.Error),
+			zap.String("error_msg", rewardRes.ErrorMessage))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -121,17 +124,21 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 
 	res, err := c.CreateEventSubSubscription(&createSub)
 	if err != nil {
-		zap.L().Error("failed to create EventSub subscription", zap.Error(err))
+		zap.L().Error("failed to create EventSub subscription", zap.String("id", id), zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	} else if len(res.ErrorMessage) > 0 {
-		zap.L().Error("error occurred while creating EventSub subscription", zap.Int("status", res.ErrorStatus), zap.String("err", res.Error), zap.String("error_msg", res.ErrorMessage))
+		zap.L().Error("error occurred while creating EventSub subscription",
+			zap.String("id", id),
+			zap.Int("status", res.ErrorStatus),
+			zap.String("err", res.Error),
+			zap.String("error_msg", res.ErrorMessage))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
 
 	if len(res.Data.EventSubSubscriptions) < 1 {
-		zap.L().Error("failed to subscribe to webhook event")
+		zap.L().Error("failed to subscribe to webhook event", zap.String("id", id))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -141,7 +148,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 	user.SubscriptionID = res.Data.EventSubSubscriptions[0].ID
 	err = e.userStore.UpdateUser(user)
 	if err != nil {
-		zap.L().Error("failed to update user", zap.Error(err))
+		zap.L().Error("failed to update user", zap.String("id", id), zap.Error(err))
 		http.Redirect(w, r, e.callbackURL, http.StatusFound)
 		return
 	}
@@ -154,7 +161,7 @@ func (e *EventSubHandler) SubscribeToTopic(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	log.Println("successfully subscribed to Channel Point topic for user", id)
+	zap.L().Info("successfully subscribed to Channel Point topic", zap.String("id", id), zap.String("subscription", user.SubscriptionID))
 
 	http.Redirect(w, r, e.callbackURL, http.StatusFound)
 }

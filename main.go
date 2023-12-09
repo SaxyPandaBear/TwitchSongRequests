@@ -25,7 +25,7 @@ func main() {
 
 	zap.RedirectStdLog(logger) // log.PrintX() functions will log at an info level, always
 	zap.ReplaceGlobals(logger) // Not recommended, but I'm lazy
-	defer logger.Sync()
+	defer logger.Sync()        //nolint:errcheck
 
 	var port = defaultPort
 	portEnv, ok := os.LookupEnv("PORT")

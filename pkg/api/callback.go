@@ -92,7 +92,11 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	// A request can come in to revoke the subscription. Drop the request
 	// https://dev.twitch.tv/docs/eventsub/handling-webhook-events/#revoking-your-subscription
 	if IsRevocationRequest(r) {
-		zap.L().Error("Revoked access", zap.String("id", vals.Subscription.ID), zap.String("status", vals.Subscription.Status))
+		zap.L().Error("Revoked access",
+			zap.String("subscriptionID", vals.Subscription.ID),
+			zap.String("status", vals.Subscription.Status),
+			zap.String("userID", vals.Subscription.Condition.BroadcasterUserID),
+			zap.String("reason", vals.Subscription.Status))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -155,10 +159,17 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		SpotifyTrack:  sID.String(), // TODO: not sure if this works if it fails to parse..
 	}
 	if err != nil {
-		zap.L().Error("failed to publish", zap.String("input", redeemEvent.UserInput), zap.Error(err))
+		zap.L().Error("failed to publish",
+			zap.String("input", redeemEvent.UserInput),
+			zap.String("user", redeemEvent.UserID),
+			zap.String("broadcaster", redeemEvent.BroadcasterUserID),
+			zap.Error(err))
 	} else {
 		msg.Success = 1
-		zap.L().Info("Submitted song request", zap.String("user", redeemEvent.UserName), zap.String("uri", redeemEvent.UserInput), zap.String("broadcaster", redeemEvent.BroadcasterUserLogin))
+		zap.L().Info("Submitted song request",
+			zap.String("user", redeemEvent.UserName),
+			zap.String("uri", redeemEvent.UserInput),
+			zap.String("broadcaster", redeemEvent.BroadcasterUserLogin))
 	}
 
 	h.config.MsgCount.AddMessage(&msg)
@@ -244,7 +255,11 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 		return err
 	}
 
-	zap.L().Debug("updated redemptions", zap.Int("status", resp.StatusCode), zap.String("error", resp.ErrorMessage), zap.Int("num", len(resp.Data.Redemptions)))
+	zap.L().Debug("updated redemptions",
+		zap.String("broadcaster", event.BroadcasterUserID),
+		zap.Int("status", resp.StatusCode),
+		zap.String("error", resp.ErrorMessage),
+		zap.Int("num", len(resp.Data.Redemptions)))
 	if resp.StatusCode >= 400 {
 		return errors.New(resp.ErrorMessage)
 	}

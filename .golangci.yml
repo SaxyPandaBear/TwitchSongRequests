@@ -14,7 +14,6 @@ run:
   # Default: use Go version from the go.mod file, fallback on the env var `GOVERSION`, fallback on 1.17
   go: "1.18" 
 
-
 # This file contains only configs which differ from defaults.
 # All possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
 linters-settings:
@@ -124,16 +123,13 @@ linters:
   disable-all: true
   enable:
     ## enabled by default
-    - deadcode # Finds unused code
     - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
     - gosimple # Linter for Go source code that specializes in simplifying a code
     - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
     - ineffassign # Detects when assignments to existing variables are not used
     - staticcheck # Staticcheck is a go vet on steroids, applying a ton of static analysis checks
-    - structcheck # Finds unused struct fields
     - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
     - unused # Checks Go code for unused constants, variables, functions and types
-    - varcheck # Finds unused global variables and constants
     - asasalint # Check for pass []any as any in variadic func(...any)
     - bidichk # Checks for dangerous unicode character sequences
     - bodyclose # checks whether HTTP response body is closed successfully
@@ -156,7 +152,6 @@ linters:
     - makezero # Finds slice declarations with non-zero initial length
     - nestif # Reports deeply nested if statements
     - noctx # noctx finds sending http request without context.Context
-    - nolintlint # Reports ill-formed or insufficient nolint directives
     - nosprintfhostport # Checks for misuse of Sprintf to construct a host with port in a URL.
     - predeclared # find code that shadows one of Go's predeclared identifiers
     - promlinter # Check Prometheus metrics naming via promlint
@@ -173,6 +168,9 @@ issues:
   # Default: 3
   max-same-issues: 50
 
+  exclude:
+    - "Error return value of `w.Write` is not checked"
+
   exclude-rules:
     - source: "^//\\s*go:generate\\s"
       linters: [ lll ]
@@ -182,6 +180,8 @@ issues:
       linters: [ gocritic ]
     - source: "^\\s+if _, ok := err\\.\\([^.]+\\.InternalError\\); ok {"
       linters: [ errorlint ]
+    - path: "pkg/db"
+      linters: [ lll ]
     - path: "_test\\.go"
       linters:
         - bodyclose

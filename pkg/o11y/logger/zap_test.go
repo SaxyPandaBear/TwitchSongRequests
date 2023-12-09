@@ -117,6 +117,7 @@ func TestNewLogEntry(t *testing.T) {
 func getZapAttributes(t *testing.T, log observer.LoggedEntry) map[string]interface{} {
 	t.Helper()
 	m := make(map[string]interface{})
+	//nolint: exhaustive
 	for _, field := range log.Context {
 		switch field.Type {
 		case zapcore.StringType:

@@ -11,7 +11,6 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 	"github.com/zmb3/spotify/v2"
-	"go.uber.org/zap"
 )
 
 var (
@@ -33,7 +32,7 @@ type SpotifyPlayerQueue struct {
 }
 
 func httpRequestResolver(s string) string {
-	if resp, err := http.Get(s); err == nil {
+	if resp, err := http.Get(s); err == nil { //nolint: gosec,noctx
 		defer resp.Body.Close()
 		bytes, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -108,20 +107,7 @@ func ShouldQueue(client queue.Queuer, id spotify.ID, p *preferences.Preference) 
 func parseSpotifyTrackID(s string, resolver func(string) string) string {
 	// need to check for the opaque link first
 	if opaqueSpotifyURLPattern.MatchString(s) {
-		// The URL with the track ID is nested inside of the HTML response from hitting the opaque link
-		resp, err := http.Get(s)
-		if err != nil {
-			zap.L().Warn("failed to GET "+s, zap.Int("status", resp.StatusCode), zap.String("url", s))
-			return ""
-		}
-		defer resp.Body.Close()
-		bytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			zap.L().Debug("failed to read response body", zap.String("url", s))
-			return ""
-		}
-
-		s = string(bytes)
+		s = resolver(s)
 	}
 
 	groups := openSpotifyURLPattern.FindStringSubmatch(s)

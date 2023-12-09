@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,7 +19,7 @@ func connect() {
 	port := os.Getenv("POSTGRES_PORT")
 
 	var err error
-	pool, err = pgxpool.New(context.Background(), fmt.Sprintf("postgres://%s:%s@%s:%s/testdb", user, pwd, host, port))
+	pool, err = pgxpool.New(context.Background(), fmt.Sprintf("postgres://%s:%s@%s/testdb", user, pwd, net.JoinHostPort(host, port)))
 	if err != nil {
 		log.Fatalf("failed to connect to postgres db: %v\n", err)
 	}

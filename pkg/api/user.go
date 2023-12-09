@@ -68,7 +68,11 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	} else if len(res.ErrorMessage) > 0 {
-		zap.L().Error("failed to remove eventsub subscription", zap.String("id", userID), zap.Int("status", res.ErrorStatus), zap.String("err", res.Error), zap.String("error_msg", res.ErrorMessage))
+		zap.L().Error("failed to remove eventsub subscription",
+			zap.String("id", userID),
+			zap.Int("status", res.ErrorStatus),
+			zap.String("err", res.Error),
+			zap.String("error_msg", res.ErrorMessage))
 		http.Redirect(w, r, h.redirectURL, http.StatusFound)
 		return
 	}
@@ -95,7 +99,8 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		// This is really a non-issue. Log and move on.
 		zap.L().Warn("failed to get user preferences", zap.String("id", userID), zap.Error(err))
 	} else if len(prefs.CustomRewardID) > 0 {
-		dcrResponse, err := c.DeleteCustomRewards(&helix.DeleteCustomRewardsParams{
+		var dcrResponse *helix.DeleteCustomRewardsResponse
+		dcrResponse, err = c.DeleteCustomRewards(&helix.DeleteCustomRewardsParams{
 			BroadcasterID: userID,
 			ID:            prefs.CustomRewardID,
 		})
@@ -103,7 +108,12 @@ func (h *UserHandler) RevokeUserAccesses(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			zap.L().Warn("failed to call api to delete custom reward", zap.String("id", userID), zap.String("reward_id", prefs.CustomRewardID), zap.Error(err))
 		} else if dcrResponse.StatusCode >= 400 {
-			zap.L().Warn("failed to delete custom reward", zap.String("id", userID), zap.String("reward_id", prefs.CustomRewardID), zap.Int("status", dcrResponse.StatusCode), zap.String("error", dcrResponse.Error), zap.String("error_msg", dcrResponse.ErrorMessage))
+			zap.L().Warn("failed to delete custom reward",
+				zap.String("id", userID),
+				zap.String("reward_id", prefs.CustomRewardID),
+				zap.Int("status", dcrResponse.StatusCode),
+				zap.String("error", dcrResponse.Error),
+				zap.String("error_msg", dcrResponse.ErrorMessage))
 		}
 	}
 
