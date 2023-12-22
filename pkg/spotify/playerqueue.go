@@ -55,7 +55,7 @@ func NewSpotifyPlayerQueue() *SpotifyPlayerQueue {
 // and then attempt to queue it in the user's Spotify player.
 func (s *SpotifyPlayerQueue) Publish(client queue.Queuer, input string, pref *preferences.Preference) (spotify.ID, error) {
 	id := parseSpotifyTrackID(input, s.OpaqueLinkResolver)
-	if len(id) < 1 {
+	if id == "" {
 		var err error
 		id, err = Search(client, input, pref)
 		if err != nil {

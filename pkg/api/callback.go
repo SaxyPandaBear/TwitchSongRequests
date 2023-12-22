@@ -109,44 +109,47 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	preferences, err := h.config.PrefStore.GetPreference(redeemEvent.BroadcasterUserID)
+	userID := redeemEvent.BroadcasterUserID
+	broadcaster := redeemEvent.BroadcasterUserLogin
+
+	preferences, err := h.config.PrefStore.GetPreference(userID)
 	if err != nil {
-		zap.L().Error("failed to get user preferences", zap.Error(err))
+		zap.L().Error("failed to get user preferences", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 	}
 
 	if !IsValidReward(&redeemEvent, preferences) {
-		zap.L().Debug("not a valid song request, so dropping")
+		zap.L().Debug("not a valid song request, so dropping", zap.String("id", userID), zap.String("broadcaster", broadcaster))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	tok, err := db.FetchSpotifyToken(h.config.UserStore, redeemEvent.BroadcasterUserID)
 	if err != nil {
-		zap.L().Error("failed to verify user for spotify access", zap.String("id", redeemEvent.BroadcasterUserID), zap.Error(err))
+		zap.L().Error("failed to verify user for spotify access", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	refreshed, err := util.RefreshSpotifyToken(r.Context(), h.config.Spotify, tok)
 	if err != nil {
-		zap.L().Error("failed to get valid token", zap.Error(err))
+		zap.L().Error("failed to get valid token", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "failed to get refreshed token")
 		return
 	}
 
 	// store the refreshed token
-	u, err := h.config.UserStore.GetUser(redeemEvent.BroadcasterUserID)
+	u, err := h.config.UserStore.GetUser(userID)
 	if err == nil {
 		u.SpotifyAccessToken = refreshed.AccessToken
 		u.SpotifyRefreshToken = refreshed.RefreshToken
 		u.SpotifyExpiry = &refreshed.Expiry
 
-		zap.L().Debug("saving updated Spotify credentials", zap.String("id", u.TwitchID))
+		zap.L().Debug("saving updated Spotify credentials", zap.String("id", userID), zap.String("broadcaster", broadcaster))
 
 		if err = h.config.UserStore.UpdateUser(u); err != nil {
 			// if we got a valid token but failed to update the DB this is not necessarily fatal.
-			zap.L().Error("failed to update user's spotify token", zap.Error(err))
+			zap.L().Error("failed to update user's spotify token", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 		}
 	}
 
@@ -161,15 +164,16 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		zap.L().Error("failed to publish",
 			zap.String("input", redeemEvent.UserInput),
-			zap.String("user", redeemEvent.UserID),
-			zap.String("broadcaster", redeemEvent.BroadcasterUserID),
+			zap.String("id", userID),
+			zap.String("broadcaster", broadcaster),
 			zap.Error(err))
 	} else {
 		msg.Success = 1
 		zap.L().Info("Submitted song request",
 			zap.String("user", redeemEvent.UserName),
 			zap.String("uri", redeemEvent.UserInput),
-			zap.String("broadcaster", redeemEvent.BroadcasterUserLogin))
+			zap.String("id", userID),
+			zap.String("broadcaster", broadcaster))
 	}
 
 	h.config.MsgCount.AddMessage(&msg)
@@ -178,12 +182,12 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	// redemption
 	if err = h.OnSuccess(h.config.Twitch, h.config.UserStore, &redeemEvent, err == nil); err != nil {
 		// don't need to fail fast here because this is housekeeping
-		zap.L().Error("failed to update Twitch reward redemption status", zap.Error(err))
+		zap.L().Error("failed to update Twitch reward redemption status", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write([]byte("ok")); err != nil {
-		zap.L().Error("failed to write response body", zap.Error(err))
+		zap.L().Error("failed to write response body", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 	}
 }
 
@@ -219,22 +223,25 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	userStore db.UserStore,
 	event *helix.EventSubChannelPointsCustomRewardRedemptionEvent,
 	success bool) error {
+	userID := event.BroadcasterUserID
+	broadcaster := event.BroadcasterUserLogin
+
 	client, err := util.GetNewTwitchClient(auth)
 	if err != nil {
-		zap.L().Error("failed to create Twitch client", zap.Error(err))
+		zap.L().Error("failed to create Twitch client", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 		return err
 	}
 
 	u, err := userStore.GetUser(event.BroadcasterUserID)
 	if err != nil {
-		zap.L().Error("failed to get user", zap.Error(err))
+		zap.L().Error("failed to get user", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 		return err
 	}
 
 	client.SetUserAccessToken(u.TwitchAccessToken)
 	token, err := client.RefreshUserAccessToken(u.TwitchRefreshToken)
 	if err != nil {
-		zap.L().Error("failed to refresh Twitch token", zap.Error(err))
+		zap.L().Error("failed to refresh Twitch token", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 		return err
 	}
 	client.SetUserAccessToken(token.Data.AccessToken)
@@ -256,7 +263,8 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	}
 
 	zap.L().Debug("updated redemptions",
-		zap.String("broadcaster", event.BroadcasterUserID),
+		zap.String("id", userID),
+		zap.String("broadcaster", broadcaster),
 		zap.Int("status", resp.StatusCode),
 		zap.String("error", resp.ErrorMessage),
 		zap.Int("num", len(resp.Data.Redemptions)))
@@ -268,7 +276,7 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	u.TwitchAccessToken = token.Data.AccessToken
 	u.TwitchRefreshToken = token.Data.RefreshToken
 	if err = userStore.UpdateUser(u); err != nil {
-		zap.L().Error("failed to update Twitch credentials", zap.Error(err))
+		zap.L().Error("failed to update Twitch credentials", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 		return err
 	}
 
