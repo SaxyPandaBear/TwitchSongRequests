@@ -69,7 +69,7 @@ func (h *HomePageRenderer) getHomePageData(r *http.Request) *HomePageData {
 	d.UserID = id
 
 	user, err := h.userStore.GetUser(id)
-	if err != nil {
+	if err != nil || user == nil {
 		zap.L().Error("failed to get user", zap.String("id", id), zap.Error(err))
 		return &d
 	}
