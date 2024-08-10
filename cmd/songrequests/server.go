@@ -35,7 +35,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	var userStore db.UserStore
 	var preferenceStore db.PreferenceStore
 	var messageCounter db.MessageCounter
-	if !ok {
+	if ok {
 		// use no-op implementations
 		userStore = &db.NoopUserStore{}
 		preferenceStore = &db.NoopPreferenceStore{}
