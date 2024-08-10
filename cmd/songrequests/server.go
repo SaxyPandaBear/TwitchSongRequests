@@ -29,16 +29,29 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	}
 	addr := fmt.Sprintf(":%d", port)
 
-	// connect to Postgres DB
-	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
-	if err != nil {
-		return fmt.Errorf("failed to connect to Postgres database")
-	}
-	defer dbpool.Close()
+	// create database first, checking flag if we do a no-op here or use a Postgres-backed
+	// database.
+	_, ok := os.LookupEnv(constants.SkipPostgres) // only care if the flag exists in the environment
+	var userStore db.UserStore
+	var preferenceStore db.PreferenceStore
+	var messageCounter db.MessageCounter
+	if !ok {
+		// use no-op implementations
+		userStore = &db.NoopUserStore{}
+		preferenceStore = &db.NoopPreferenceStore{}
+		messageCounter = &db.NoopMessageCounter{}
+	} else {
+		// connect to Postgres DB
+		dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+		if err != nil {
+			return fmt.Errorf("failed to connect to Postgres database")
+		}
+		defer dbpool.Close()
 
-	userStore := db.NewPostgresUserStore(dbpool)
-	preferenceStore := db.NewPostgresPreferenceStore(dbpool)
-	messageCounter := db.NewPostgresMessageCounter(dbpool)
+		userStore = db.NewPostgresUserStore(dbpool)
+		preferenceStore = db.NewPostgresPreferenceStore(dbpool)
+		messageCounter = db.NewPostgresMessageCounter(dbpool)
+	}
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -54,7 +67,7 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.Heartbeat("/ping"))
 
-	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fmt.Sprintf("http://localhost:%s", addr))
+	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, util.GetFromEnvOrDefault(constants.RailwayDomain, fmt.Sprintf("http://localhost%s", addr)))
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
 	if err != nil {

@@ -43,7 +43,15 @@ func LoadTwitchConfigs() (*AuthConfig, error) {
 		return nil, err
 	}
 
-	redirectURL := GetFromEnvOrDefault(constants.TwitchRedirectURL, "localhost:8000")
+	// if deployed via railway, we want to derive the URL
+	var redirectURL string
+
+	railwayDomain, err := GetFromEnv(constants.RailwayDomain)
+	if err == nil {
+		redirectURL = fmt.Sprintf("https://%s/oauth/twitch", railwayDomain)
+	} else {
+		redirectURL = GetFromEnvOrDefault(constants.TwitchRedirectURL, "localhost:8000/oauth/twitch")
+	}
 	apiURL := GetFromEnvOrDefault(constants.MockServerURLKey, "")
 
 	return &AuthConfig{
@@ -67,9 +75,19 @@ func LoadSpotifyConfigs() (*AuthConfig, error) {
 		return nil, err
 	}
 
-	redirect, err := GetFromEnv(constants.SpotifyRedirectURL)
-	if err != nil {
-		return nil, err
+	// if deployed via railway, we want to derive the URL
+	var redirect string
+
+	railwayDomain, err := GetFromEnv(constants.RailwayDomain)
+	if err == nil {
+		redirect = fmt.Sprintf("https://%s/oauth/spotify", railwayDomain)
+	} else {
+		// TODO: idk if we want to fail here.
+		var err error
+		redirect, err = GetFromEnv(constants.SpotifyRedirectURL)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	state, err := GetFromEnv(constants.SpotifyStateKey)

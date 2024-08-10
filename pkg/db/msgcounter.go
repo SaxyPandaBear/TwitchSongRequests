@@ -10,3 +10,25 @@ type MessageCounter interface {
 	RunningCount(int) uint64
 	MessagesForUser(string) []*metrics.Message
 }
+
+type NoopMessageCounter struct{}
+
+// AddMessage implements MessageCounter.
+func (n *NoopMessageCounter) AddMessage(*metrics.Message) {}
+
+// MessagesForUser implements MessageCounter.
+func (n *NoopMessageCounter) MessagesForUser(string) []*metrics.Message {
+	return nil
+}
+
+// RunningCount implements MessageCounter.
+func (n *NoopMessageCounter) RunningCount(int) uint64 {
+	return 0
+}
+
+// TotalMessages implements MessageCounter.
+func (n *NoopMessageCounter) TotalMessages() uint64 {
+	return 0
+}
+
+var _ MessageCounter = (*NoopMessageCounter)(nil)

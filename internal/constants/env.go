@@ -22,4 +22,10 @@ const (
 	// User metrics
 	NumOnboardedUsers = "ONBOARDED_USERS"
 	NumAllowedUsers   = "ALLOWED_USERS"
+
+	// Postgres flag
+	SkipPostgres = "SKIP_POSTGRES"
+
+	// Railway
+	RailwayDomain = "RAILWAY_PUBLIC_DOMAIN"
 )
