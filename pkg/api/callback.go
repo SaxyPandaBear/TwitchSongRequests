@@ -203,8 +203,8 @@ func IsRevocationRequest(r *http.Request) bool {
 // Original implementation relies on the existence of a key word in the reward title. New implementation
 // verifies with the stored CustomRewardID for a user's preference.
 func IsValidReward(e *helix.EventSubChannelPointsCustomRewardRedemptionEvent, p *preferences.Preference) bool {
-	zap.L().Info(fmt.Sprintf("%s == %s", e.Reward.ID, p.CustomRewardID))
 	if p != nil && p.CustomRewardID != "" {
+		zap.L().Info(fmt.Sprintf("%s == %s", e.Reward.ID, p.CustomRewardID))
 		return e.Reward.ID == p.CustomRewardID
 	}
 	return e != nil && strings.Contains(e.Reward.Title, SongRequestsTitle)
