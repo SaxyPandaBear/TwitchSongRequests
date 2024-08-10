@@ -83,10 +83,10 @@ func LoadSpotifyConfigs() (*AuthConfig, error) {
 		redirect = fmt.Sprintf("https://%s/oauth/spotify", railwayDomain)
 	} else {
 		// TODO: idk if we want to fail here.
-		var err error
-		redirect, err = GetFromEnv(constants.SpotifyRedirectURL)
-		if err != nil {
-			return nil, err
+		var err2 error
+		redirect, err2 = GetFromEnv(constants.SpotifyRedirectURL)
+		if err2 != nil {
+			return nil, err2
 		}
 	}
 

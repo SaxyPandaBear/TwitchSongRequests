@@ -160,6 +160,16 @@ Take a look at the `.github/workflows/ci.yml` file for how they are run.
 Technically they can be run locally by standing up a Postgres db and injecting 
 the same test data into a local instance. 
 
+### Linting
+This project uses [golangci-lint](https://golangci-lint.run/welcome/install/) in GitHub Actions, so
+it will fail builds on linting. 
+
+Run locally by installing the CLI tool and running:
+```bash
+golangci-lint run
+```
+from the root of the project. 
+
 ### Set up Twitch CLI
 Use the [Twitch CLI](https://dev.twitch.tv/docs/cli) for local development. 
 

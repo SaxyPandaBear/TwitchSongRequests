@@ -67,7 +67,8 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.Heartbeat("/ping"))
 
-	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, util.GetFromEnvOrDefault(constants.RailwayDomain, fmt.Sprintf("http://localhost%s", addr)))
+	fallbackURL := util.GetFromEnvOrDefault(constants.RailwayDomain, fmt.Sprintf("http://localhost%s", addr))
+	redirectURL := util.GetFromEnvOrDefault(constants.SiteRedirectURL, fallbackURL)
 
 	s, err := util.GetFromEnv(constants.TwitchEventSubSecretKey)
 	if err != nil {
