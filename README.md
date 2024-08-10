@@ -89,78 +89,6 @@ to streamers that have not used it in 30 days. Personally, I think it sucks, but
 up with demand considering I am only allowed to serve 25 users. I will keep track of Twitch users that I revoke access to 
 via the `CHANGELOG` file.
 
-### Connectiong to the Postgres database
-This is mostly documenting for myself, especially since Railway removed their
-web UI for running queries on the connected database so I have to do everything
-from my terminal now.
-```bash
-# Assumes psql is installed, and the below variables mirror names of variables provided by Railway
-psql -h $PGHOST -p $PGPORT -d railway -U $PGUSER
-# type in password when prompted
-```
-
-### Queries ran on the database to get Twitch IDs
-Getting previously "active" users
-```sql
-select distinct cast(broadcaster_id as integer) from messages 
-  where broadcaster_id != '' 
-  and success = 1 
-  and age(messages.created_at) > 30 * INTERVAL '1 day' 
-except select distinct cast(broadcaster_id as integer) from messages 
-  where broadcaster_id != '' 
-  and age(messages.created_at) <= 30 * INTERVAL '1 day'
-order by broadcaster_id asc;
-```
-
-So the criteria are:
-1. Had at least 1 successful song request redeemed more than 30 days ago
-1. Has not had ANY redeems in the past 30 days
-
-This allows for errors such as issues with the API, credentials, etc in the past 30 days, because
-at least it was attempted.
-
-Getting users who signed up but never used it, because I need to be more cutthroat now.
-If you are having issues using it, please cut a GitHub issue so I know you're at least trying
-```sql
-select distinct cast(broadcaster_id as integer) from messages
-  where broadcaster_id != '' 
-  and success = 0 
-except select distinct cast(broadcaster_id as integer) from messages 
-  where success = 1;
-```
-
-### API call to get usernames
-```bash
-# for each user ID
-twitch token
-twitch api get users -q id=$ID
-```
-
-### Full flow
-1. Run the SQL query to get the list of IDs
-1. Copy and save the output list of IDs to a text file: `/tmp/ids`
-  1. `rm /tmp/ids`
-  1. `vim /tmp/ids`
-1. Run the following bash script to get the Twitch ID mapped to their username
-
-```bash
-twitch token
-cat /tmp/ids | while read line || [[ -n $line ]];
-do
-  twitch api get users -q id=$line | jq '.data | .[] | (.id, .display_name)'
-done
-```
-
-TODO: this will likely include older IDs, so might need a way to filter those out to reduce noise.
-There's really no guarantee that the full set of IDs returned from the query will even still be
-onboarded.
-
-If you believe that I revoked your access in error, please feel free to open a GitHub issue to appeal it, otherwise
-you'll want to submit a new onboarding request.
-
-If you want to have better control over this and are willing to host the project yourself, I will be writing up
-a guide on how to self-host. TBD
-
 ## How does it work?
 The TwitchSongRequests service will authorize to your Twitch account so that the 
 service can listen for channel point redemption events from your channel. Once the 
@@ -204,16 +132,16 @@ go build .
 | --------------------- | ---------------------------------------------------------------- |
 | PORT                  | Override default port for the HTTP server                        |
 | DATABASE_URL          | PostgresDB URL to connect to                                     |
-| SITE_REDIRECT_URL     | URL for the base path for the main site                          |
+| SITE_REDIRECT_URL     | URL for the base path for the main site (can be derived)         |
 | TWITCH_SECRET         | Passphrase to verify subscription requests for Twitch EventSub   |
 | TWITCH_CLIENT_ID      | Twitch app OAuth client ID                                       |
 | TWITCH_CLIENT_SECRET  | Twitch app OAuth client secret                                   |
 | TWITCH_STATE          | Twitch app OAuth state key                                       |
-| TWITCH_REDIRECT_URL   | Twitch OAuth redirect URL                                        |
+| TWITCH_REDIRECT_URL   | Twitch OAuth redirect URL (can be derived)                       |
 | MOCK_SERVER_URL       | Arbitrary mock URL for local testing with Twitch CLI mock server |
 | SPOTIFY_CLIENT_ID     | Spotify app OAuth client ID                                      |
 | SPOTIFY_CLIENT_SECRET | Spotify app OAuth client secret                                  |
-| SPOTIFY_REDIRECT_URL  | Spotify OAuth redirect URL                                       |
+| SPOTIFY_REDIRECT_URL  | Spotify OAuth redirect URL (can be derived)                      |
 | SPOTIFY_STATE         | Spotify app OAuth state key                                      |
 | ONBOARDED_USERS       | Number of onboarded users to display stats for                   |
 | ALLOWED_USERS         | Number of users that are allowed to be onboarded                 |

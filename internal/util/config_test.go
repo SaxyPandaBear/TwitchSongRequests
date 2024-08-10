@@ -70,7 +70,7 @@ func TestLoadTwitchConfigsWithDefaultRedirect(t *testing.T) {
 
 	c, err := util.LoadTwitchConfigs()
 	assert.NoError(t, err)
-	assert.Equal(t, "localhost:8000", c.RedirectURL)
+	assert.Equal(t, "localhost:8000/oauth/twitch", c.RedirectURL)
 }
 
 func TestLoadTwitchConfigsErrors(t *testing.T) {

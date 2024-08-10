@@ -19,4 +19,7 @@ jobs:
           BODY: >
             Thanks for onboarding. I don't see an email associated with your Spotify account
             and I need that to add you to my allowlist. 
-            Can you please send that to me? My discord is `@saxypandabear`
+            Can you please send that to me? My discord is `@saxypandabear`. Please make sure to
+            include a link to the GitHub issue you created so I konw which user I am talking to.
+
+            Thanks again!
