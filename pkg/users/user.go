@@ -1,10 +1,7 @@
 package users
 
 import (
-	"fmt"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 type User struct {
@@ -20,7 +17,6 @@ type User struct {
 }
 
 func (u *User) IsAuthenticated() bool {
-	zap.L().Info(fmt.Sprintf("'%s', '%s'", u.TwitchAccessToken, u.SpotifyAccessToken))
 	tAuthed := len(u.TwitchAccessToken) > 0
 	sAuthed := len(u.SpotifyAccessToken) > 0
 	return tAuthed && sAuthed

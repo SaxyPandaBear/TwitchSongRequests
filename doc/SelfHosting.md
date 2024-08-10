@@ -59,7 +59,8 @@ Similarly, go back to the Spotify [dev dashboard](https://developer.spotify.com/
 ### Bootstrapping the database
 
 **IMPORTANT NOTE**:
-If you do not plan on hosting for other people to use, then skip this step. Otherwise, continue reading.
+> This step is optional. The database is required if you want to interact with the website, which is not required functionality. 
+If you do not plan on hosting for other people to use, then skip this step. Otherwise, continue reading. 
 
 You can go into the Railway UI and configure the required tables yourself, or you can
 log into the Postgres database and run the SQL script in `/testdata/bootstrap/db.sql` for
