@@ -22,7 +22,7 @@ const (
 	SpotifyUserScope = "user-modify-playback-state user-read-playback-state user-read-email"
 	// TwitchUserScope is the set of permissions required to access the necessary
 	// Twitch APIs
-	TwitchUserScope = "channel:manage:redemptions"
+	TwitchUserScope = "chat:read chat:edit channel:manage:redemptions"
 )
 
 // LoadTwitchConfigs reads from environment variables in order to
