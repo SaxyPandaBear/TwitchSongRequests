@@ -1,6 +1,8 @@
 Managing User Access
 ====================
 
+> If you believe that I revoked your access in error, please feel free to open a GitHub issue to appeal it, otherwise you'll want to submit a new onboarding request.
+
 ### Connectiong to the Postgres database
 This is mostly documenting for myself, especially since Railway removed their
 web UI for running queries on the connected database so I have to do everything
@@ -63,19 +65,39 @@ twitch api get users -q id=$ID
 1. Copy and save the output list of IDs to a text file: `/tmp/ids`
   1. `rm /tmp/ids`
   1. `vim /tmp/ids`
-1. Run the following bash script to get the Twitch ID mapped to their username
+1. Run the bash script below to get the Twitch ID mapped to their username
+1. Copy the onboarded users from the Spotify dashboard into a file: `/tmp/onboarded_users`
+1. Run the python script below to figure out who needs to get their access revoked
 
 ```bash
 twitch token
+rm /tmp/twitch_users
 cat /tmp/ids | while read line || [[ -n $line ]];
 do
-  twitch api get users -q id=$line | jq '.data | .[] | (.id, .display_name)'
+  twitch api get users -q id=$line | jq '.data | .[] | (.id, .display_name)' >> /tmp/twitch_users
 done
 ```
 
-TODO: this will likely include older IDs, so might need a way to filter those out to reduce noise.
-There's really no guarantee that the full set of IDs returned from the query will even still be
-onboarded.
+```python
+users = set()
+with open("/tmp/twitch_users") as usersfile:
+    cnt = 0
+    for line in usersfile.readlines():
+        if cnt % 2 == 1:
+            users.add(line.replace('"', '').strip().lower())
+        cnt += 1
 
-If you believe that I revoked your access in error, please feel free to open a GitHub issue to appeal it, otherwise
-you'll want to submit a new onboarding request.
+onboarded = set()
+with open("/tmp/onboarded_users") as onboardedfile:
+    # every 2nd line of a grouping of 4 contains the username
+    cnt = 0
+    for line in onboardedfile.readlines():
+        if cnt > 3:
+            cnt = 0
+        if cnt == 1:
+            onboarded.add(line.strip().lower())
+        cnt += 1
+
+for username in users.intersection(onboarded):
+    print(username)
+```

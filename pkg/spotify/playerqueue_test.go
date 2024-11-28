@@ -173,7 +173,7 @@ func TestShouldQueueMaxSongLength(t *testing.T) {
 		Messages: make([]spotify.ID, 0, 1),
 		GetTrackFunc: func(i spotify.ID) (*spotify.FullTrack, error) {
 			track := spotify.FullTrack{}
-			track.Duration = int(time.Hour.Milliseconds())
+			track.Duration = spotify.Numeric(time.Hour.Milliseconds())
 			return &track, nil
 		},
 	}
