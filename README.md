@@ -87,7 +87,7 @@ give a chance to other users who want to use the service.
 In order to better accommodate people who want to use this project, I am going to start actively revoking access
 to streamers that have not used it in 30 days. Personally, I think it sucks, but it's the only way to fairly keep
 up with demand considering I am only allowed to serve 25 users. I will keep track of Twitch users that I revoke access to 
-via the `CHANGELOG` file.
+via the `CHANGELOG` file. For the most up-to-date version of this, you want to check the [dev branch](https://github.com/SaxyPandaBear/TwitchSongRequests/blob/dev/CHANGELOG).
 
 ## How does it work?
 The TwitchSongRequests service will authorize to your Twitch account so that the 
@@ -118,6 +118,11 @@ and I'll set up a way to contribute in that way.
 
 ---
 # For Developers
+
+## Releases
+This project is published as a template on Railway, which points to the `main` branch. Regular development happens on the `dev` branch, 
+and I'll make a judgment call on if or when I ever need to merge stuff to `main`. 
+
 ## Running the project
 Run the project locally:
 ```bash
