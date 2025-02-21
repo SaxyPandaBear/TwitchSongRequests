@@ -30,6 +30,7 @@ the reward title! Thanks @rosethornttv for the feedback!
 1. If it worked, you should see a `Subscribe` and `Revoke Access` button
 1. Click `Subscribe`. If successful, you should see the UI update accordingly
 1. Submit an [onboarding request](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/new?assignees=&labels=onboarding&template=Onboarding-Form.yml&title=Onboarding+Request) on this GitHub project, and I will manually allowlist your Spotify account to let you access the service (this is a limitation on Spotify, not on me)
+1. **FROM THIS POINT ON YOU HAVE TO WAIT UNTIL YOU ARE ONBOARDED. KEEP TRACK OF YOUR GITHUB ISSUE PLEASE**
 1. After you are onboarded, go to your Creator Dashboard > Viewer Rewards > Channel Points > Manage Rewards & Challenges
 1. Scroll down to find `Spotify Song Request` in the Custom Rewards section and enable the reward - you can edit the amount of channel points, too.
 1. That's all! Start submitting Spotify URLs with the channel point reward!
@@ -105,7 +106,7 @@ The site uses cookies to track whether a user is authenticated or not.
 ## Why not YouTube?
 Well, the YouTube API doesn't let you queue videos outside of an iframe player,
 which means I would need to embed the player inside my website. Which, I'm not
-necessariliy opposed to doing, but that wasn't the original point of this. 
+necessarily opposed to doing, but that wasn't the original point of this. 
 
 If you want this feature, react and comment on [this issue](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/131)
 
