@@ -94,7 +94,7 @@ func ShouldQueue(client queue.Queuer, id spotify.ID, p *preferences.Preference) 
 		return ErrExplicitSong
 	}
 
-	if p != nil && p.MaxSongLength > 0 && track.Duration > p.MaxSongLength {
+	if p != nil && p.MaxSongLength > 0 && int(track.Duration) > p.MaxSongLength {
 		return fmt.Errorf("song is too long. %d > %d", track.Duration, p.MaxSongLength)
 	}
 
