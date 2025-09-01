@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/nicklaw5/helix/v2"
 	"github.com/saxypandabear/twitchsongrequests/internal/util"
@@ -16,6 +18,8 @@ import (
 	"github.com/saxypandabear/twitchsongrequests/pkg/preferences"
 	"github.com/saxypandabear/twitchsongrequests/pkg/queue"
 	"go.uber.org/zap"
+
+	"github.com/saxypandabear/twitchsongrequests/pkg/chatbot"
 )
 
 const (
@@ -37,6 +41,8 @@ type RewardHandler struct {
 	// OnSuccess is a callback function that executes after successfully
 	// publishing to the queue
 	OnSuccess func(*util.AuthConfig, db.UserStore, *helix.EventSubChannelPointsCustomRewardRedemptionEvent, bool) error
+
+	processedEvents sync.Map
 }
 
 type RewardHandlerConfig struct {
@@ -112,6 +118,24 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 	userID := redeemEvent.BroadcasterUserID
 	broadcaster := redeemEvent.BroadcasterUserLogin
 
+	// Check if the event has already been processed
+	if _, exists := h.processedEvents.LoadOrStore(redeemEvent.ID, time.Now()); exists {
+		zap.L().Info("Duplicate event detected, skipping",
+			zap.String("id", userID),
+			zap.String("broadcaster", broadcaster),
+			zap.String("redeemID", redeemEvent.ID))
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Remove event from memory after 5 minutes
+	defer func() {
+		go func() {
+			time.Sleep(5 * time.Minute)
+			h.processedEvents.Delete(redeemEvent.ID)
+		}()
+	}()
+
 	preferences, err := h.config.PrefStore.GetPreference(userID)
 	if err != nil {
 		zap.L().Error("failed to get user preferences", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
@@ -172,6 +196,7 @@ func (h *RewardHandler) ChannelPointRedeem(w http.ResponseWriter, r *http.Reques
 		zap.L().Info("Submitted song request",
 			zap.String("user", redeemEvent.UserName),
 			zap.String("uri", redeemEvent.UserInput),
+			zap.String("name", sID.String()),
 			zap.String("id", userID),
 			zap.String("broadcaster", broadcaster))
 	}
@@ -278,6 +303,17 @@ func UpdateRedemptionStatus(auth *util.AuthConfig,
 	if err = userStore.UpdateUser(u); err != nil {
 		zap.L().Error("failed to update Twitch credentials", zap.String("id", userID), zap.String("broadcaster", broadcaster), zap.Error(err))
 		return err
+	}
+
+	// After updating the status, we send a message to the chat
+	if success {
+		if err := chatbot.SendChatMessage(broadcaster, userStore, event); err != nil {
+			zap.L().Error("Error sending chat message",
+				zap.String("id", userID),
+				zap.String("broadcaster", broadcaster),
+				zap.Error(err))
+			return err
+		}
 	}
 
 	return nil
