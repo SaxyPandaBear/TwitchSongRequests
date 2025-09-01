@@ -1,4 +1,4 @@
-FROM golang:1.20.1-alpine3.17
+FROM golang:1.25.0-alpine3.21
 
 ARG PORT # injected from Railway at build time
 
