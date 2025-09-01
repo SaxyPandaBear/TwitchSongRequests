@@ -97,8 +97,8 @@ func TestOnboardedCount(t *testing.T) {
 	ready := make(chan struct{})
 
 	tests := []struct {
-		onboarded     uint
-		allowed       uint
+		onboarded     int
+		allowed       int
 		expectedColor string
 	}{
 		{

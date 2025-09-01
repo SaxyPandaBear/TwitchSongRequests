@@ -90,13 +90,13 @@ func StartServer(zaplogger *zap.Logger, port int) error {
 
 	onboardedUsers := util.GetFromEnvOrDefault(constants.NumOnboardedUsers, "0")
 	allowedUsers := util.GetFromEnvOrDefault(constants.NumAllowedUsers, "1")
-	var numOnboarded uint
-	var numAllowed uint = 1
+	var numOnboarded int
+	numAllowed := 1
 	if i, err := strconv.Atoi(onboardedUsers); err == nil {
-		numOnboarded = uint(i)
+		numOnboarded = i
 	}
 	if i, err := strconv.Atoi(allowedUsers); err == nil {
-		numAllowed = uint(i)
+		numAllowed = i
 	}
 	zap.L().Debug(fmt.Sprintf("Currently serving song requests for %d/%d users", numOnboarded, numAllowed))
 

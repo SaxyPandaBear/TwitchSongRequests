@@ -410,7 +410,7 @@ func TestPublishRedeemInvalidJSON(t *testing.T) {
 
 	userInput := generateUserInput(t)
 	payload := strings.Replace(redeemPayload, userInputPlaceholder, userInput, 1)
-	payload = strings.Replace(payload, "}", "foo", -1) // should be invalid json now
+	payload = strings.ReplaceAll(payload, "}", "foo") // should be invalid json now
 	assert.NotEmpty(t, payload)
 	assert.False(t, strings.Contains(payload, userInputPlaceholder))
 

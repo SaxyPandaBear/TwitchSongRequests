@@ -12,8 +12,8 @@ import (
 
 type StatsHandler struct {
 	msgCounter   db.MessageCounter
-	NumOnboarded uint
-	NumAllowed   uint
+	NumOnboarded int
+	NumAllowed   int
 }
 
 // https://shields.io/endpoint schema
@@ -26,7 +26,7 @@ type SvgData struct {
 	CacheSeconds  int    `json:"cacheSeconds"`
 }
 
-func NewStatsHandler(counter db.MessageCounter, onboarded, allowed uint) *StatsHandler {
+func NewStatsHandler(counter db.MessageCounter, onboarded, allowed int) *StatsHandler {
 	return &StatsHandler{
 		msgCounter:   counter,
 		NumOnboarded: onboarded,
