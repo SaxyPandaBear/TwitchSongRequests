@@ -1,5 +1,26 @@
 # TwitchSongRequests
 
+---
+
+## Update: 2026-02-26
+
+I received an email from Spotify and will relevant excerpts here:
+
+> Starting March 9, 2026, we will start applying the new restrictions and requirements to all applications in “Development Mode” using Spotify’s Web API. ... Development Mode use will require a Spotify Premium account (incl. Family and duo). This is to ensure accountability and to reduce automated misuse at scale. Only the main account associated with the app must be on Premium. Authorized users do not need a subscription.
+
+For those who aren't aware, the reason I have a restriction of 25 users is because my application is stuck in "Development Mode" because they will not approve it for general use. I have canceled my own Spotify Premium after 13 years of being a paying customer for personal reasons, that align with the recent call to [boycott Spotify](https://bdsmovement.net/boycott-spotify). As such, starting on March 9th when these restrictions are implemented, my application will stop working. I apologize for the inconvenience to the streamers that will be impacted by this, as well to the streamers who have onboarded and are waiting to be added. I am going to spend some time looking into alternative platforms (see [#476](https://github.com/SaxyPandaBear/TwitchSongRequests/issues/476)). 
+
+For those who want to self-host because they are going to keep a Spotify Premium membership, all I say to you is I will not be making any updates to the Spotify portion of this going forward, and you are on your own. I will cut a protected branch of this repo named `spotify` and leave it in perpetuity. 
+
+### What does this mean for me?
+If you are a currently onboarded streamer that is using this, it will stop working on or after March 9th. I don't really know when nor do I care because I can't do anything about it. 
+If you onboarded and are waiting for me to enable access for you, I'm sorry for the inconvenience. There are alternative applications that probably still do the same thing, though I don't know if the other 
+changes Spotify is implementing impacts those developers as well (probably). 
+
+It would be in your best interest to go through the process of revoking access to the application (detailed below in the README), but sometime after March 9th I will go and wipe my database too.
+
+---
+
 Integrate Twitch channel point rewards directly with a user's Spotify player.
 Configure a channel point reward to accept a Spotify song URL, and enqueue
 the song in the user's current playing session.
